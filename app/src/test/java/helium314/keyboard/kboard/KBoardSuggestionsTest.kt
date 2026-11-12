@@ -4,6 +4,7 @@ package helium314.keyboard.kboard
 import helium314.keyboard.latin.NgramContext
 import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.common.InputPointers
+import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.suggestions.SuggestedWordInfo
 import io.github.kboard.engine.Candidate
 import io.github.kboard.engine.CandidateSource
@@ -106,6 +107,16 @@ class KBoardSuggestionsTest {
 
         // sus korunur: HeliBoard düzeltmek istese de düzeltme yok
         assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("sus", mutableListOf(info("süs")), tr, true, true to true))
+
+        // kişisel sözlük / geçmiş / kişilerdeki kelime düzeltilmez (geri alınan düzeltme tekrarlanmaz)
+        for (type in listOf(Dictionary.TYPE_USER, Dictionary.TYPE_USER_HISTORY, Dictionary.TYPE_CONTACTS))
+            assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, true to true, type))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, heli, Dictionary.TYPE_MAIN))
+
+        // sondaki tırnak korunur: cok' → çok'
+        val quoted = mutableListOf(info("çok'"))
+        KBoardSuggestions.mergeAutoCorrection("cok", quoted, tr, true, heli, null, 1)
+        assertEquals(listOf("çok'"), quoted.map { it.word })
 
         // görüş yoksa ya da düzeltme kapalıysa HeliBoard'un kararı aynen kalır
         assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("merhba", mutableListOf(info("merhaba")), tr, true, true to true))

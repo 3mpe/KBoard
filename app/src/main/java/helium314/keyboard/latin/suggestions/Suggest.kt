@@ -7,6 +7,7 @@ package helium314.keyboard.latin.suggestions
 
 import android.text.TextUtils
 import com.android.inputmethod.latin.utils.BinaryDictionaryUtils
+import helium314.keyboard.kboard.KBoardSuggestions // KBOARD
 import helium314.keyboard.compat.CompatBreakIterator
 import helium314.keyboard.keyboard.Keyboard
 import helium314.keyboard.keyboard.internal.keyboard_parser.getEmojiDefaultVersion
@@ -26,7 +27,6 @@ import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.utils.AutoCorrectionUtils
-import helium314.keyboard.kboard.KBoardSuggestions // KBOARD
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.BackgroundGatheringCache
 import helium314.keyboard.latin.utils.TextAtCursor
@@ -138,7 +138,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             capitalizedTypedWord.dropLast(trailingSingleQuotesCount), suggestionsContainer, mDictionaryFacilitator.mainLocale,
             isCorrectionEnabled && wordComposer.isComposingWord && !wordComposer.hasDigits() && !wordComposer.isResumed
                 && !(wordComposer.isMostlyCaps && !wordComposer.isAllUpperCase),
-            heliBoardAutoCorrection
+            heliBoardAutoCorrection,
+            typedWordFirstOccurrenceWordInfo?.sourceDict?.mDictType,
+            trailingSingleQuotesCount
         )
         val typedWordInfo = SuggestedWordInfo(typedWordString, "", SuggestedWordInfo.MAX_SCORE,
             SuggestedWordInfo.KIND_TYPED, typedWordFirstOccurrenceWordInfo?.sourceDict ?: Dictionary.DICTIONARY_USER_TYPED,
