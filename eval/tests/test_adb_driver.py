@@ -312,6 +312,10 @@ class DriverTest(unittest.TestCase):
         self.assertEqual(list(drv.drive([case()])), stable)
         self.assertTrue(any("yeniden deneniyor" in m for m in log))
         self.assertFalse(drv.adb._plain_dump)  # geçici hata --windows'u kalıcı olarak kapatmamalı
+        # ilk dökümden sonra --windows bir kez bozulsa da düz döküme düşülmez
+        dev.fail_dumps = 1
+        self.assertEqual(list(drv.drive([case()])), stable)
+        self.assertFalse(drv.adb._plain_dump)
 
     def test_commit_reports_autocorrect(self):
         drv, _, _ = make_driver()

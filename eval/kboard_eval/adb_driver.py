@@ -293,7 +293,8 @@ class Adb:
         if codes:
             self.shell("input", "keyevent", *map(str, codes))
 
-    _plain_dump = False  # `--windows` desteklenmiyorsa düz döküme düşülür (bir kez karar verilir)
+    _plain_dump = False  # `--windows` desteklenmiyorsa düz döküme düşülür
+    _probed = False      # karar yalnızca ilk başarılı dökümde verilir; sonraki geçici hatalar düşürmez
 
     def dump_ui(self, command: str | None = None) -> str:
         """Ekran XML'i. Düz `uiautomator dump` yalnızca etkin (uygulama) penceresini döker, klavye
@@ -306,13 +307,14 @@ class Adb:
                 out = self.exec_out(_dump_cmd("--windows "))
             except DriveError:
                 pass
-            if _has_xml(out):
+            if _has_xml(out) or self._probed:
+                self._probed = True
                 return out
             plain = self.exec_out(_dump_cmd(""))
-            # Düz döküm çalışıyorsa `--windows` desteklenmiyordur; yalnızca o zaman kalıcı olarak düşülür.
-            # İkisi de başarısızsa geçici bir hatadır (ör. "could not get idle state").
+            # İlk dökümde düz döküm çalışıp `--windows` çalışmıyorsa desteklenmiyordur; kalıcı olarak düşülür.
+            # İkisi de başarısızsa geçici bir hatadır (ör. "could not get idle state"), karar ertelenir.
             if _has_xml(plain):
-                self._plain_dump = True
+                self._plain_dump = self._probed = True
             return plain
         return self.exec_out(_dump_cmd(""))
 
@@ -322,7 +324,10 @@ def _has_xml(out: str) -> bool:
 
 
 def _dump_cmd(flags: str) -> str:
-    return f"uiautomator dump {flags}{DEFAULT_DUMP_PATH} >/dev/null && cat {DEFAULT_DUMP_PATH}"
+    # Önce eski döküm silinir: `--windows`'u tanımayan eski uiautomator onu dosya adı sanıp
+    # yolu yazmazsa `cat` önceki oturumun dosyasını basmasın.
+    p = DEFAULT_DUMP_PATH
+    return f"rm -f {p}; uiautomator dump {flags}{p} >/dev/null && cat {p}"
 
 
 KEYCODE_MOVE_END = 123
