@@ -3,6 +3,8 @@ name: Ekran görüntüleri
 # Debug APK'yı emülatöre kurar, KBoard'u varsayılan klavye yapar ve klavyenin
 # ekran görüntülerini `ci-screenshots` dalına <commit>/ klasörü olarak yazar.
 # Zorunlu kontrol değildir; yalnızca görsel inceleme içindir.
+# Derleme ve üçüncü taraf emülatör eylemi salt okunur token ile çalışır; yazma
+# yetkisi yalnızca görüntüleri iten ikinci işte vardır.
 on:
   pull_request:
   workflow_dispatch:
@@ -12,15 +14,19 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  screenshots:
+  capture:
     name: Emülatörde ekran görüntüsü
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -35,7 +41,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Emülatör + ekran görüntüleri
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 34
           target: google_apis
@@ -49,20 +55,36 @@ jobs:
         with:
           name: kboard-screenshots
           path: screenshots/
-      - name: ci-screenshots dalına yaz
-        if: always()
+
+  publish:
+    name: Görüntüleri ci-screenshots dalına yaz
+    needs: capture
+    if: always() && github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kboard-screenshots
+          path: /tmp/shots
+      - name: Dala yaz
+        env:
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          [ -d screenshots ] || exit 0
-          sha="${{ github.event.pull_request.head.sha || github.sha }}"
+          git init -q repo && cd repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mv screenshots /tmp/shots
-          git fetch origin ci-screenshots || true
-          if git rev-parse --verify -q origin/ci-screenshots >/dev/null; then
-            git checkout -B ci-screenshots origin/ci-screenshots
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin ci-screenshots; then
+            git checkout -q -B ci-screenshots FETCH_HEAD
           else
-            git checkout --orphan ci-screenshots && git rm -rfq .
+            git checkout -q --orphan ci-screenshots
           fi
-          rm -rf "$sha" && mkdir -p "$sha" && cp -r /tmp/shots/. "$sha/"
-          git add "$sha" && git commit -qm "Ekran görüntüleri: $sha" && git push origin ci-screenshots
+          rm -rf "$SHA" && mkdir -p "$SHA" && cp -r /tmp/shots/. "$SHA/"
+          git add "$SHA"
+          if git diff --cached --quiet; then echo "Değişiklik yok"; exit 0; fi
+          git commit -qm "Ekran görüntüleri: $SHA"
+          git push -q origin ci-screenshots

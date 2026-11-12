@@ -55,7 +55,7 @@ olduğu, klavye + cihaz başına bir JSON dosyasında tutulur.
 
 | Alan | Anlam |
 |---|---|
-| `package` | klavyenin paket adı; öneri düğümleri bu pakete ait olanlardan seçilir (KBoard/HeliBoard `helium314.keyboard`, Gboard `com.google.android.inputmethod.latin`) |
+| `package` | klavyenin paket adı; öneri düğümleri bu pakete ait olanlardan seçilir (KBoard `io.github.kboard.tr`, debug derlemesi `io.github.kboard.tr.debug`; HeliBoard `helium314.keyboard`; Gboard `com.google.android.inputmethod.latin`) |
 | `layers.base` | ana katman; `space` zorunlu |
 | `rows` | eşit aralıklı tuş sırası: i'inci karakter `(x0 + i·dx, y)` noktasında |
 | `keys` | tek tek tuşlar `[x, y]`; adlı tuşlar (`shift`, `abc`…) katman geçişinde kullanılır |
