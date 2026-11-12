@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
-from .turkish import fold, normalize
+from .turkish import asciify, fold, normalize
 
 
 @dataclass
@@ -86,7 +86,7 @@ class FrequencyPredictor:
         pa = fold(prefix)
         out = []
         for w, n, a in self._keys:
-            if n.startswith(p) or (pa == p and a.startswith(pa)):
+            if n.startswith(p) or (pa == asciify(p) and a.startswith(pa)):
                 out.append(w)
                 if len(out) >= self.max_suggestions:
                     break
