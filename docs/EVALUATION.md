@@ -1,20 +1,51 @@
 # Teknik değerlendirmeler
 
-> Aşağıdaki sayılar ön tahmindir; kesin değerler Faz 3 öncesindeki ölçüm çalışmasında
-> (spike) referans cihazda ölçülecek. Lisanslar kullanılmadan önce kaynağından doğrulanacak.
+> §1'deki Zemberek sayıları masaüstünde ölçüldü (2026-11-12); cihaz ölçümü Faz 3 başında.
+> Diğer sayılar ön tahmindir. Lisanslar kullanılmadan önce kaynağından doğrulanacak.
 
 ## 1. Zemberek-NLP mobilde kullanılabilir mi?
 
 Zemberek-NLP (Java, Apache-2.0, GPL-3.0 ile uyumlu) Türkçe için en kapsamlı açık morfolojik
 analiz/üretim kütüphanesi. Sorun "doğru mu" değil, "klavye sürecinde taşınabilir mi".
 
-| Boyut | Beklenti | Klavye için anlamı |
+### Masaüstü ölçümü (2026-11-12)
+
+Araç: [`tools/zemberek-spike`](../tools/zemberek-spike/README.md), Zemberek 0.17.1, OpenJDK 21
+(x86-64, 4 çekirdek Xeon 2,3 GHz), SerialGC, her koşu taze JVM, 5 koşunun medyanı (parantezde
+en düşük–en yüksek). Ham çıktı: [`sonuclar/masaustu-2026-11-12.md`](../tools/zemberek-spike/sonuclar/masaustu-2026-11-12.md).
+
+| Ölçüm | JIT (varsayılan) | Yalnız C1 | `-Xint` (yorumlayıcı) |
+|---|---|---|---|
+| Sözlük yükleme (`RootLexicon.getDefault()`) | 338 ms (317–353) | 320 ms | 2069 ms |
+| Morfoloji kurulumu (`build()`) | 277 ms (248–301) | 272 ms | 1930 ms |
+| **Toplam açılış** | **596 ms (581–654)** | 590 ms (502–751) | 3999 ms |
+| Tutulan yığın (yükleme sonrası, GC'den sonra) | **41,6 MB** | 41,6 MB | 41,6 MB |
+| 1000 kelime, ilk geçiş (JIT soğuk) | 85 ms (78–109) | 60 ms | 504 ms |
+| 1000 kelime, sıcak | 18 ms (14–19) | 20 ms | 433 ms |
+
+- **En küçük çalışan yığın:** `-Xmx47m` ile yükleme + analiz tamamlanıyor, 43 MB'da
+  `OutOfMemoryError`. Bu sınırda açılış GC baskısıyla ~1,4 sn'ye çıkıyor.
+- **Sözlük:** 67.755 kök. 1000 kelimenin (120 farklı, önbellek kapalı) hepsi çözümlendi.
+- **Boyut:** sınıf yolu toplamı **8,3 MB** jar: Guava 2,7 MB, `zemberek-morphology` 2,3 MB,
+  protobuf 1,6 MB, Caffeine 0,6 MB, diğerleri ~1 MB. Morfoloji jar'ının asıl verisi
+  `tr/lexicon.bin` (0,5 MB sıkıştırılmış, 1,2 MB açık); jar'daki en büyük kaynak olan
+  belirsizlik giderme modeli (1,4 MB sıkıştırılmış) yalnız morfoloji için gerekmiyor.
+  R8 küçültmesiyle APK etkisinin bunun altında kalması beklenir (ölçülmedi).
+- **Lisans:** Zemberek-NLP deposundaki `LICENSE` Apache-2.0 (doğrulandı).
+
+**Yorum.** Tahmin edilen "saniye mertebesi açılış, onlarca–yüzlerce MB" masaüstünde daha iyi
+çıktı: ~0,6 sn ve ~42 MB. Yine de klavye için ağır:
+
+| Boyut | Ölçülen (masaüstü) | Klavye için anlamı |
 |---|---|---|
-| Boyut | morfoloji modülü + gömülü sözlük birkaç on MB mertebesinde (jar + kaynaklar) | APK'ya doğrudan eklemek pahalı |
-| Açılış | `TurkishMorphology.createWithDefaults()` sözlüğü yükleyip ek grafiğini kurar; masaüstünde saniye mertebesi | IME her açılışta bunu bekleyemez |
-| Bellek | onlarca–yüzlerce MB yığın (heap) | Android IME süreçleri düşük bellekte ilk öldürülenlerdendir |
-| Hız | tek kelime analizi hızlı, ama önekten "olası tamamlamaları üretme" doğrudan desteklenmiyor | tamamlama için ayrı yapı gerekir |
-| Java 8 / Guava vb. bağımlılıklar | Android'de çalışır ama minify/desugar ayarı ister | ek bakım yükü |
+| Açılış | ~0,6 sn JIT, ~4 sn yorumlayıcı | Telefonda (ART, daha yavaş çekirdek) 1–3 sn beklenir (tahmin, cihazda ölçülecek); IME her açılışta bekleyemez, ancak arka planda tembel yükleme olabilir |
+| Bellek | ~42 MB tutulan yığın, en az ~47 MB `-Xmx` | Klavye sürecinin belleğini kabaca ikiye katlar; düşük bellekli cihazda IME'nin öldürülme riskini artırır |
+| Hız | sıcakken ~18 µs/kelime | Analiz hızı sorun değil; önekten tamamlama üretimi ise doğrudan desteklenmiyor |
+| Boyut | 8,3 MB jar (küçültmesiz) | APK'ya eklemek pahalı ama imkânsız değil |
+| Bağımlılıklar | Guava, protobuf, Caffeine, ANTLR | Android'de minify/desugar ayarı ve ek bakım yükü |
+
+Sonuç: masaüstü ölçümü varsayılan planı **doğruluyor**. Cihaz ölçümü (ART, referans telefon,
+PSS dahil) Faz 3 başında yapılıp bu bölüme eklenecek; karar onunla kesinleşir.
 
 **Öneri: Zemberek'i cihazda değil, masaüstünde ön hesaplama aracı olarak kullan.**
 
@@ -27,8 +58,8 @@ analiz/üretim kütüphanesi. Sorun "doğru mu" değil, "klavye sürecinde taş�
 3. Zemberek'in kendisi gerekirse "lazy-load" arka plan iş parçacığında, yalnızca yüksek bellekli
    cihazlarda isteğe bağlı açılabilir (varsayılan kapalı).
 
-Spike görevi (Faz 3 başında): Zemberek'i referans cihazda açılış süresi, yığın kullanımı ve
-1000 kelime analiz süresiyle ölçmek; sonuç bu bölüme yazılacak.
+Kalan spike adımı (Faz 3 başında): aynı ölçümü referans cihazda (ART) tekrarlamak; açılış,
+yığın, işlem belleği (PSS) ve 1000 kelime süresi bu bölüme eklenecek.
 
 ## 2. Deasciifier seçenekleri
 
