@@ -44,13 +44,16 @@ open_field() {
 }
 
 type_word() { adb shell input text "$1"; }
+# Ekrandaki boşluk tuşu (pixel_6, 1080x2400). `input keyevent SPACE` donanım tuşu sayılır ve
+# otomatik düzeltmeyi tetiklemez; gerçek kullanımı göstermek için tuşa dokunulur.
+tap_space() { adb shell input tap 540 2160; }
 
 capture_set() { # $1 = önek
   adb shell cmd uimode night no; sleep 1
   open_field
   shot "$1-01-acik-bos" 2
   type_word "cok"; shot "$1-02-acik-cok" 3
-  adb shell input keyevent KEYCODE_SPACE; shot "$1-03-acik-cok-bosluk" 2
+  tap_space; shot "$1-03-acik-cok-bosluk" 2
   type_word "guzel"; shot "$1-04-acik-guzel" 3
   adb shell cmd uimode night yes; sleep 2
   open_field
@@ -68,6 +71,14 @@ adb shell ime set "$kboard"
 log "varsayılan: $(adb shell settings get secure default_input_method)"
 sleep 3 # aksan dizini arka planda yüklenir
 capture_set kboard
+
+# Kişisel sözlük + ek: "Kadıköy" eklenir, "Kadikoy'd" yazılır → "Kadıköy'de" önerilmeli.
+adb shell content insert --uri content://user_dictionary/words --bind word:s:Kadıköy \
+  --bind locale:s:tr --bind frequency:i:250 --bind appid:i:0 || true
+sleep 3
+adb shell cmd uimode night no; sleep 1
+open_field
+type_word "Kadikoy\\'d"; shot "kboard-07-kisisel-sozluk-ek" 3
 
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
