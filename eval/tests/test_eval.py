@@ -10,7 +10,7 @@ from kboard_eval.predictors import FrequencyPredictor, SubprocessPredictor
 from kboard_eval.simulate import simulate
 from kboard_eval.testset import Case
 from kboard_eval.trace import Event
-from kboard_eval.turkish import asciify, is_deasciify_pair, tokenize, tr_lower
+from kboard_eval.turkish import asciify, is_deasciify_pair, is_typo_pair, tokenize, tr_lower
 
 SEED = Path(__file__).resolve().parents[1] / "testset" / "seed-v0.jsonl"
 
@@ -41,6 +41,14 @@ class TurkishTest(unittest.TestCase):
         self.assertTrue(is_deasciify_pair("isik", "Işık"))
         self.assertTrue(is_deasciify_pair("irmak", "Irmak"))
         self.assertTrue(is_deasciify_pair("ilik", "Ilık"))
+
+    def test_typo_pair(self):
+        self.assertTrue(is_typo_pair("geliyorm", "geliyorum"))
+        self.assertTrue(is_typo_pair("tesekurler", "teşekkürler"))  # aksan + eksik harf
+        self.assertTrue(is_typo_pair("bilmiyrum", "bilmiyorum"))
+        self.assertFalse(is_typo_pair("cok", "çok"))  # yalnızca aksan
+        self.assertFalse(is_typo_pair("Irmak", "ırmak"))  # yalnızca büyük/küçük harf
+        self.assertFalse(is_typo_pair("çok", "çok"))
 
     def test_nfd_input_is_normalized(self):
         import unicodedata
@@ -135,9 +143,32 @@ class MetricsTest(unittest.TestCase):
         r = metrics.score([c], events)["overall"]
         self.assertEqual(r["false_autocorrect_rate"], {"value": 0.5, "hit": 1, "total": 2})
 
+    def test_typo_correction(self):
+        c = case(text="geliyorum ama geç kalacağım", input="geliyorm ama gec kalcağım")
+        events = [
+            Event("c1", 0, "geliyorm", ["geliyorum"], autocorrect="geliyorum", commit=True),
+            Event("c1", 1, "ama", [], autocorrect=None, commit=True),
+            Event("c1", 2, "gec", [], autocorrect="geç", commit=True),
+            # düzeltilmedi ama hedef öneri çubuğunda
+            Event("c1", 3, "kalcağım", ["kalcağım", "kalacağım"], autocorrect=None, commit=True),
+        ]
+        r = metrics.score([c], events)["overall"]
+        self.assertEqual(r["typo_correction_accuracy"], {"value": 0.5, "hit": 1, "total": 2})
+        self.assertEqual(r["typo_suggest_top3"], {"value": 1.0, "hit": 2, "total": 2})
+        # aksan ve doğru yazım sayaçları yazım hatası kelimelerini içermez
+        self.assertEqual(r["deasciify_accuracy"]["total"], 1)
+        self.assertEqual(r["false_autocorrect_rate"]["total"], 1)
+        self.assertIn("Yazım hatası düzeltme", metrics.to_markdown(metrics.score([c], events)))
+
     def test_missing_events_reported(self):
         r = metrics.score([case()], [])["overall"]
         self.assertEqual(r["missing_events"], 2)
+
+    def test_missing_commit_on_typo_word_reported(self):
+        c = case(text="geliyorum", input="geliyorm")
+        r = metrics.score([c], [Event("c1", 0, "", [])])["overall"]
+        self.assertEqual(r["missing_events"], 1)
+        self.assertEqual(r["typo_correction_accuracy"]["total"], 0)
 
 
 class EndToEndTest(unittest.TestCase):
