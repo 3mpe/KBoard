@@ -72,8 +72,8 @@ object KBoardSuggestions {
      * ve imlecin kelime ortasında olması kontrol edilmez: motor kendi sözlüğünü taşır).
      *
      * [typedWordSourceType]: yazılan kelime HeliBoard'un hangi sözlüğünde bulunduysa onun türü.
-     * Kişisel sözlük, kişiler ve kullanıcı geçmişindeki kelimeler (ör. düzeltmeyi geri alıp yeniden
-     * yazılan kelime) asla düzeltilmez.
+     * Kişisel sözlük, kişiler ve kullanıcı geçmişindeki kelimeleri (ör. düzeltmeyi geri alıp yeniden
+     * yazılan kelime) motor düzeltmez; bu durumda HeliBoard'un kararı aynen geçerlidir.
      *
      * [trailingQuotes]: yazılanın sonundaki tek tırnak sayısı; düzeltme kelimesine geri eklenir.
      */
@@ -83,11 +83,11 @@ object KBoardSuggestions {
         typedWordSourceType: String? = null, trailingQuotes: Int = 0,
     ): Pair<Boolean, Boolean> {
         if (!correctionAllowed) return base
-        if (locale.language == "tr" && typedWordSourceType in USER_SOURCES) return base.first to false
         return when (val ac = autoCorrection(typedWord, locale)) {
             AutoCorrection.NoOpinion -> base
             AutoCorrection.Keep -> base.first to false
-            is AutoCorrection.Replace -> {
+            // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.
+            is AutoCorrection.Replace -> if (typedWordSourceType in USER_SOURCES) base else {
                 val word = ac.word + "'".repeat(trailingQuotes)
                 val target = TurkishText.lower(word)
                 val i = suggestions.indexOfFirst { TurkishText.lower(it.word) == target }
