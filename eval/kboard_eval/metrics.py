@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from .testset import Case
 from .trace import Event
-from .turkish import is_deasciify_pair, normalize, same_word
+from .turkish import is_deasciify_pair, is_typo_pair, normalize, same_word
 
 TOP_N = 3
 TOP_AT_K = (0, 1, 2, 3)
@@ -38,6 +38,8 @@ class Bucket:
     keystrokes_full: int = 0
     deasciify: Ratio = field(default_factory=Ratio)
     false_autocorrect: Ratio = field(default_factory=Ratio)
+    typo_correction: Ratio = field(default_factory=Ratio)
+    typo_suggest_top3: Ratio = field(default_factory=Ratio)
     words: int = 0
     missing_events: int = 0
 
@@ -55,6 +57,8 @@ class Bucket:
             "ksr": {"value": self.ksr, "used": self.keystrokes_used, "full": self.keystrokes_full},
             "deasciify_accuracy": self.deasciify.as_dict(),
             "false_autocorrect_rate": self.false_autocorrect.as_dict(),
+            "typo_correction_accuracy": self.typo_correction.as_dict(),
+            "typo_suggest_top3": self.typo_suggest_top3.as_dict(),
             "missing_events": self.missing_events,
         }
 
@@ -133,7 +137,12 @@ def score(cases: list[Case], events: list[Event]) -> dict:
                         b.deasciify.add(same_word(committed, target))
                     elif normalize(typed) == normalize(target):
                         b.false_autocorrect.add(not same_word(committed, typed))
-                elif is_deasciify_pair(typed, target) or normalize(typed) == normalize(target):
+                    elif is_typo_pair(typed, target):
+                        # Yazım hatası (aksan dışı fark): boşluğa basınca hedefe düzeltildi mi,
+                        # düzeltilmediyse hedef en azından öneri çubuğunun ilk 3'ünde miydi?
+                        b.typo_correction.add(same_word(committed, target))
+                        b.typo_suggest_top3.add(_in_top(target, commit.suggestions))
+                else:
                     b.missing_events += 1
 
     latencies.sort()
@@ -159,12 +168,15 @@ def _row(name: str, b: dict) -> str:
     return (f"| {name} | {b['words']} | {_pct(t['0']['value'])} | {_pct(t['1']['value'])} | "
             f"{_pct(t['2']['value'])} | {_pct(t['3']['value'])} | {_pct(b['ksr']['value'])} | "
             f"{_pct(b['deasciify_accuracy']['value'])} ({b['deasciify_accuracy']['total']}) | "
-            f"{_pct(b['false_autocorrect_rate']['value'])} ({b['false_autocorrect_rate']['total']}) |")
+            f"{_pct(b['false_autocorrect_rate']['value'])} ({b['false_autocorrect_rate']['total']}) | "
+            f"{_pct(b['typo_correction_accuracy']['value'])} ({b['typo_correction_accuracy']['total']}) | "
+            f"{_pct(b['typo_suggest_top3']['value'])} |")
 
 
 def to_markdown(result: dict, title: str = "Ölçüm raporu") -> str:
     head = ("| Kırılım | Kelime | İlk-3 @0 (sonraki kelime) | İlk-3 @1 | İlk-3 @2 | İlk-3 @3 | KSR | "
-            "Aksan düzeltme (n) | Yanlış oto. düzeltme (n) |\n|---|---|---|---|---|---|---|---|---|")
+            "Aksan düzeltme (n) | Yanlış oto. düzeltme (n) | Yazım hatası düzeltme (n) | Yazım hatası ilk-3 |\n"
+            "|---|---|---|---|---|---|---|---|---|---|---|")
     lines = [f"# {title}", "", head, _row("**Genel**", result["overall"])]
     for k, b in result["by_category"].items():
         lines.append(_row(f"kategori: {k}", b))

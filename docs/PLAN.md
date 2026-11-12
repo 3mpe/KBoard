@@ -147,6 +147,7 @@ sonucunu (`autocorrect`: boşluğa basınca metne geçecek kelime) taşır.
 | Tuş tasarrufu (KSR) | Kullanıcı hedefi ilk 3'te gördüğü an dokunarak seçer (1 tuş, boşluk dahil). `KSR = 1 − kullanılan / (karakter + boşluk)`. Hatasız seçim varsayılır; yanlış commit'in düzeltme maliyeti sayılmaz |
 | Aksan düzeltme doğruluğu | `input ≠ text` olan ve farkı yalnızca Türkçe karakterler olan kelimelerde commit sonucu = hedef |
 | Yanlış otomatik düzeltme | `input = text` (doğru yazılmış) kelimelerde commit sonucu ≠ yazılan |
+| Yazım hatası düzeltme | `input ≠ text` olan ve farkı yalnızca Türkçe karakterler **olmayan** kelimelerde (harf eksik/fazla/yanlış/yer değişmiş; aksanla birlikte de olabilir) commit sonucu = hedef. Ek olarak hedefin commit anında ilk 3 öneride olma oranı. Yanlış otomatik düzeltmenin karşı ağırlığıdır: biri artarken diğeri de artıyorsa düzeltme fazla saldırgandır |
 | Gecikme | izdeki `latency_ms` için p50 / p95 / max |
 
 Karşılaştırma büyük/küçük harf duyarsızdır ve Türkçe kurallarla yapılır (`I→ı`, `İ→i`).

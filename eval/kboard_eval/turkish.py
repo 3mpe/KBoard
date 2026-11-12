@@ -55,3 +55,12 @@ def same_word(a: str | None, b: str | None) -> bool:
 def is_deasciify_pair(typed: str, target: str) -> bool:
     """`typed`, `target`ın aksansız yazımı mı (ve ondan farklı mı)?"""
     return normalize(typed) != normalize(target) and fold(typed) == fold(target)
+
+
+def is_typo_pair(typed: str, target: str) -> bool:
+    """`typed`, `target`ın aksan dışı bir hatayla yazılmış hali mi (harf eksik/fazla/yanlış/yer değişmiş)?
+
+    Yalnızca aksan farkı olan çiftler (`is_deasciify_pair`) yazım hatası sayılmaz; aksan farkı
+    ile birlikte başka bir hata da varsa ('tesekurler' → 'teşekkürler') yazım hatasıdır.
+    """
+    return fold(typed) != fold(target)
