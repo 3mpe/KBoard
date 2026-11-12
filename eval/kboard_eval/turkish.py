@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 _UPPER_TO_LOWER = str.maketrans({"I": "ı", "İ": "i"})
 _ASCII_FOLD = str.maketrans({
@@ -26,6 +27,15 @@ def normalize(word: str) -> str:
     return tr_lower(word).replace("’", "'")
 
 
+def fold(word: str) -> str:
+    """Önce Türkçe küçük harf, sonra ascii katlama: 'Işık' ve 'isik' aynı anahtara düşer."""
+    return asciify(normalize(word))
+
+
+def nfc(text: str) -> str:
+    return unicodedata.normalize("NFC", text)
+
+
 def asciify(text: str) -> str:
     """Türkçe karakterleri ASCII karşılıklarına katlar (çok → cok)."""
     return text.translate(_ASCII_FOLD)
@@ -44,4 +54,4 @@ def same_word(a: str | None, b: str | None) -> bool:
 
 def is_deasciify_pair(typed: str, target: str) -> bool:
     """`typed`, `target`ın aksansız yazımı mı (ve ondan farklı mı)?"""
-    return normalize(typed) != normalize(target) and normalize(typed) == normalize(asciify(target))
+    return normalize(typed) != normalize(target) and fold(typed) == fold(target)

@@ -142,9 +142,9 @@ sonucunu (`autocorrect`: boşluğa basınca metne geçecek kelime) taşır.
 
 | Metrik | Tanım |
 |---|---|
-| İlk-3 isabet @k | `k` karakter yazıldıktan sonra hedef ilk 3 öneride mi (k=0 sonraki kelime, 1, 2, 3) |
+| İlk-3 isabet @k | `k` karakter yazıldıktan sonra hedef ilk 3 öneride mi (k=0 sonraki kelime, 1, 2, 3). k>0 için en az bir karakter yazılacak kalmalı (yazılanı göstermek bedava isabet olmasın); k=0'da cümlenin ilk kelimesi sayılmaz |
 | Sonraki kelime isabeti | k=0 için ilk-1 / ilk-3 |
-| Tuş tasarrufu (KSR) | Kullanıcı hedefi ilk 3'te gördüğü an dokunarak seçer (1 tuş, boşluk dahil). `KSR = 1 − kullanılan / (karakter + boşluk)` |
+| Tuş tasarrufu (KSR) | Kullanıcı hedefi ilk 3'te gördüğü an dokunarak seçer (1 tuş, boşluk dahil). `KSR = 1 − kullanılan / (karakter + boşluk)`. Hatasız seçim varsayılır; yanlış commit'in düzeltme maliyeti sayılmaz |
 | Aksan düzeltme doğruluğu | `input ≠ text` olan ve farkı yalnızca Türkçe karakterler olan kelimelerde commit sonucu = hedef |
 | Yanlış otomatik düzeltme | `input = text` (doğru yazılmış) kelimelerde commit sonucu ≠ yazılan |
 | Gecikme | izdeki `latency_ms` için p50 / p95 / max |
@@ -160,9 +160,11 @@ Kırılım: kategori ve etikete göre.
 - Öngörücü arayüzü: `predict(context_words, prefix) → (suggestions, autocorrect)`.
   Dahili `freq` öngörücüsü (kelime listesi + önek eşleşmesi) boru hattını sınamak içindir.
   `subprocess` öngörücüsü JSON-satır protokolüyle `engine/` CLI'ını çağırır (Faz 2'de).
-- Cihaz sürücüsü (`adb`): her vakayı karakter karakter `adb shell input` ile yazar,
-  her tuştan sonra öneri çubuğunu `uiautomator dump` ile okur ve iz üretir. Gboard ve saf
-  HeliBoard baseline'ı bu yolla, aynı koşullarda alınır (OQ-1).
+- Cihaz sürücüsü (`adb`): her karakteri, klavye başına tutulan bir tuş koordinat haritasıyla
+  `adb shell input tap x y` olarak ekrandaki tuşa dokunarak yazar (`input text` donanım tuş olayı
+  gönderir, yumuşak klavyenin dokunma yolunu atlar ve ç/ş/ğ/ı/ö/ü gönderemez). Her dokunuştan sonra
+  öneri çubuğu `uiautomator dump` ile okunur ve iz üretilir. Gboard ve saf HeliBoard baseline'ı bu
+  yolla, aynı koşullarda alınır (OQ-1). Öneri çubuğu okunamazsa OQ-1'deki yedek yollar geçerli.
 
 ### 4.5 Faz 0 adımları ve bitiş kriterleri
 
@@ -173,6 +175,7 @@ Kırılım: kategori ve etikete göre.
 | 0.3 | Kullanıcının HeliBoard test bulgularını vakaya dönüştürme | Her bulgu ≥1 vakayla temsil ediliyor |
 | 0.4 | `adb` cihaz sürücüsü (öneri çubuğunu okuma) | Aynı vaka 3 koşuda aynı izi veriyor (deterministik) |
 | 0.5 | Gboard ve saf HeliBoard baseline ölçümü | `docs/reports/baseline-v0.md` yayınlandı |
+| 0.5b | Yazım hatası düzeltme metriği (aksan dışı farklar: `input` ≠ `text`), yanlış otomatik düzeltme metriğinin karşı ağırlığı | Metrik raporda; test setinde ≥50 yazım hatası vakası |
 | 0.6 | Sayısal hedeflerin belirlenmesi | Faz 2–4 bitiş eşikleri bu belgeye işlendi |
 
 ## 5. Faz 1: Fork + temel (ayrıntılı)
@@ -181,7 +184,7 @@ Kırılım: kategori ve etikete göre.
 |---|---|---|
 | 1.1 | HeliBoard'u depoya alma (upstream remote, unrelated-histories merge) **(onay gerekli)** | Depo kökünde HeliBoard ağacı + bizim dizinler; upstream commit'i `docs/UPSTREAM.md`'de kayıtlı |
 | 1.2 | Kimlik: `applicationId`, uygulama adı, ikon (özgün), sürüm adı | Kurulu HeliBoard ile yan yana kurulabiliyor |
-| 1.3 | Tek dil: `main_tr.dict` dışındaki sözlükleri çıkar, varsayılan alt tip `tr` (Q) | APK'da yalnızca TR sözlüğü; ilk açılışta Türkçe düzen |
+| 1.3 | Tek dil (`main_tr.dict` HeliBoard'da `app/src/main/assets/dicts/` altında gömülü, doğrulandı): diğer sözlükleri çıkar, varsayılan alt tip `tr` (Q) | APK'da yalnızca TR sözlüğü; ilk açılışta Türkçe düzen |
 | 1.4 | Varsayılan büyük tuşlar + tuş kenarlıkları açık (`Defaults.kt`: `PREF_KEYBOARD_HEIGHT_SCALE`, `PREF_THEME_KEY_BORDERS`) | Kullanıcı tuş hissini onayladı |
 | 1.5 | İnternet izni yokluğunun CI kontrolü (birleştirilmiş manifest) | CI, `INTERNET` izni eklenirse kırılıyor |
 | 1.6 | GitHub Actions: debug APK + birim testler | Her PR'da indirilebilir APK |

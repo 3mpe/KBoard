@@ -114,9 +114,17 @@ def score(cases: list[Case], events: list[Event]) -> dict:
             for b in buckets:
                 b.words += 1
                 for k in TOP_AT_K:
-                    if k in prefixes and (k == 0 or k <= len(typed)):
+                    if k not in prefixes:
+                        continue
+                    if k == 0:
+                        # Sonraki kelime: cümlenin ilk kelimesinde bağlam yok, sayılmaz.
+                        if i > 0:
+                            b.top3_at[0].add(_in_top(target, prefixes[0].suggestions))
+                    elif k < len(target) and k < len(typed):
+                        # En az bir karakter yazılacak kalmalı; yoksa klavyenin yazılanı
+                        # öneri çubuğunda göstermesi bedava isabet sayılırdı.
                         b.top3_at[k].add(_in_top(target, prefixes[k].suggestions))
-                if 0 in prefixes:
+                if 0 in prefixes and i > 0:
                     b.next_word_top1.add(_in_top(target, prefixes[0].suggestions, 1))
                 b.keystrokes_used += used
                 b.keystrokes_full += full

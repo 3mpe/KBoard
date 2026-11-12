@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
-from .turkish import asciify, normalize
+from .turkish import fold, normalize
 
 
 @dataclass
@@ -65,7 +65,7 @@ class FrequencyPredictor:
         for w in self._user:
             merged[w] = max(merged.get(w, 0), top)  # kullanıcı kelimeleri öne
         self._ranked = sorted(merged.items(), key=lambda kv: (-kv[1], kv[0]))
-        self._keys = [(w, normalize(w), normalize(asciify(w))) for w, _ in self._ranked]
+        self._keys = [(w, normalize(w), fold(w)) for w, _ in self._ranked]
         self._exact = {normalize(w) for w in merged}
         self._by_ascii: dict[str, str] = {}
         for w, _n, a in self._keys:
@@ -83,7 +83,7 @@ class FrequencyPredictor:
 
     def predict(self, context: list[str], prefix: str) -> Prediction:
         p = normalize(prefix)
-        pa = normalize(asciify(prefix))
+        pa = fold(prefix)
         out = []
         for w, n, a in self._keys:
             if n.startswith(p) or (pa == p and a.startswith(pa)):

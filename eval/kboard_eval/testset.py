@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .turkish import tokenize
+from .turkish import nfc, tokenize
 
 REQUIRED = ("id", "text", "category", "source", "license")
 KNOWN = set(REQUIRED) | {"input", "tags", "user_words", "note"}
@@ -90,7 +90,7 @@ def load_with_errors(paths: list[Path] | Path) -> tuple[list[Case], list[str]]:
                     continue
                 where = f"{path.name}:{lineno}"
                 try:
-                    obj = json.loads(line)
+                    obj = json.loads(nfc(line))
                 except json.JSONDecodeError as exc:
                     errors.append(f"{where}: geçersiz JSON ({exc.msg})")
                     continue

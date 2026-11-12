@@ -37,6 +37,20 @@ class TurkishTest(unittest.TestCase):
         self.assertTrue(is_deasciify_pair("Isik", "Işık"))
         self.assertFalse(is_deasciify_pair("çok", "çok"))
         self.assertFalse(is_deasciify_pair("cik", "çok"))
+        # büyük noktasız I: önce küçült, sonra katla
+        self.assertTrue(is_deasciify_pair("isik", "Işık"))
+        self.assertTrue(is_deasciify_pair("irmak", "Irmak"))
+        self.assertTrue(is_deasciify_pair("ilik", "Ilık"))
+
+    def test_nfd_input_is_normalized(self):
+        import unicodedata
+        line = json.dumps({"id": "n", "text": unicodedata.normalize("NFD", "çok güzel"), "category": "s",
+                           "source": "t", "license": "l"}, ensure_ascii=False)
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "t.jsonl"
+            p.write_text(line + "\n", encoding="utf-8")
+            cases = testset.load(p)
+        self.assertEqual(cases[0].target_words, ["çok", "güzel"])
 
 
 class TestSetTest(unittest.TestCase):
@@ -88,14 +102,29 @@ class MetricsTest(unittest.TestCase):
         ]
         r = metrics.score([c], events)["overall"]
         self.assertEqual(r["words"], 2)
-        self.assertEqual(r["top3_at_k"]["0"]["hit"], 1)  # güzel
+        # @0 yalnızca bağlamı olan kelimelerde (güzel) sayılır
+        self.assertEqual(r["top3_at_k"]["0"], {"value": 1.0, "hit": 1, "total": 1})
         self.assertEqual(r["top3_at_k"]["1"], {"value": 0.5, "hit": 1, "total": 2})
+        # @3: "cok" tamamen yazılmış, sayılmaz; "guz" sayılır
+        self.assertEqual(r["top3_at_k"]["3"]["total"], 1)
         self.assertEqual(r["next_word_top1"]["hit"], 1)
         # çok: 1 tuş + dokunma = 2 (tam 4); güzel: @0 isabet → 1 (tam 6)
         self.assertEqual(r["ksr"]["used"], 3)
         self.assertEqual(r["ksr"]["full"], 10)
         self.assertEqual(r["deasciify_accuracy"], {"value": 0.5, "hit": 1, "total": 2})
         self.assertEqual(r["false_autocorrect_rate"]["total"], 0)
+
+    def test_echo_keyboard_gets_no_free_hits(self):
+        c = case(text="ne su çok")
+        events = []
+        for i, w in enumerate(c.target_words):
+            for k in range(len(w) + 1):
+                events.append(Event("c1", i, w[:k], [w[:k]] if k else []))
+            events.append(Event("c1", i, w, [w], commit=True))
+        r = metrics.score([c], events)["overall"]
+        for k in ("0", "1", "2", "3"):
+            self.assertEqual(r["top3_at_k"][k]["hit"], 0, k)
+        self.assertEqual(r["ksr"]["value"], 0.0)
 
     def test_false_autocorrect(self):
         c = case(text="kar yağıyor", input=None)

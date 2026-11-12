@@ -17,8 +17,8 @@
 {"id": "ksoz-0004", "text": "Pamuk'u veterinere götürdüm, aşısı yapıldı.", "category": "kullanici_sozlugu", "tags": ["ek", "kesme"], "user_words": ["Pamuk"], "source": "elle", "license": "CC0-1.0"}
 {"id": "aksan-0001", "text": "Şimdi çıkıyorum, çok az kaldı.", "input": "Simdi cikiyorum, cok az kaldi.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
 {"id": "aksan-0002", "text": "Güzel bir gün geçirdik.", "input": "Guzel bir gun gecirdik.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
-{"id": "aksan-0003", "text": "Öğlen yemeğe çıkalım mı?", "input": "Oglen yemege cikalim mi?", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
-{"id": "aksan-0004", "text": "Şu an müsait değilim, sonra konuşuruz.", "input": "Su an musait degilim, sonra konusuruz.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0003", "text": "Öğlen yemeğe çıkalım mı?", "input": "Oglen yemege cikalim mi?", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "mi → mı: yazılan biçim de geçerli bir kelime", "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0004", "text": "Şu an müsait değilim, sonra konuşuruz.", "input": "Su an musait degilim, sonra konusuruz.", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "Su → Şu: yazılan biçim de geçerli bir kelime", "source": "elle", "license": "CC0-1.0"}
 {"id": "aksan-0005", "text": "Işıkları kapatmayı unutma.", "input": "Isiklari kapatmayi unutma.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
 {"id": "aksan-0006", "text": "Bu elbise çok şık olmuş.", "input": "Bu elbise cok sik olmus.", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "sik → şık/sık belirsizliği; bağlam gerekir", "source": "elle", "license": "CC0-1.0"}
 {"id": "aksan-0007", "text": "Sık sık buraya gelir misin?", "input": "Sik sik buraya gelir misin?", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "aynı ascii biçim, farklı hedef (bkz. aksan-0006)", "source": "elle", "license": "CC0-1.0"}
@@ -28,3 +28,4 @@
 {"id": "dogru-0003", "text": "Kar yağıyor, yollar kapalı.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "note": "'kar' → 'kâr' yapılmamalı", "source": "elle", "license": "CC0-1.0"}
 {"id": "dogru-0004", "text": "Sinema bileti aldım.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "source": "elle", "license": "CC0-1.0"}
 {"id": "dogru-0005", "text": "Masada iki bardak çay var.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0009", "text": "Irmak kenarında ılık bir akşam.", "input": "irmak kenarinda ilik bir aksam.", "category": "sohbet", "tags": ["deasciify", "buyuk_I"], "note": "küçük i ile yazılmış Irmak / ılık", "source": "elle", "license": "CC0-1.0"}

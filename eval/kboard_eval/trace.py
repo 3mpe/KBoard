@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterable
@@ -39,7 +40,7 @@ def read(path: Path) -> list[Event]:
         for lineno, line in enumerate(fh, 1):
             if not line.strip():
                 continue
-            obj = json.loads(line)
+            obj = json.loads(unicodedata.normalize("NFC", line))
             try:
                 events.append(Event(
                     case_id=obj["case_id"], word_index=int(obj["word_index"]), typed=obj["typed"],

@@ -23,10 +23,8 @@ def simulate_case(case: Case, predictor: Predictor) -> Iterator[Event]:
             pred = predictor.predict(context, prefix)
             ms = (time.perf_counter() - t0) * 1000
             yield Event(case.id, i, prefix, pred.suggestions, None, False, round(ms, 3))
-        t0 = time.perf_counter()
-        pred = predictor.predict(context, typed_word)
-        ms = (time.perf_counter() - t0) * 1000
-        yield Event(case.id, i, typed_word, pred.suggestions, pred.autocorrect, True, round(ms, 3))
+        # Commit olayı son önek çağrısının aynısıdır; gecikmeyi iki kez saymamak için kaydedilmez.
+        yield Event(case.id, i, typed_word, pred.suggestions, pred.autocorrect, True, None)
 
 
 def simulate(cases: list[Case], predictor: Predictor) -> Iterator[Event]:
