@@ -52,6 +52,7 @@ class Layer:
     keys: dict[str, tuple[int, int]]
     enter: list[str] = field(default_factory=list)   # ana katmandan bu katmana geçiren tuş adları
     exit: list[str] = field(default_factory=list)    # bu katmandan ana katmana dönüş (boş: kendiliğinden döner)
+    auto_exit: str = ""                               # yazılınca klavyenin kendiliğinden ana katmana döndüğü karakterler
 
 
 @dataclass
@@ -79,10 +80,11 @@ class KeyMap:
     strip_bounds: tuple[int, int, int, int] | None = None
     strip_resource_id: str | None = None   # düzenli ifade; verilirse yalnızca eşleşen düğümler öneridir
     max_suggestions: int = 5
+    strip_order: str = "left-to-right"     # "center-first": ortadaki öneri ilk (HeliBoard/Gboard en olasıyı ortaya koyar)
     settle_ms: int = 150                   # dokunuştan sonra ilk okumadan önce bekleme
     stable_reads: int = 2                  # ardışık aynı okuma sayısı (öneri çubuğu durulsun)
     max_reads: int = 8
-    dump_command: str | None = None        # varsayılan: uiautomator dump + cat
+    dump_command: str | None = None        # varsayılan: uiautomator dump --windows, olmazsa düz dump
 
     @classmethod
     def from_dict(cls, data: dict) -> "KeyMap":
@@ -112,6 +114,7 @@ class KeyMap:
             strip_bounds=tuple(bounds) if bounds else None,
             strip_resource_id=strip.get("resource_id"),
             max_suggestions=int(strip.get("max", 5)),
+            strip_order=_strip_order(strip.get("order", "left-to-right")),
             settle_ms=int(data.get("settle_ms", 150)),
             stable_reads=int(data.get("stable_reads", 2)),
             max_reads=int(data.get("max_reads", 8)),
@@ -134,7 +137,8 @@ class KeyMap:
                 continue
             seq = [base.keys[k] for k in layer.enter]
             seq.append(layer.keys[ch])
-            seq.extend(layer.keys[k] for k in layer.exit)
+            if ch not in layer.auto_exit:
+                seq.extend(layer.keys[k] for k in layer.exit)
             return seq
         raise KeyError(ch)
 
@@ -146,6 +150,12 @@ class KeyMap:
             except KeyError:
                 missing.add(ch)
         return missing
+
+
+def _strip_order(value: str) -> str:
+    if value not in ("left-to-right", "center-first"):
+        raise ValueError(f"suggestion_strip.order: 'left-to-right' ya da 'center-first' olmalı, {value!r} verildi")
+    return value
 
 
 def _point(value, where: str) -> tuple[int, int]:
@@ -168,7 +178,7 @@ def _parse_layer(name: str, raw: dict, base: Layer | None) -> Layer:
             keys[ch] = (x0 + j * dx, y)
     for k, pos in (raw.get("keys") or {}).items():
         keys[k] = _point(pos, f"{name}.{k}")
-    return Layer(name, keys, list(raw.get("enter", [])), list(raw.get("exit", [])))
+    return Layer(name, keys, list(raw.get("enter", [])), list(raw.get("exit", [])), str(raw.get("auto_exit", "")))
 
 
 # --------------------------------------------------------------------------- ekran okuma
@@ -177,6 +187,7 @@ def _parse_layer(name: str, raw: dict, base: Layer | None) -> Layer:
 class Screen:
     suggestions: list[str]
     field_text: str | None   # odaktaki metin kutusu (bulunamazsa None)
+    keyboard_seen: bool = True  # dökümde klavye paketine ait düğüm var mı
 
 
 def _bounds(node: ET.Element) -> tuple[int, int, int, int] | None:
@@ -192,14 +203,17 @@ def _inside(inner: tuple[int, int, int, int], outer: tuple[int, int, int, int]) 
 def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
     """uiautomator XML'inden öneri çubuğunu ve odaktaki metin kutusunu çıkarır.
 
-    Öneri: klavye paketine ait, metni (yoksa content-desc'i) dolu, öneri çubuğu sınırları
-    içinde (ve verilmişse resource-id'si eşleşen) düğümler; soldan sağa sıralı. Gboard ve
-    HeliBoard ortadaki öneriyi en olası olarak gösterir; sıra burada ekrandaki gibi bırakılır,
-    sıralamayı puanlayıcı değil klavye belirler.
+    Öneri: klavye paketine ait, metni dolu, öneri çubuğu sınırları içinde (ve verilmişse
+    resource-id'si eşleşen) düğümler. `content-desc` yalnızca `resource_id` süzgeci verilmişse
+    kullanılır; yoksa şeritteki menü/araç düğmelerinin açıklamaları öneri sanılırdı.
+    Sıra: `left-to-right` ekrandaki gibi; `center-first` şeridin ortasına en yakın öneri ilk,
+    sonra ortaya uzaklığa göre (soldaki önce). Puanlayıcı `suggestions[0]`'ı ilk-1 sayar.
+    Kök `<hierarchy>` (düz döküm) ya da `<displays>`/`<window>` (`--windows`) olabilir.
     """
     start = xml_text.find("<?xml")
-    if start < 0:
-        start = xml_text.find("<hierarchy")
+    for tag in ("<displays", "<hierarchy"):
+        if start < 0:
+            start = xml_text.find(tag)
     if start < 0:
         raise DriveError("uiautomator çıktısında XML yok: " + xml_text[:200])
     end = xml_text.rfind(">")
@@ -209,17 +223,21 @@ def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
         raise DriveError(f"uiautomator XML'i okunamadı: {exc}") from None
 
     rid = re.compile(keymap.strip_resource_id) if keymap.strip_resource_id else None
-    found: list[tuple[int, int, str]] = []
+    found: list[tuple[int, int, int, str]] = []
     field_text: str | None = None
+    keyboard_seen = False
     for node in root.iter("node"):
         pkg = node.get("package", "")
+        if pkg == keymap.package:
+            keyboard_seen = True
         if pkg != keymap.package:
             if field_text is None and node.get("focused") == "true" and "EditText" in node.get("class", ""):
                 text = node.get("text", "")
                 # Bazı Android sürümleri boş kutuda ipucunu (hint) metin olarak verir.
                 field_text = "" if text and text == node.get("hint") else nfc(text)
             continue
-        label = nfc((node.get("text") or node.get("content-desc") or "").strip())
+        label = node.get("text") or (node.get("content-desc") if rid else "") or ""
+        label = nfc(label.strip())
         if not label:
             continue
         b = _bounds(node)
@@ -227,13 +245,17 @@ def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
             continue
         if rid and not rid.search(node.get("resource-id", "")):
             continue
-        found.append((b[0], b[1], label))
+        found.append((b[0], b[1], (b[0] + b[2]) // 2, label))
     found.sort()
+    if keymap.strip_order == "center-first" and found:
+        sb = keymap.strip_bounds
+        mid = (sb[0] + sb[2]) / 2 if sb else (min(f[0] for f in found) + max(f[2] for f in found)) / 2
+        found.sort(key=lambda f: (abs(f[2] - mid), f[2]))
     suggestions: list[str] = []
-    for _, _, label in found:
+    for _, _, _, label in found:
         if label not in suggestions:
             suggestions.append(label)
-    return Screen(suggestions[: keymap.max_suggestions], field_text)
+    return Screen(suggestions[: keymap.max_suggestions], field_text, keyboard_seen)
 
 
 # --------------------------------------------------------------------------- adb
@@ -271,9 +293,36 @@ class Adb:
         if codes:
             self.shell("input", "keyevent", *map(str, codes))
 
+    _plain_dump = False  # `--windows` desteklenmiyorsa düz döküme düşülür (bir kez karar verilir)
+
     def dump_ui(self, command: str | None = None) -> str:
-        cmd = command or f"uiautomator dump {DEFAULT_DUMP_PATH} >/dev/null && cat {DEFAULT_DUMP_PATH}"
-        return self.exec_out(cmd)
+        """Ekran XML'i. Düz `uiautomator dump` yalnızca etkin (uygulama) penceresini döker, klavye
+        ayrı bir penceredir; bu yüzden önce `--windows` (Android 11+) denenir."""
+        if command:
+            return self.exec_out(command)
+        if not self._plain_dump:
+            out = ""
+            try:
+                out = self.exec_out(_dump_cmd("--windows "))
+            except DriveError:
+                pass
+            if _has_xml(out):
+                return out
+            plain = self.exec_out(_dump_cmd(""))
+            # Düz döküm çalışıyorsa `--windows` desteklenmiyordur; yalnızca o zaman kalıcı olarak düşülür.
+            # İkisi de başarısızsa geçici bir hatadır (ör. "could not get idle state").
+            if _has_xml(plain):
+                self._plain_dump = True
+            return plain
+        return self.exec_out(_dump_cmd(""))
+
+
+def _has_xml(out: str) -> bool:
+    return "<displays" in out or "<hierarchy" in out
+
+
+def _dump_cmd(flags: str) -> str:
+    return f"uiautomator dump {flags}{DEFAULT_DUMP_PATH} >/dev/null && cat {DEFAULT_DUMP_PATH}"
 
 
 KEYCODE_MOVE_END = 123
@@ -312,8 +361,8 @@ class DeviceDriver:
         last: Screen | None = None
         same = 0
         for _ in range(max(km.max_reads, 1)):
-            screen = parse_dump(self.adb.dump_ui(km.dump_command), km)
-            if ready is not None and screen.field_text is not None and not ready(screen):
+            screen = self._dump()
+            if ready is not None and (screen.field_text is None or not ready(screen)):
                 last, same = screen, 0
                 continue
             same = same + 1 if (same and screen == last) else 1
@@ -323,8 +372,26 @@ class DeviceDriver:
         self.log(f"uyarı: ekran {km.max_reads} okumada durulmadı, son okuma kullanıldı")
         return last  # type: ignore[return-value]
 
+    def _dump(self, retries: int = 3) -> Screen:
+        """Tek okuma; geçici uiautomator hataları ("could not get idle state", boş çıktı) yeniden denenir."""
+        for attempt in range(retries):
+            try:
+                screen = parse_dump(self.adb.dump_ui(self.keymap.dump_command), self.keymap)
+                break
+            except DriveError as exc:
+                if attempt == retries - 1:
+                    raise
+                self.log(f"uyarı: ekran okunamadı, yeniden deneniyor ({exc})")
+                self.sleep(0.5)
+        if not screen.keyboard_seen:
+            raise DriveError(
+                f"dökümde klavye paketi ({self.keymap.package}) yok: klavye açık değil ya da bu Android "
+                "sürümünde uiautomator klavye penceresini dökmüyor (OQ-1 yedek yolları)"
+            )
+        return screen
+
     def clear_field(self) -> None:
-        screen = parse_dump(self.adb.dump_ui(self.keymap.dump_command), self.keymap)
+        screen = self._dump()
         if screen.field_text is None:
             raise DriveError("odakta metin kutusu bulunamadı; cihazda boş bir metin kutusu açıp odaklayın")
         if screen.field_text:
@@ -336,8 +403,10 @@ class DeviceDriver:
             self.adb.tap(x, y)
 
     def _check_field(self, screen: Screen, expected: str, where: str) -> None:
-        if not self.verify_field or screen.field_text is None:
+        if not self.verify_field:
             return
+        if screen.field_text is None:
+            raise DriveError(f"{where}: odaktaki metin kutusu kayboldu")
         if _same_text(screen.field_text) != _same_text(expected):
             raise DriveError(
                 f"{where}: metin kutusunda {screen.field_text!r} var, {expected!r} bekleniyordu "
@@ -366,7 +435,11 @@ class DeviceDriver:
                 yield Event(case.id, i, prefix, list(screen.suggestions), None, False, None)
             before = screen
             self.type_char(" ")
-            screen = self.read_screen(lambda sc, typed=before.field_text: sc.field_text != typed)
+            screen = self.read_screen(
+                lambda sc, typed=before.field_text: sc.field_text != typed and sc.field_text[-1:].isspace())
+            if self.verify_field and (screen.field_text is None or screen.field_text == before.field_text
+                                      or not screen.field_text[-1:].isspace()):
+                raise DriveError(f"{case.id} kelime {i}: boşluk işlenmedi, metin kutusunda {screen.field_text!r}")
             result = self._committed_word(screen, committed, word)
             yield Event(case.id, i, word, list(before.suggestions), result, True, None)
             committed = (screen.field_text if screen.field_text is not None else committed + word + " ")
@@ -375,12 +448,13 @@ class DeviceDriver:
         """Boşluktan sonra metin kutusuna geçen kelime; yazılanla aynıysa None."""
         if screen.field_text is None:
             return None
-        tail = screen.field_text[len(committed):] if screen.field_text.startswith(committed) else screen.field_text
-        words = tokenize(tail)
-        if not words:
+        text = screen.field_text
+        tail = text[len(committed):] if text.startswith(committed) else (tokenize(text) or [""])[-1]
+        tail = tail.strip()
+        if not tail:
             return None
-        word = words[-1]
-        return None if word == typed else word
+        # Düzeltme birden çok kelime olabilir ("birşey" → "bir şey"); tamamı alınır.
+        return None if _same_text(tail) == _same_text(typed) else tail
 
     def drive(self, cases: list[Case]) -> Iterator[Event]:
         for n, case in enumerate(cases, 1):

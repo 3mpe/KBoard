@@ -29,7 +29,7 @@
       "keys": {"abc": [100, 2225]}
     }
   },
-  "suggestion_strip": {"bounds": [0, 1560, 1080, 1680], "max": 3},
+  "suggestion_strip": {"bounds": [0, 1560, 1080, 1680], "max": 3, "order": "center-first"},
   "settle_ms": 150,
   "stable_reads": 2,
   "max_reads": 8

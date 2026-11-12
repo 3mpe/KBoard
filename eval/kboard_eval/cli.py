@@ -78,16 +78,19 @@ def _cmd_drive(args) -> int:
     driver = adb_driver.DeviceDriver(
         adb_driver.Adb(args.serial, adb=args.adb), keymap, verify_field=not args.no_verify)
     runs = []
-    for r in range(args.runs):
+    for r in range(1, args.runs + 1):
         if args.runs > 1:
-            print(f"koşu {r + 1}/{args.runs}", file=sys.stderr)
+            print(f"koşu {r}/{args.runs}", file=sys.stderr)
         try:
-            runs.append(list(driver.drive(cases)))
+            events = list(driver.drive(cases))
         except adb_driver.DriveError as exc:
             print(f"HATA {exc}", file=sys.stderr)
             return 2
-    trace.write(runs[0], args.output)
-    print(f"iz yazıldı: {args.output} ({len(cases)} vaka, {len(skipped)} atlandı)")
+        # Her koşu bitince yazılır: sonraki koşudaki bir hata öncekileri kaybettirmez.
+        out = args.output if r == 1 else args.output.with_name(f"{args.output.stem}.run{r}{args.output.suffix}")
+        trace.write(events, out)
+        print(f"iz yazıldı: {out} ({len(cases)} vaka, {len(skipped)} atlandı)")
+        runs.append(events)
     status = 0
     for r, other in enumerate(runs[1:], 2):
         diffs = adb_driver.diff_traces(runs[0], other)

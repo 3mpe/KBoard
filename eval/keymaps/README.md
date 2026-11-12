@@ -47,7 +47,8 @@ olduğu, klavye + cihaz başına bir JSON dosyasında tutulur.
                 "rows": [{"y": 1745, "x0": 54, "dx": 108, "keys": "1234567890"}],
                 "keys": {"abc": [100, 2225]}}
   },
-  "suggestion_strip": {"bounds": [0, 1560, 1080, 1680], "resource_id": "suggestion", "max": 3},
+  "suggestion_strip": {"bounds": [0, 1560, 1080, 1680], "resource_id": "suggestion", "max": 3,
+                       "order": "center-first"},
   "settle_ms": 150, "stable_reads": 2, "max_reads": 8
 }
 ```
@@ -59,17 +60,22 @@ olduğu, klavye + cihaz başına bir JSON dosyasında tutulur.
 | `rows` | eşit aralıklı tuş sırası: i'inci karakter `(x0 + i·dx, y)` noktasında |
 | `keys` | tek tek tuşlar `[x, y]`; adlı tuşlar (`shift`, `abc`…) katman geçişinde kullanılır |
 | `enter` / `exit` | katmana ana katmandan giriş ve ana katmana dönüş tuşları. `shift` gibi bir harften sonra kendiliğinden dönen katmanda `exit` boş bırakılır |
+| `auto_exit` | (isteğe bağlı) bu katmanda yazılınca klavyenin kendiliğinden harflere döndüğü karakterler (ör. `"'"`); bunlardan sonra `exit` tuşlarına basılmaz |
 | `from_base: "upper"` | katman, ana katmandaki harflerin Türkçe büyük hâlleri (`i→İ`, `ı→I`), aynı konumlarda |
 | `suggestion_strip.bounds` | öneri çubuğu `[x1, y1, x2, y2]`; merkezi bu alanda olan düğümler öneri sayılır |
-| `suggestion_strip.resource_id` | (isteğe bağlı) düzenli ifade; yalnızca eşleşen `resource-id`'ler öneri sayılır |
+| `suggestion_strip.resource_id` | (isteğe bağlı) düzenli ifade; yalnızca eşleşen `resource-id`'ler öneri sayılır. Öneri metni `text`'ten okunur; `content-desc` (Gboard) yalnızca bu süzgeç verilmişse kullanılır, yoksa şeritteki menü düğmeleri öneri sanılırdı |
+| `suggestion_strip.order` | `left-to-right` (varsayılan) ya da `center-first`: ortadaki öneri ilk, sonra ortaya yakınlığa göre. HeliBoard ve Gboard en olası öneriyi ortaya koyar; puanlayıcı ilk öneriyi ilk-1 saydığı için bu klavyelerde `center-first` kullanın |
 | `suggestion_strip.max` | en fazla kaç öneri okunur (soldan sağa) |
 | `settle_ms`, `stable_reads`, `max_reads` | dokunuştan sonra bekleme; öneri çubuğu art arda `stable_reads` okumada aynı kalınca durulmuş sayılır |
-| `dump_command` | (isteğe bağlı) ekranı XML olarak basan `adb exec-out` komutu; varsayılan `uiautomator dump` + `cat` |
+| `dump_command` | (isteğe bağlı) ekranı XML olarak basan `adb exec-out` komutu. Varsayılan: önce `uiautomator dump --windows` (Android 11+, klavye penceresi dahil), desteklenmiyorsa düz `uiautomator dump` |
 
 ## Sınırlar
 
-- Klavye penceresi bazı Android sürümlerinde `uiautomator dump` çıktısına girmez. O durumda
-  öneri listesi boş gelir; OQ-1'deki yedek yollar geçerlidir ([OPEN_QUESTIONS](../../docs/OPEN_QUESTIONS.md)).
+- Düz `uiautomator dump` yalnızca uygulama penceresini döker; klavye ayrı bir penceredir. Sürücü bu
+  yüzden `--windows` dener. Dökümde klavye paketine ait hiç düğüm yoksa sessizce boş iz üretmek yerine
+  hata verir; o zaman OQ-1'deki yedek yollar geçerlidir ([OPEN_QUESTIONS](../../docs/OPEN_QUESTIONS.md)).
+- Her koşu bitince yazılır: `-o out/t.jsonl --runs 3` → `t.jsonl`, `t.run2.jsonl`, `t.run3.jsonl`.
+- Geçici `uiautomator` hataları (boş çıktı, "could not get idle state") üç kez denenir.
 - `user_words` (kişisel sözlük) cihaza eklenmez; bu vakalar uyarıyla yazılır, istenirse
   `--skip-user-words` ile atlanır.
 - `latency_ms` yazılmaz: `uiautomator dump` yüzlerce ms sürdüğü için ölçüm anlamsız olur.

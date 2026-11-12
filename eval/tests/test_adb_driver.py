@@ -57,8 +57,15 @@ class FakeDevice:
     gösterir; dokunuşu geç işleyen telefonu taklit eder.
     """
 
-    def __init__(self, keymap: KeyMap, predictor: FrequencyPredictor, noisy_reads: int = 0):
+    def __init__(self, keymap: KeyMap, predictor: FrequencyPredictor, noisy_reads: int = 0,
+                 center_first: bool = False, corrections: dict | None = None):
         self.km = keymap
+        self.center_first = center_first
+        self.corrections = corrections or {}
+        self.keyboard_visible = True
+        self.drop_space = False
+        self.windows_supported = True
+        self.fail_dumps = 0
         self.pred = predictor
         self.text = ""
         self.layer = "base"
@@ -77,7 +84,12 @@ class FakeDevice:
         if rest[:1] == ["-s"]:
             rest = rest[2:]
         if rest[0] == "exec-out":
-            return self._dump()
+            if "--windows" in rest[1] and not self.windows_supported:
+                raise DriveError("Unknown option: --windows")
+            if self.fail_dumps:
+                self.fail_dumps -= 1
+                return "ERROR: could not get idle state."
+            return self._dump(windows="--windows" in rest[1])
         assert rest[0] == "shell", rest
         cmd = rest[1:]
         if cmd[:2] == ["input", "tap"]:
@@ -103,8 +115,10 @@ class FakeDevice:
             self.layer = "base"
             return
         if key == "space":
+            if self.drop_space:
+                return
             words = self.text.split(" ")
-            ac = self.pred.predict([], words[-1]).autocorrect
+            ac = self.corrections.get(words[-1]) or self.pred.predict([], words[-1]).autocorrect
             if ac:
                 words[-1] = ac
             self.text = " ".join(words) + " "
@@ -123,31 +137,38 @@ class FakeDevice:
         self._shown = (self.text, self._suggest())
         self._pending_noise = self.noisy_reads
 
-    def _dump(self):
+    def _dump(self, windows: bool):
         text, shown = self._shown
         if self._pending_noise:
             self._pending_noise -= 1
             text, shown = self._stale
+        # center_first: en olası öneri ortada (slot 1), ikinci solda, üçüncü sağda
+        slots = [1, 0, 2] if self.center_first else [0, 1, 2]
         nodes = "".join(
-            f'<node index="{i}" text={quoteattr(s)} resource-id="" class="android.widget.TextView" '
-            f'package="{PKG}" content-desc="" bounds="[{i * 100},0][{i * 100 + 100},50]" />'
+            f'<node index="{slots[i]}" text={quoteattr(s)} resource-id="" class="android.widget.TextView" '
+            f'package="{PKG}" content-desc="" bounds="[{slots[i] * 100},0][{slots[i] * 100 + 100},50]" />'
             for i, s in enumerate(shown)
         )
-        return (
-            "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\">"
-            f'<node index="0" text={quoteattr(text)} class="android.widget.EditText" package="org.example.notes" '
-            'content-desc="" focused="true" bounds="[0,500][300,900]" />'
-            f'<node index="0" text="" class="android.widget.FrameLayout" package="{PKG}" content-desc="" '
-            f'bounds="[0,0][300,450]">{nodes}</node></hierarchy>'
-        )
+        app = (f'<node index="0" text={quoteattr(text)} class="android.widget.EditText" package="org.example.notes" '
+               'content-desc="" focused="true" bounds="[0,500][300,900]" />')
+        ime = (f'<node index="0" text="" class="android.widget.FrameLayout" package="{PKG}" content-desc="" '
+               f'bounds="[0,0][300,450]">{nodes}</node>')
+        head = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>"
+        if windows:
+            win = '<window index="{0}" type="{1}"><hierarchy rotation="0">{2}</hierarchy></window>'
+            body = win.format(0, "APPLICATION", app) + (win.format(1, "INPUT_METHOD", ime) if self.keyboard_visible else "")
+            return f'{head}<displays><display id="0">{body}</display></displays>'
+        # düz döküm yalnızca uygulama penceresini içerir
+        return f'{head}<hierarchy rotation="0">{app}</hierarchy>'
 
 
 WORDS = {"çok": 50, "çocuk": 30, "güzel": 40, "gün": 35, "bir": 60, "ben": 55, "Kadıköy'de": 5, "3'te": 4}
 
 
-def make_driver(noisy_reads=0, **kw):
-    km = KeyMap.from_dict(KEYMAP)
-    dev = FakeDevice(km, FrequencyPredictor(WORDS), noisy_reads=noisy_reads)
+def make_driver(noisy_reads=0, keymap=None, center_first=False, corrections=None, **kw):
+    km = KeyMap.from_dict(keymap or KEYMAP)
+    dev = FakeDevice(km, FrequencyPredictor(WORDS), noisy_reads=noisy_reads,
+                     center_first=center_first, corrections=corrections)
     log = []
     drv = DeviceDriver(Adb(runner=dev), km, sleep=lambda s: None, log=log.append, **kw)
     return drv, dev, log
@@ -165,6 +186,12 @@ class KeyMapTest(unittest.TestCase):
         # sembol katmanı: gir, tuş, çık
         self.assertEqual(km.taps_for("3"), [(5, 400), (50, 100), (5, 400)])
         self.assertEqual(km.missing_chars("Kadıköy'de 3'te #"), {"#"})
+        # auto_exit: bu karakterden sonra klavye kendiliğinden harflere döner, "abc"ye basılmaz
+        auto = json.loads(json.dumps(KEYMAP))
+        auto["layers"]["symbols"]["auto_exit"] = "'"
+        km2 = KeyMap.from_dict(auto)
+        self.assertEqual(km2.taps_for("'"), [(5, 400), (10, 200)])
+        self.assertEqual(km2.taps_for("3"), [(5, 400), (50, 100), (5, 400)])
 
     def test_tr_upper(self):
         self.assertEqual(tr_upper("ışık istanbul"), "IŞIK İSTANBUL")
@@ -196,8 +223,8 @@ class ParseDumpTest(unittest.TestCase):
         km = KeyMap.from_dict({**KEYMAP, "package": "com.google.android.inputmethod.latin",
                                "suggestion_strip": {"bounds": [0, 1540, 1080, 1680]}})
         xml = (DATA / "gboard_cok.xml").read_text(encoding="utf-8")
-        # resource-id süzgeci yoksa menü düğmesi de öneri sanılır
-        self.assertEqual(parse_dump(xml, km).suggestions[0], "Menüyü aç")
+        # resource-id süzgeci yoksa content-desc kullanılmaz (menü düğmesi öneri sanılmasın)
+        self.assertEqual(parse_dump(xml, km).suggestions, [])
         km.strip_resource_id = "candidate"
         s = parse_dump(xml, km)
         self.assertEqual(s.suggestions, ["cok", "çok", "çocuk"])
@@ -205,7 +232,16 @@ class ParseDumpTest(unittest.TestCase):
 
     def test_hint_is_empty_field(self):
         s = parse_dump((DATA / "empty_hint.xml").read_text(encoding="utf-8"), KeyMap.from_dict(KEYMAP))
-        self.assertEqual(s, type(s)([], ""))
+        self.assertEqual(s, type(s)([], "", keyboard_seen=False))
+
+    def test_windows_dump_center_first(self):
+        km = KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"bounds": [0, 1560, 1080, 1680], "order": "center-first"}})
+        s = parse_dump((DATA / "windows_heliboard.xml").read_text(encoding="utf-8"), km)
+        self.assertEqual(s.suggestions, ["Kadıköy", "Kadın", "Kadar"])
+        self.assertEqual(s.field_text, "Kad")
+        self.assertTrue(s.keyboard_seen)
+        with self.assertRaisesRegex(ValueError, "order"):
+            KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"order": "rastgele"}})
 
     def test_leading_noise_and_garbage(self):
         km = KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"bounds": [0, 1560, 1080, 1680]}})
@@ -229,6 +265,53 @@ class DriverTest(unittest.TestCase):
         taps = [c for c in dev.calls if c[2:4] == ["input", "tap"]]
         self.assertEqual(len(taps), len("çok güzel ") + len("Ben Kadikoy'de 3'te guzel ") + 2 + 3 * 2)  # B ve K için shift; 3 ve iki kesme için sembol katmanına gir/çık
         self.assertFalse([c for c in dev.calls if "text" in c[2:4]], "input text kullanılmamalı")
+
+    def test_center_first_strip_matches_simulation(self):
+        """Klavye en olası öneriyi ortaya koyuyor; `center-first` ile iz yine simulate sırasında."""
+        km = {**KEYMAP, "suggestion_strip": {"bounds": [0, 0, 300, 50], "max": 3, "order": "center-first"}}
+        cases = [case(), case(id="c2", text="bir gün")]
+        got = list(make_driver(keymap=km, center_first=True)[0].drive(cases))
+        want = list(simulate(cases, FrequencyPredictor(WORDS, max_suggestions=3)))
+        for ev in want:
+            ev.latency_ms = None
+        self.assertEqual(got, want)
+        # left-to-right okunursa sıra bozulur (ilk-1 yanlış ölçülür)
+        wrong = list(make_driver(center_first=True)[0].drive(cases))
+        self.assertNotEqual(wrong, want)
+
+    def test_multiword_autocorrect(self):
+        drv, dev, _ = make_driver(corrections={"birsey": "bir şey"})
+        commits = [e for e in drv.drive([case(text="birşey güzel", input="birsey guzel")]) if e.commit]
+        self.assertEqual(commits[0].autocorrect, "bir şey")
+        self.assertEqual(commits[1].autocorrect, "güzel")
+
+    def test_missed_space_detected(self):
+        drv, dev, _ = make_driver()
+        dev.drop_space = True
+        with self.assertRaisesRegex(DriveError, "boşluk işlenmedi"):
+            list(drv.drive([case()]))
+
+    def test_keyboard_window_missing_detected(self):
+        drv, dev, _ = make_driver()
+        dev.keyboard_visible = False
+        with self.assertRaisesRegex(DriveError, "klavye paketi"):
+            list(drv.drive([case()]))
+
+    def test_plain_dump_fallback_without_keyboard_window(self):
+        """--windows desteklenmiyorsa düz döküme düşülür; o da klavyeyi göstermezse sessizce boş iz değil, hata."""
+        drv, dev, _ = make_driver()
+        dev.windows_supported = False
+        with self.assertRaisesRegex(DriveError, "klavye paketi"):
+            list(drv.drive([case()]))
+        self.assertTrue(drv.adb._plain_dump)
+
+    def test_transient_dump_failure_retried(self):
+        drv, dev, log = make_driver()
+        stable = list(make_driver()[0].drive([case()]))
+        dev.fail_dumps = 2
+        self.assertEqual(list(drv.drive([case()])), stable)
+        self.assertTrue(any("yeniden deneniyor" in m for m in log))
+        self.assertFalse(drv.adb._plain_dump)  # geçici hata --windows'u kalıcı olarak kapatmamalı
 
     def test_commit_reports_autocorrect(self):
         drv, _, _ = make_driver()
@@ -308,6 +391,7 @@ class CliDriveTest(unittest.TestCase):
             self.assertEqual(rc, 0, err.getvalue())
             self.assertIn("atlandı: c (user_words)", err.getvalue())
             self.assertIn("2 koşu aynı izi verdi", so.getvalue())
+            self.assertEqual(trace.read(tmp / "trace.run2.jsonl"), trace.read(out))
             events = trace.read(out)
             self.assertEqual({e.case_id for e in events}, {"a", "b"})
             self.assertTrue(all(c[1:3] == ["-s", "EMU1"] for c in dev.calls))
