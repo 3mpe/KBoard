@@ -13,15 +13,20 @@ import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
+import android.app.Application
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+// Düz Application: HeliBoard'un App.onCreate'i her testte arka plan coroutine'leri başlatıyor; testler
+// arasında bunlar ölen iş parçacıklarıyla takılıyor (#30). Bu testler App'e ihtiyaç duymaz.
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class KBoardSuggestionsTest {
     private val tr = Locale.forLanguageTag("tr")
     private var lastQuery: Query? = null
