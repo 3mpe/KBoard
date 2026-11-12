@@ -27,7 +27,7 @@ jobs:
         run: python -m kboard_eval validate testset/*.jsonl
 
   android:
-    name: Debug APK + birim testler
+    name: Debug APK + izin kontrolü
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,15 +53,31 @@ jobs:
             echo "::error::İzin listesinde olmayan izin(ler): $extra"
             exit 1
           fi
-      - name: Birim testler
-        run: ./gradlew testRunTestsUnitTest
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: KBoard-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-      - uses: actions/upload-artifact@v4
-        if: failure()
+
+  upstream-tests:
+    # HeliBoard'un kendi birim test paketi. Bizim CI'ımızda henüz hiç yeşil olmadı
+    # (bkz. #30). Zorunlu kontrol DEĞİL, ama başarısız olursa kırmızı görünür:
+    # continue-on-error yok, hiçbir test atlanmıyor. Yeşile dönünce zorunlu yapılacak.
+    name: Upstream birim testleri (zorunlu değil)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          name: reports
-          path: '*/build/reports'
+          java-version: '21' # Robolectric, SDK 35+ için Java 21 istiyor
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Birim testler (runTests varyantı)
+        run: ./gradlew --init-script .github/ci/test-logging.init.gradle testRunTestsUnitTest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: upstream-test-reports
+          path: app/build/reports/tests
