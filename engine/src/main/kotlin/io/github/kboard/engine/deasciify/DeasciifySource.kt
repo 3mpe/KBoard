@@ -124,6 +124,17 @@ class DeasciifySource(
         return best.word
     }
 
+    /**
+     * Yazılan kelime olduğu gibi korunmalı mı? Koruma listesindeki ("sus", "koy") ya da kullanıcı
+     * sözlüğündeki bir kelimeyse true. Uygulama bunu HeliBoard'un kendi otomatik düzeltmesini
+     * engellemek için kullanır.
+     */
+    fun isProtected(typed: String): Boolean {
+        val lowerTyped = TurkishText.lower(typed)
+        val self = exactForms(typed).firstOrNull { TurkishText.lower(it.word) == lowerTyped } ?: return false
+        return self.user || self.flags and DeasciifyIndex.FLAG_PROTECTED != 0
+    }
+
     /** Katlanmış biçimi tam [typed] olan, aksanlarla uyumlu biçimler; sıklığa göre azalan. */
     private fun exactForms(typed: String): List<Form> {
         val key = TurkishText.fold(typed)

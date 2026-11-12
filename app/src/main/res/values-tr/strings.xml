@@ -555,4 +555,7 @@
     <string name="gesture_data_add_key">Araç çubuğu tuşunu ekle</string>
     <string name="gesture_data_no_known_dict">Arka planda toplama, yalnızca yerleşik olan veya &lt;a href=%s&gt;sözlük deposunda&lt;/a&gt; bulunan sözlüklerden gelen kelimeleri toplar. Şu anda etkin böyle bir sözlüğün yok.</string>
     <string name="gesture_data_swipe_o_scope">Hareket verilerini görselleştirme aracı: &lt;a href=%s&gt;Swipe-O-Scope&lt;/a&gt;</string>
+    <!-- KBOARD -->
+    <string name="kboard_deasciify">Türkçe aksan düzeltme</string>
+    <string name="kboard_deasciify_summary">Aksansız yazılan Türkçe harfleri öner ve otomatik düzelt (cok → çok)</string>
 </resources>

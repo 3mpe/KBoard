@@ -26,6 +26,7 @@ import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.utils.AutoCorrectionUtils
+import helium314.keyboard.kboard.KBoardSuggestions // KBOARD
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.BackgroundGatheringCache
 import helium314.keyboard.latin.utils.TextAtCursor
@@ -115,7 +116,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         val firstOccurrenceOfTypedWordInSuggestions = SuggestedWordInfo.removeDupsAndTypedWord(capitalizedTypedWord, suggestionsContainer)
         makeFirstTwoSuggestionsNonEmoji(suggestionsContainer)
 
-        val (allowsToBeAutoCorrected, hasAutoCorrection) = shouldBeAutoCorrected(
+        val heliBoardAutoCorrection = shouldBeAutoCorrected(
             trailingSingleQuotesCount,
             capitalizedTypedWord,
             suggestionsContainer.firstOrNull(),
@@ -131,6 +132,13 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             suggestionResults,
             firstOccurrenceOfTypedWordInSuggestions,
             typedWordFirstOccurrenceWordInfo
+        )
+        // KBOARD: Türkçe aksan düzeltici otomatik düzeltme kararına katılır (cok → çok, "sus" korunur)
+        val (allowsToBeAutoCorrected, hasAutoCorrection) = KBoardSuggestions.mergeAutoCorrection(
+            capitalizedTypedWord.dropLast(trailingSingleQuotesCount), suggestionsContainer, mDictionaryFacilitator.mainLocale,
+            isCorrectionEnabled && wordComposer.isComposingWord && !wordComposer.hasDigits() && !wordComposer.isResumed
+                && !(wordComposer.isMostlyCaps && !wordComposer.isAllUpperCase),
+            heliBoardAutoCorrection
         )
         val typedWordInfo = SuggestedWordInfo(typedWordString, "", SuggestedWordInfo.MAX_SCORE,
             SuggestedWordInfo.KIND_TYPED, typedWordFirstOccurrenceWordInfo?.sourceDict ?: Dictionary.DICTIONARY_USER_TYPED,
