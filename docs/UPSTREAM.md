@@ -14,6 +14,12 @@
   tutulur.
 - HeliBoard'un [`AI_USAGE.md`](../AI_USAGE.md) kuralı gereği upstream'e PR veya issue açılmaz.
 
+## Merge kuralı
+
+Upstream'i içeren PR'lar (ilk alma ve her senkron) **"Create a merge commit"** ile birleştirilir,
+asla squash veya rebase ile değil. Squash, upstream ebeveynini düşürür ve sonraki her
+`git merge upstream/main` yeniden ilişkisiz geçmiş gibi çakışır.
+
 ## HeliBoard'dan kaldırılanlar
 
 - `.github/` altındaki HeliBoard'a özgü dosyalar (bağış bağlantısı, issue/tartışma şablonları,

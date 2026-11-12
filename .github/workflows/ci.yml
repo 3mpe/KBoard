@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   eval:
@@ -39,20 +39,24 @@ jobs:
       - run: chmod +x gradlew
       - name: Debug APK
         run: ./gradlew assembleDebug
-      - name: İnternet izni olmamalı
+      - name: İzin listesi (ağ izni olmamalı)
         run: |
           set -euo pipefail
           apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
           aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
-          perms=$("$aapt2" dump permissions "$apk")
-          echo "$perms"
-          if echo "$perms" | grep -E "android.permission.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE)"; then
-            echo "::error::APK ağ izni içeriyor. KBoard tamamen çevrimdışı olmalı."
+          "$aapt2" dump permissions "$apk" | tee perms.txt
+          # İzin listesi: bunların dışındaki her izin (özellikle ağ) CI'ı kırar.
+          allowed='READ_USER_DICTIONARY|WRITE_USER_DICTIONARY|RECEIVE_BOOT_COMPLETED|VIBRATE|READ_CONTACTS'
+          extra=$(grep -oE "uses-permission: name='[^']+'" perms.txt | sed -E "s/.*name='([^']+)'/\1/" \
+            | grep -vE "^android\.permission\.($allowed)$" | grep -vE "\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION$" || true)
+          if [ -n "$extra" ]; then
+            echo "::error::İzin listesinde olmayan izin(ler): $extra"
             exit 1
           fi
       - name: Birim testler
         run: ./gradlew testRunTestsUnitTest
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: KBoard-debug-apk
           path: app/build/outputs/apk/debug/*.apk
