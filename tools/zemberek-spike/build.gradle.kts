@@ -6,7 +6,9 @@ plugins {
 repositories {
     mavenCentral()
     // Zemberek-NLP Maven Central'da yok; yazarın kendi Maven deposu.
-    maven("https://raw.githubusercontent.com/ahmetaa/maven-repo/master")
+    maven("https://raw.githubusercontent.com/ahmetaa/maven-repo/master") {
+        content { includeGroup("zemberek-nlp") }
+    }
 }
 
 val zemberekVersion = "0.17.1"

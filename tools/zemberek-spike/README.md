@@ -26,22 +26,26 @@ gerçek bir soğuk açılıştır:
 | Ölçüm | Nasıl |
 |---|---|
 | Sözlük yükleme | `RootLexicon.getDefault()` süresi (gömülü `lexicon.bin` + sınıf yükleme) |
-| Morfoloji kurulum | `TurkishMorphology.builder().setLexicon(..).disableCache().build()` |
-| Tutulan yığın | Yükleme öncesi ve sonrası `System.gc()` sonrası kullanılan heap farkı |
-| En küçük `-Xmx` | 16–1024 MB arası ikili arama; yükleme + analiz OOM vermeden bitmeli |
-| 1000 kelime | `eval/testset/seed-v0.jsonl` cümlelerinden kelimeler, 1000'e tamamlanana dek döngü; önbellek kapalı. İlk geçiş (JIT soğuk) ve 5 sıcak geçişin en iyisi |
+| Morfoloji kurulum | `TurkishMorphology.builder().setLexicon(..).build()`; `build()` belirsizlik giderme modelini de yükler |
+| Tutulan yığın | Yükleme öncesi ve sonrası `System.gc()` sonrası kullanılan heap farkı; analizden sonra bir kez daha |
+| En küçük `-Xmx` | 16–1024 MB arası ikili arama, 1 MB çözünürlük; yalnız `OutOfMemoryError` başarısızlık sayılır, başka hata ölçümü durdurur |
+| Kelime analizi | `eval/testset/seed-v0.jsonl` cümlelerinden kelimeler: önce her farklı kelime bir kez (gerçekten soğuk), sonra 1000'e tamamlanana dek döngüyle ilk geçiş ve 5 sıcak geçişin en iyisi |
 | Boyut | Sınıf yolundaki jar'lar ve morfoloji jar'ının içindeki büyük kaynaklar |
 
+Kurulumlar: **varsayılan** (`createWithDefaults()` ile aynı, önbellek kapalı), **modelsiz**
+(belirsizlik giderme modeli yerine boş bir çözümleyici; kelime analizi aynı) ve **önbellek açık**.
 Üç yürütme modu karşılaştırılır: varsayılan JIT, yalnız C1 (`-XX:TieredStopAtLevel=1`) ve
 yorumlayıcı (`-Xint`, kötümser üst sınır). Android ART bunların hiçbiriyle aynı değildir; masaüstü
 sayıları cihaz için yalnızca **mertebe** verir.
 
 ## Sınırlar
 
-- Kelime listesi küçük (120 farklı kelime). Önbellek kapalı olduğu için tekrar sonucu
-  bozmaz, ama nadir/uzun çekimler az temsil edilir.
+- Kelime listesi küçük (120 farklı kelime). Önbellek kapalıyken tekrar sonucu bozmaz, ama
+  nadir/uzun çekimler az temsil edilir. Önbellek açık satırının analiz süreleri tekrar
+  nedeniyle anlamsız derecede iyidir; o satır yalnız bellek için okunmalı.
 - "Tutulan yığın" Java nesne yığınıdır; işlemin toplam bellek kullanımı (PSS/RSS) daha yüksektir.
-- Belirsizlik giderme modeli (`tr/ambiguity/model-compressed`, ~1,7 MB) yalnızca
-  `TurkishMorphology` ile yüklenmez; ölçüme dahil değildir.
+- Önbellek açıkken yükleme hemen sonrası ölçülen yığın yarışlıdır (statik önbellek arka
+  planda dolar); "kullanım sonrası" değeri daha güvenilirdir.
+- `-Xint` satırları tek koşudur.
 
 Son çalıştırmanın ham çıktısı: [sonuclar/masaustu-2026-11-12.md](sonuclar/masaustu-2026-11-12.md).
