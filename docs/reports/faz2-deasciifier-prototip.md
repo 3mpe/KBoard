@@ -80,6 +80,33 @@ Tamamlama metrikleri (İlk-3, KSR) `freq` öngörücüyle aynı düzeyde: veri a
 sıklık. KSR'deki 0,7 puanlık düşüş, tam eşleşen aksanlı biçimlerin tamamlama yerlerini almasından.
 Sonraki kelime bu kaynağın işi değil (@0 = %0).
 
+## Sonuçlar (seed-v0 tam set, 327 vaka, 1250 kelime) — 2026-11-12
+
+Test seti 31 vakadan 327 vakaya büyüdükten sonra yeniden ölçüldü. Kod ve eşikler değiştirilmedi.
+**Ayrılmış alt küme:** ayarlama sırasında hiç görülmemiş 297 vaka (ilk 30 vaka hariç). Koruma listesi
+ve eşikler yalnızca ilk 30 vakayla ayarlandığı için aşırı uyumun ölçüsü bu satırlardır.
+
+| Öngörücü | Küme | İlk-3 @1 | @3 | KSR | Aksan düzeltme (n) | Yanlış oto. düzeltme (n) | Gecikme p95 |
+|---|---|---|---|---|---|---|---|
+| Faz 1.7 motoru (kaynak yok) | 327 | %0,0 | %0,0 | %0,0 | %0,0 (289) | %0,0 (904) | 0,50 ms |
+| `freq` öngörücü | 327 | %7,9 | %26,7 | %18,1 | %67,5 (289) | %0,2 (904) | 113 ms |
+| **DeasciifySource (varsayılan)** | 327 | %8,2 | %24,7 | %17,1 | **%78,2** (289) | **%0,1** (904) | 1,37 ms |
+| DeasciifySource, margin off | 327 | %8,2 | %24,7 | %17,1 | %69,6 (289) | %0,1 (904) | 0,95 ms |
+| **DeasciifySource (varsayılan)** | ayrılmış 297 | %8,3 | %24,9 | %17,1 | **%77,7** (265) | **%0,1** (796) | – |
+| `freq` öngörücü | ayrılmış 297 | %7,9 | %27,0 | %18,1 | %67,5 (265) | %0,3 (796) | – |
+
+Yorum: ayrılmış kümede aksan doğruluğu %82,1'den %77,7'ye iniyor; düşüş küçük, aşırı uyum belirtisi
+sınırlı. `freq` öngörücüsüne göre fark +10 puan ve korunuyor. Etiket kırılımı: `belirsiz` %62,3 (61),
+`buyuk_I` %73,3 (15), `kesme` %91,7 (12), `oto_duzeltme_tuzagi` yanlış düzeltme %0,9 (115).
+
+Tek yanlış oto. düzeltme: `copunu` → `çöpünü` (hedef `copunu`, "cop" = polis sopası). İncelenen diğer
+kaçaklar:
+- `sik`→sık (hedef şık), `uc`→uç (hedef üç), `Basim`→Basım (hedef Başım), `Isim`→İsim (hedef İşim).
+  Hepsi bağlam ister (Faz 4).
+- `kalmayacagim` → `Kalmayacağım`: sözlükte kelime yalnız büyük harfle var (cümle başı artığı). Faz 4
+  korpusundan sözlük yeniden üretilince düzelir; o zamana kadar bilinen sınırlama.
+- `Tesekurler` → `Teşekürler`: yazım hatası + aksan birlikte; yazım düzeltme kapsam dışı.
+
 ## Boyut, yükleme, bellek, gecikme
 
 `DeasciifyTool bench` (OpenJDK 21, 4 çekirdekli konteyner; Android değil):
