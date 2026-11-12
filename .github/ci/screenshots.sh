@@ -12,6 +12,7 @@ pkg=$(adb shell pm list packages | tr -d '\r' | sed 's/^package://' | grep -m1 k
 kboard="$pkg/helium314.keyboard.latin.LatinIME"
 log "paket: $pkg, IME: $kboard"
 adb shell settings put secure show_ime_with_hard_keyboard 1
+sleep 20 # açılış sonrası sistem arayüzü otursun (ilk koşuda "System UI isn't responding" çıktı)
 for i in 1 2 3 4 5; do
   adb shell ime list -a -s | tr -d '\r' | grep -q "^$kboard$" && break
   sleep 2
@@ -26,11 +27,18 @@ open_field() {
   adb shell am force-stop com.android.contacts >/dev/null 2>&1
   adb shell am start -W -a android.intent.action.INSERT -t vnd.android.cursor.dir/contact >/dev/null
   sleep 4
-  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-  b=$(adb shell cat /sdcard/ui.xml | tr '>' '\n' | grep -m1 'class="android.widget.EditText"' \
-      | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
+  adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 # "yanıt vermiyor" kutusu
+  b=""
+  for i in 1 2 3; do
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+    b=$(adb shell cat /sdcard/ui.xml 2>/dev/null | tr '>' '\n' | grep -m1 'class="android.widget.EditText"' \
+        | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
+    [ -n "$b" ] && break
+    sleep 2
+  done
+  [ -n "$b" ] || b="137 803 933 952" # pixel_6, kişi formunun "Ad" alanı
   log "metin alanı: $b"
-  if [ -n "$b" ]; then set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); fi
+  set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
   sleep 3
   adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId" | head -2
 }
