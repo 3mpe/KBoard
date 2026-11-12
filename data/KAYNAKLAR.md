@@ -36,7 +36,7 @@ esas alınır: model dosyası kaynakların lisans yükümlülüklerini (atıf, S
 | [ParlaMint-TR 5.0](https://www.clarin.si/repository/xmlui/handle/11356/2004) | TBMM konuşma tutanakları; konuşma dili ama resmi | ~283 MB arşiv (kelime sayısı ölçülecek) | CC BY 4.0 | Atıf | İkincil, düşük ağırlık |
 | [Türkçe Vikipedi](https://dumps.wikimedia.org/trwiki/) | Ansiklopedik, resmi; kelime dağarcığı ve genel sıklık için | Ölçülecek | CC BY-SA ([tr sayfası](https://tr.wikipedia.org/wiki/Vikipedi:Telif_hakları) 3.0 + GFDL diyor; Wikimedia kullanım koşulları 2023'ten beri 4.0) | Atıf + ShareAlike | İkincil, düşük ağırlık |
 | [GlobalVoices (OPUS)](https://opus.nlpl.eu/GlobalVoices/) tr | Yurttaş gazeteciliği; yarı resmi | Küçük (ölçülecek) | CC BY 3.0 (indirmede doğrulanacak) | Atıf | İkincil, düşük ağırlık |
-| Elle yazılmış sohbet cümleleri (`data/sohbet/`, ileride) | Mesajlaşma dili (kısaltma, "tmm", "nbr" vb.) | Hedef birkaç bin | CC0-1.0 (proje) | Yok | Birincil, sohbet açığını kapatır |
+| Elle yazılmış sohbet cümleleri (`data/sohbet/`, #26) | Mesajlaşma dili (kısaltma, "tmm", "nbr" vb.) | Hedef birkaç bin | CC0-1.0 (proje) | Yok | Birincil, sohbet açığını kapatır |
 | Kullanıcının kendi yazdıkları | Gerçek sohbet dili | Cihazda | Kişisel veri; **cihazdan çıkmaz, depoya girmez** | Yok | Cihazda kişisel öğrenme |
 
 Ön işleme: Tatoeba büyük ölçüde çeviri cümlesidir ve kalıp tekrarları, "Tom", "Mary" gibi isimler
