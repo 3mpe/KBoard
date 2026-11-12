@@ -30,6 +30,9 @@ object KBoardSuggestions {
      */
     private const val SCORE_SCALE = 1_000_000
 
+    /** Bu sözlüklerden gelen yazılan kelime kullanıcınındır; motor düzeltmez. */
+    private val USER_SOURCES = setOf(Dictionary.TYPE_USER, Dictionary.TYPE_CONTACTS, Dictionary.TYPE_USER_HISTORY)
+
     /** Kişisel sözlük kelimelerinin çekimleri (her zaman açık; sözlük boşken aday üretmez). */
     private val userMorph = UserWordSuffixSource()
 
@@ -84,21 +87,31 @@ object KBoardSuggestions {
      * düzeltme kelimesini [suggestions] listesinin başına taşır.
      *
      * [correctionAllowed]: kullanıcı otomatik düzeltmeyi açmış, kelime yazılıyor, rakam içermiyor ve
-     * öneriler geri çağrılmamış (HeliBoard'un aynı ön koşulları).
+     * öneriler geri çağrılmamış (HeliBoard'un aynı ön koşulları; `hasAtLeastOneInitializedMainDictionary`
+     * ve imlecin kelime ortasında olması kontrol edilmez: motor kendi sözlüğünü taşır).
+     *
+     * [typedWordSourceType]: yazılan kelime HeliBoard'un hangi sözlüğünde bulunduysa onun türü.
+     * Kişisel sözlük, kişiler ve kullanıcı geçmişindeki kelimeler (ör. düzeltmeyi geri alıp yeniden
+     * yazılan kelime) asla düzeltilmez.
+     *
+     * [trailingQuotes]: yazılanın sonundaki tek tırnak sayısı; düzeltme kelimesine geri eklenir.
      */
     fun mergeAutoCorrection(
         typedWord: String, suggestions: MutableList<SuggestedWordInfo>, locale: Locale,
         correctionAllowed: Boolean, base: Pair<Boolean, Boolean>,
+        typedWordSourceType: String? = null, trailingQuotes: Int = 0,
     ): Pair<Boolean, Boolean> {
         if (!correctionAllowed) return base
+        if (locale.language == "tr" && typedWordSourceType in USER_SOURCES) return base.first to false
         return when (val ac = autoCorrection(typedWord, locale)) {
             AutoCorrection.NoOpinion -> base
             AutoCorrection.Keep -> base.first to false
             is AutoCorrection.Replace -> {
-                val target = TurkishText.lower(ac.word)
+                val word = ac.word + "'".repeat(trailingQuotes)
+                val target = TurkishText.lower(word)
                 val i = suggestions.indexOfFirst { TurkishText.lower(it.word) == target }
                 val info = if (i >= 0) suggestions.removeAt(i) else SuggestedWordInfo(
-                    ac.word, "", SCORE_SCALE, SuggestedWordInfo.KIND_CORRECTION or
+                    word, "", SCORE_SCALE, SuggestedWordInfo.KIND_CORRECTION or
                         SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION,
                     dictionaries.getOrPut(locale) { KBoardDictionary(locale) },
                     SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE

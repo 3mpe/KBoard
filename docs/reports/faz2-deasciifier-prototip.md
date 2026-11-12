@@ -123,9 +123,8 @@ kaçaklar:
 Birim testindeki 200 bin kayıtlı sentetik dizinde p95 0,1 ms (eşik 5 ms). Isınmamış JIT'te ilk
 sorgular (ör. ilk kesme işaretli sorgu) birkaç ms sürebiliyor.
 
-Android notu: `read()` dosyanın tamamını bir `ByteArray`'e alır; Faz 2'nin uygulama tarafında aynı
-biçim `assets`'ten `MappedByteBuffer` ile okunarak yığın dışında tutulabilir (biçim buna uygun,
-kod değişikliği gerektirir).
+Android notu: uygulama dizini `ByteArray` olarak okur (~3,2 MB yığın). `MappedByteBuffer` ile yığın
+dışında tutmak mümkün (biçim buna uygun); ölçülen bir sorun çıkarsa yapılacak.
 
 ## Sınırlamalar ve açık işler
 
@@ -138,4 +137,6 @@ kod değişikliği gerektirir).
    "doğrulanacak".
 4. Kesme işaretli kelimelerde ek seçimi yalnızca ilk ünlüye bakıyor; ünsüz benzeşmesi
    (`'de`/`'te`) yazılana bırakılıyor.
-5. Uygulamaya (`app/`) bağlanmadı; Android'de yükleme ve gecikme ölçülmedi.
+5. Uygulamaya bağlandı (PR #32): dizin derlemede üretilip `assets/kboard/` altına girer,
+   `KBoardEngineLoader` açılışta arka planda yükler, otomatik düzeltme kararı `Suggest` kancasında
+   motorla birleşir. Android'de yükleme süresi ve gecikme henüz ölçülmedi (cihaz gerekir).
