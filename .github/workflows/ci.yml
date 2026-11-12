@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21' # Robolectric, SDK 35+ için Java 21 istiyor
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
