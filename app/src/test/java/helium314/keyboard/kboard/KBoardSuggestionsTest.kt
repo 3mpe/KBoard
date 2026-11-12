@@ -109,8 +109,12 @@ class KBoardSuggestionsTest {
         assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("sus", mutableListOf(info("süs")), tr, true, true to true))
 
         // kişisel sözlük / geçmiş / kişilerdeki kelime düzeltilmez (geri alınan düzeltme tekrarlanmaz)
-        for (type in listOf(Dictionary.TYPE_USER, Dictionary.TYPE_USER_HISTORY, Dictionary.TYPE_CONTACTS))
-            assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, true to true, type))
+        for (type in listOf(Dictionary.TYPE_USER, Dictionary.TYPE_USER_HISTORY, Dictionary.TYPE_CONTACTS)) {
+            val l = mutableListOf(info("cop"))
+            assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", l, tr, true, heli, type))
+            assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", l, tr, true, true to true, type))
+            assertEquals(listOf("cop"), l.map { it.word }) // liste değişmez
+        }
         assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, heli, Dictionary.TYPE_MAIN))
 
         // sondaki tırnak korunur: cok' → çok'
@@ -122,6 +126,14 @@ class KBoardSuggestionsTest {
         assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("merhba", mutableListOf(info("merhaba")), tr, true, true to true))
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, false, heli))
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), Locale.ENGLISH, true, heli))
+    }
+
+    @Test
+    fun toggleOffLeavesHeliBoardAlone() {
+        KBoardSuggestions.setDeasciifier(null)
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, true to true, Dictionary.TYPE_USER_HISTORY))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("sus", mutableListOf(), tr, true, true to true))
+        assertEquals(false to false, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, false to false))
     }
 
     @Test
