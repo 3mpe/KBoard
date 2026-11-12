@@ -1,0 +1,2 @@
+--------- beginning of main
+11-12 21:38:32.440  6082  6109 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 423 ms

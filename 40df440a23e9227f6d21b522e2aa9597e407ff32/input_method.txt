@@ -1,0 +1,599 @@
+Current Input Method Manager state:
+  Input Methods: mMethodMapUpdateCount=12
+  InputMethod #0:
+    mId=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME mSettingsActivityName=com.google.android.apps.inputmethod.latin.preference.SettingsActivity mIsVrOnly=false mSupportsSwitchingToNextInputMethod=true mInlineSuggestionsEnabled=true mSupportsInlineSuggestionsWithTouchExploration=false mSuppressesSpellChecker=false mShowInInputMethodPicker=true mSupportsStylusHandwriting=false mStylusHandwritingSettingsActivityAttr=null
+    mIsDefaultResId=0x0
+    Service:
+      priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+      ServiceInfo:
+        name=com.android.inputmethod.latin.LatinIME
+        packageName=com.google.android.inputmethod.latin
+        labelRes=0x7f1402e5 nonLocalizedLabel=null icon=0x0 banner=0x0
+        enabled=true exported=true directBootAware=true
+        permission=android.permission.BIND_INPUT_METHOD
+        flags=0x0
+        ApplicationInfo:
+          name=com.google.android.apps.inputmethod.latin.ImeLatinApp
+          packageName=com.google.android.inputmethod.latin
+          labelRes=0x7f1402e5 nonLocalizedLabel=null icon=0x7f110003 banner=0x0
+          className=com.google.android.apps.inputmethod.latin.ImeLatinApp
+          processName=com.google.android.inputmethod.latin
+          taskAffinity=null
+          uid=10149 flags=0x20cabe45 privateFlags=0x8c081110 theme=0x7f150013
+          requiresSmallestWidthDp=0 compatibleWidthLimitDp=0 largestWidthLimitDp=0
+          sourceDir=/product/app/LatinIMEGooglePrebuilt/LatinIMEGooglePrebuilt.apk
+          resourceDirs=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          overlayPaths=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          seinfo=default:targetSdkVersion=33
+          seinfoUser=:complete
+          dataDir=/data/user/0/com.google.android.inputmethod.latin
+          deviceProtectedDataDir=/data/user_de/0/com.google.android.inputmethod.latin
+          credentialProtectedDataDir=/data/user/0/com.google.android.inputmethod.latin
+          sharedLibraryFiles=[/system_ext/framework/androidx.window.extensions.jar, /system_ext/framework/androidx.window.sidecar.jar]
+          enabled=true minSdkVersion=23 targetSdkVersion=33 versionCode=99078520 targetSandboxVersion=1
+          supportsRtl=true
+          fullBackupContent=true
+          crossProfile=true
+          HiddenApiEnforcementPolicy=2
+          usesNonSdkApi=false
+          allowsPlaybackCapture=true
+          nativeHeapZeroInitialized=0
+          enableOnBackInvokedCallback=false
+          createTimestamp=187800
+  InputMethod #1:
+    mId=com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService mSettingsActivityName=com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.ui.VoiceImeSettingsActivity mIsVrOnly=false mSupportsSwitchingToNextInputMethod=false mInlineSuggestionsEnabled=false mSupportsInlineSuggestionsWithTouchExploration=false mSuppressesSpellChecker=false mShowInInputMethodPicker=true mSupportsStylusHandwriting=false mStylusHandwritingSettingsActivityAttr=null
+    mIsDefaultResId=0x0
+    Service:
+      priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+      ServiceInfo:
+        name=com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService
+        packageName=com.google.android.tts
+        labelRes=0x7f14014b nonLocalizedLabel=null icon=0x0 banner=0x0
+        enabled=true exported=true directBootAware=false
+        permission=android.permission.BIND_INPUT_METHOD
+        flags=0x0
+        ApplicationInfo:
+          name=com.google.android.apps.speech.tts.googletts.GoogleTTSRoot_Application
+          packageName=com.google.android.tts
+          labelRes=0x7f14002a nonLocalizedLabel=null icon=0x7f110001 banner=0x0
+          className=com.google.android.apps.speech.tts.googletts.GoogleTTSRoot_Application
+          processName=com.google.android.tts
+          taskAffinity=null
+          uid=10147 flags=0x24cbbe45 privateFlags=0x8c081100 theme=0x7f150225
+          requiresSmallestWidthDp=0 compatibleWidthLimitDp=0 largestWidthLimitDp=0
+          sourceDir=/product/app/GoogleTTS/GoogleTTS.apk
+          resourceDirs=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          overlayPaths=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          seinfo=default:targetSdkVersion=33
+          seinfoUser=:complete
+          dataDir=/data/user/0/com.google.android.tts
+          deviceProtectedDataDir=/data/user_de/0/com.google.android.tts
+          credentialProtectedDataDir=/data/user/0/com.google.android.tts
+          sharedLibraryFiles=[/system_ext/framework/androidx.window.extensions.jar, /system_ext/framework/androidx.window.sidecar.jar]
+          enabled=true minSdkVersion=26 targetSdkVersion=33 versionCode=210411863 targetSandboxVersion=1
+          supportsRtl=true
+          fullBackupContent=@xml/2132213763
+          dataExtractionRules=@xml/2132213764
+          crossProfile=false
+          HiddenApiEnforcementPolicy=2
+          usesNonSdkApi=false
+          allowsPlaybackCapture=true
+          nativeHeapZeroInitialized=0
+          enableOnBackInvokedCallback=false
+          createTimestamp=187800
+  InputMethod #2:
+    mId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME mSettingsActivityName=helium314.keyboard.settings.SettingsActivity mIsVrOnly=false mSupportsSwitchingToNextInputMethod=true mInlineSuggestionsEnabled=true mSupportsInlineSuggestionsWithTouchExploration=false mSuppressesSpellChecker=false mShowInInputMethodPicker=true mSupportsStylusHandwriting=false mStylusHandwritingSettingsActivityAttr=null
+    mIsDefaultResId=0x7f050005
+    Service:
+      priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+      ServiceInfo:
+        name=helium314.keyboard.latin.LatinIME
+        packageName=io.github.kboard.tr.debug
+        labelRes=0x7f0e008c nonLocalizedLabel=null icon=0x0 banner=0x0
+        enabled=true exported=true directBootAware=true
+        permission=android.permission.BIND_INPUT_METHOD
+        flags=0x0
+        ApplicationInfo:
+          name=helium314.keyboard.latin.App
+          packageName=io.github.kboard.tr.debug
+          labelRes=0x7f0e008c nonLocalizedLabel=null icon=0x7f0d0001 banner=0x0
+          className=helium314.keyboard.latin.App
+          processName=io.github.kboard.tr.debug
+          taskAffinity=io.github.kboard.tr.debug
+          uid=10192 flags=0x30e8be46 privateFlags=0x8c001100 theme=0x0
+          requiresSmallestWidthDp=0 compatibleWidthLimitDp=0 largestWidthLimitDp=0
+          sourceDir=/data/app/~~xCcH970LTFd-ecVyPBG9UQ==/io.github.kboard.tr.debug-gbx8hORjivv9uyQ_hrRM0A==/base.apk
+          resourceDirs=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          overlayPaths=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          seinfo=default:targetSdkVersion=37
+          seinfoUser=:complete
+          dataDir=/data/user/0/io.github.kboard.tr.debug
+          deviceProtectedDataDir=/data/user_de/0/io.github.kboard.tr.debug
+          credentialProtectedDataDir=/data/user/0/io.github.kboard.tr.debug
+          enabled=true minSdkVersion=21 targetSdkVersion=37 versionCode=4300 targetSandboxVersion=1
+          supportsRtl=true
+          fullBackupContent=true
+          crossProfile=false
+          HiddenApiEnforcementPolicy=2
+          usesNonSdkApi=false
+          allowsPlaybackCapture=true
+          nativeHeapZeroInitialized=0
+          localeConfigRes=0x7f110005
+          enableOnBackInvokedCallback=true
+          createTimestamp=187800
+  Clients:
+  Client ClientState{161fd5a mUid=1000 mPid=553 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@f867b8b
+    fallbackInputConnection=RemoteInputConnectionImpl{connection=android.view.inputmethod.BaseInputConnection@e692468 finished=false mParentInputMethodManager.isActive()=false mServedView=null}
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{89029ed mUid=10169 mPid=1224 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@c4c6081
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@6b29526
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=SessionState{uid 10169 pid 1224 method 1520e1 session 809be06 channel ClientState{89029ed mUid=10169 mPid=1224 mSelfReportedDisplayId=0} (server)}
+  Client ClientState{c5d83bd mUid=10149 mPid=1627 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@322ddb2
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@f10d103
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{b49c6d2 mUid=10154 mPid=6951 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@6f1f0c0
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@de31f9
+    sessionRequested=false
+    sessionRequestedForAccessibility=true
+    curSession=SessionState{uid 10154 pid 6951 method 1520e1 session 16b553e channel ClientState{b49c6d2 mUid=10154 mPid=6951 mSelfReportedDisplayId=0} (server)}
+  Client ClientState{e457a5f mUid=10084 mPid=1748 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@3583cac
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@8166d75
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{464710a mUid=10132 mPid=1974 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@f15d7b
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@9627798
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{2afecc7 mUid=1000 mPid=5993 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@7f6a2f4
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@661ea1d
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{33e59b6 mUid=10178 mPid=935 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@6ed6bf1
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@76093d6
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{c73b492 mUid=10192 mPid=6082 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@9348e63
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@254fa60
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{cd37544 mUid=10168 mPid=934 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@a5bd62d
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@82a1762
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  mCurMethodId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME
+  mCurClient=ClientState{b49c6d2 mUid=10154 mPid=6951 mSelfReportedDisplayId=0} mCurSeq=18
+  mCurPerceptible=true
+  mCurFocusedWindow=android.os.BinderProxy@3ec0b10 softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE client=ClientState{b49c6d2 mUid=10154 mPid=6951 mSelfReportedDisplayId=0}
+  mCurId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME mHaveConnection=true mBoundToMethod=true mVisibleBound=true
+  mCurToken=android.os.Binder@b3d6965
+  mCurTokenDisplayId=0
+  mCurHostInputToken=android.os.BinderProxy@220112
+  mCurIntent=Intent { act=android.view.InputMethod cmp=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME (has extras) }
+  mCurMethod=com.android.server.inputmethod.IInputMethodInvoker@47f5c8c
+  mEnabledSession=SessionState{uid 10154 pid 6951 method 1520e1 session 16b553e channel ClientState{b49c6d2 mUid=10154 mPid=6951 mSelfReportedDisplayId=0} (server)}
+ mRequestedShowExplicitly=true mShowForced=false
+  mImeHiddenByDisplayPolicy=false
+  mInputShown=true
+  mInFullscreenMode=false
+  mSystemReady=true mInteractive=true
+  mSettingsObserver=SettingsObserver{mUserId=0 mRegistered=true mLastEnabled=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME:com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService:io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME}
+  mStylusIds=[4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  mSwitchingController:
+    mSwitchingAwareRotationList:
+      rank=0 item=ImeSubtypeListItem{mImeName=Gboard mSubtypeName=null mSubtypeId=0 mIsSystemLocale=false mIsSystemLanguage=false}
+      rank=1 item=ImeSubtypeListItem{mImeName=KBoard debug mSubtypeName= mSubtypeId=0 mIsSystemLocale=false mIsSystemLanguage=false}
+    mSwitchingUnawareRotationList:
+  mSettings:
+    mCurrentUserId=0
+    mCurrentProfileIds=[0]
+    mCopyOnWrite=false
+    mEnabledInputMethodsStrCache=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME:com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService:io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME
+  mStartInputHistory:
+   StartInput #0:
+    time=2026-11-12 21:36:14.775 (timestamp=68992) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@e415ca0 [com.android.settings] targetUserId=0 targetDisplayId=0 clientBindSeq=1
+    softInputMode=STATE_UNSPECIFIED|ADJUST_PAN
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #1:
+    time=2026-11-12 21:36:33.388 (timestamp=87604) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@c732660 [com.google.android.apps.nexuslauncher] targetUserId=0 targetDisplayId=0 clientBindSeq=2
+    softInputMode=STATE_UNSPECIFIED|ADJUST_NOTHING
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #2:
+    time=2026-11-12 21:36:56.502 (timestamp=110719) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@99e0600 [com.google.android.permissioncontroller] targetUserId=0 targetDisplayId=0 clientBindSeq=3
+    softInputMode=STATE_ALWAYS_HIDDEN|ADJUST_NOTHING|IS_FORWARD_NAVIGATION
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #3:
+    time=2026-11-12 21:36:57.631 (timestamp=111847) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@874f5ef [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=4
+    softInputMode=STATE_UNSPECIFIED|ADJUST_PAN|IS_FORWARD_NAVIGATION
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #4:
+    time=2026-11-12 21:37:00.877 (timestamp=115094) reason=WINDOW_FOCUS_GAIN restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@8a6398 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=5
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #5:
+    time=2026-11-12 21:37:13.031 (timestamp=127248) reason=CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@8a6398 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=6
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+    inputType=0x2061 imeOptions=0xa000005 fieldId=0x8 fieldName=null actionId=0 actionLabel=null
+   StartInput #6:
+    time=2026-11-12 21:37:50.332 (timestamp=164549) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@9f77041 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=7
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #7:
+    time=2026-11-12 21:37:52.479 (timestamp=166696) reason=SCHEDULED_CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@9f77041 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=8
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #8:
+    time=2026-11-12 21:38:13.056 (timestamp=187273) reason=CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@f8ee01a [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@9f77041 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=9
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x2061 imeOptions=0xa000005 fieldId=0x6 fieldName=null actionId=0 actionLabel=null
+   StartInput #9:
+    time=2026-11-12 21:38:35.893 (timestamp=210109) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@c9f8f59 [com.google.android.apps.nexuslauncher] targetUserId=0 targetDisplayId=0 clientBindSeq=12
+    softInputMode=STATE_UNSPECIFIED|ADJUST_NOTHING
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #10:
+    time=2026-11-12 21:38:42.488 (timestamp=216705) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@ff79523 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=13
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #11:
+    time=2026-11-12 21:38:43.960 (timestamp=218177) reason=SCHEDULED_CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@ff79523 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=14
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #12:
+    time=2026-11-12 21:38:50.305 (timestamp=224521) reason=CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@ff79523 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=15
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x2061 imeOptions=0xa000005 fieldId=0x6 fieldName=null actionId=0 actionLabel=null
+   StartInput #13:
+    time=2026-11-12 21:39:18.019 (timestamp=252236) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@3ec0b10 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=16
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #14:
+    time=2026-11-12 21:39:19.672 (timestamp=253889) reason=SCHEDULED_CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@3ec0b10 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=17
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #15:
+    time=2026-11-12 21:39:23.808 (timestamp=258025) reason=CHECK_FOCUS restarting=false
+    imeToken=android.os.Binder@b3d6965 [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@3ec0b10 [com.google.android.contacts] targetUserId=0 targetDisplayId=0 clientBindSeq=18
+    softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+    inputType=0x2061 imeOptions=0xa000005 fieldId=0x6 fieldName=null actionId=0 actionLabel=null
+  mSoftInputShowHideHistory:
+   SoftInputShowHideHistory #0:
+    time=2026-11-12 21:37:13.119 (timestamp=127336)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{32d2fa8 mUid=10154 mPid=3956 mSelfReportedDisplayId=0}
+    focusedWindowName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    requestWindowName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeControlTargetName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{2c99787 u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xffa1384
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+   SoftInputShowHideHistory #1:
+    time=2026-11-12 21:37:40.578 (timestamp=154794)
+    reason=HIDE_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{32d2fa8 mUid=10154 mPid=3956 mSelfReportedDisplayId=0}
+    focusedWindowName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    requestWindowName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeControlTargetName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{2c99787 u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xffa1384
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+   SoftInputShowHideHistory #2:
+    time=2026-11-12 21:37:43.309 (timestamp=157525)
+    reason=HIDE_REMOVE_CLIENT inFullscreenMode=false
+    requestClient=ClientState{32d2fa8 mUid=10154 mPid=3956 mSelfReportedDisplayId=0}
+    focusedWindowName=null
+    requestWindowName=null
+    imeControlTargetName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=2cbe93a com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{2c99787 u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xffa1384
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+   SoftInputShowHideHistory #3:
+    time=2026-11-12 21:38:13.097 (timestamp=187314)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{88ee94 mUid=10154 mPid=5388 mSelfReportedDisplayId=0}
+    focusedWindowName=5d4c9e6 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    requestWindowName=5d4c9e6 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeControlTargetName=5d4c9e6 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=5d4c9e6 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{10c2dc1 u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xd5a3fc1
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+   SoftInputShowHideHistory #4:
+    time=2026-11-12 21:38:50.320 (timestamp=224537)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{ff3ef64 mUid=10154 mPid=6199 mSelfReportedDisplayId=0}
+    focusedWindowName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    requestWindowName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeControlTargetName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{e90ad0b u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xa3057b4
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+   SoftInputShowHideHistory #5:
+    time=2026-11-12 21:39:09.353 (timestamp=243569)
+    reason=HIDE_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{ff3ef64 mUid=10154 mPid=6199 mSelfReportedDisplayId=0}
+    focusedWindowName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    requestWindowName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeControlTargetName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{e90ad0b u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xa3057b4
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+   SoftInputShowHideHistory #6:
+    time=2026-11-12 21:39:11.499 (timestamp=245716)
+    reason=HIDE_REMOVE_CLIENT inFullscreenMode=false
+    requestClient=ClientState{ff3ef64 mUid=10154 mPid=6199 mSelfReportedDisplayId=0}
+    focusedWindowName=null
+    requestWindowName=null
+    imeControlTargetName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=50954ce com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{e90ad0b u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xa3057b4
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+   SoftInputShowHideHistory #7:
+    time=2026-11-12 21:39:23.840 (timestamp=258057)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{b49c6d2 mUid=10154 mPid=6951 mSelfReportedDisplayId=0}
+    focusedWindowName=53fc609 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    requestWindowName=53fc609 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeControlTargetName=53fc609 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeTargetNameFromWm=53fc609 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{b95feb9 u0 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity)/@0xf03cb1d
+    editorInfo:  inputType=0 privateImeOptions=null fieldId (viewId)=0
+    focusedWindowSoftInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE
+  mImeTrackerService#History:
+   ImeTrackerService#History.mLiveEntries: 0 elements
+   ImeTrackerService#History.mEntries: 36 elements
+    #0 TYPE_HIDE - STATUS_CANCEL - com.android.settings:f42c90de (1ms):
+      startTime=2026-11-12 21:36:08.185 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #1 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:4dbc43b4 (43ms):
+      startTime=2026-11-12 21:36:23.344 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #2 TYPE_HIDE - STATUS_FAIL - com.google.android.googlequicksearchbox:search:7b202e99 (1ms):
+      startTime=2026-11-12 21:36:28.126 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #3 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:a0754121 (0ms):
+      startTime=2026-11-12 21:36:33.167 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #4 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:875fd60f (104ms):
+      startTime=2026-11-12 21:36:55.634 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #5 TYPE_HIDE - STATUS_CANCEL - com.google.android.permissioncontroller:f0f0fca9 (1ms):
+      startTime=2026-11-12 21:36:56.407 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_ALWAYS_HIDDEN_STATE PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #6 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:2896daa2 (0ms):
+      startTime=2026-11-12 21:36:57.608 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #7 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:c946706d (0ms):
+      startTime=2026-11-12 21:37:00.875 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #8 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:1543bfb6 (0ms):
+      startTime=2026-11-12 21:37:01.001 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #9 TYPE_SHOW - STATUS_SUCCESS - com.google.android.contacts:7a7ab83e (3251ms):
+      startTime=2026-11-12 21:37:13.086 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    #11 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:331236aa (47ms):
+      startTime=2026-11-12 21:37:42.721 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT_BY_INSETS_API PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=not set
+    #10 TYPE_HIDE - STATUS_FAIL - com.google.android.contacts:3ce92e12 (3166ms):
+      startTime=2026-11-12 21:37:40.468 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_SERVER_APPLY_IME_VISIBILITY
+      requestWindowName=4d4e7f1 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    #13 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:c26e607b (0ms):
+      startTime=2026-11-12 21:37:43.646 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT_BY_INSETS_API PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=not set
+    #12 TYPE_HIDE - STATUS_FAIL - com.google.android.contacts:aac823b4 (849ms):
+      startTime=2026-11-12 21:37:43.296 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_REMOVE_CLIENT PHASE_SERVER_APPLY_IME_VISIBILITY
+      requestWindowName=null
+    #14 TYPE_HIDE - STATUS_FAIL - com.google.android.googlequicksearchbox:search:ca80f21c (1ms):
+      startTime=2026-11-12 21:37:44.725 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #15 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:2eaa4efb (1ms):
+      startTime=2026-11-12 21:37:49.585 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #16 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:eac9bc52 (0ms):
+      startTime=2026-11-12 21:37:50.315 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #17 TYPE_SHOW - STATUS_SUCCESS - com.google.android.contacts:50a88241 (1696ms):
+      startTime=2026-11-12 21:38:13.072 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=5d4c9e6 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    #18 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:2f75626 (14ms):
+      startTime=2026-11-12 21:38:32.590 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #19 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:5f6fa20f (0ms):
+      startTime=2026-11-12 21:38:34.431 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_REMOVE_CLIENT PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #20 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:ffd52776 (10ms):
+      startTime=2026-11-12 21:38:35.022 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #21 TYPE_HIDE - STATUS_FAIL - com.google.android.googlequicksearchbox:search:d618542f (26ms):
+      startTime=2026-11-12 21:38:35.324 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #22 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:b4f5565b (0ms):
+      startTime=2026-11-12 21:38:35.860 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #23 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:8f836e9f (0ms):
+      startTime=2026-11-12 21:38:42.479 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #24 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:d76aba73 (10ms):
+      startTime=2026-11-12 21:38:42.944 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #25 TYPE_SHOW - STATUS_SUCCESS - com.google.android.contacts:83a456f3 (2273ms):
+      startTime=2026-11-12 21:38:50.311 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    #26 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:77bcffe6 (4ms):
+      startTime=2026-11-12 21:38:59.745 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #27 TYPE_HIDE - STATUS_FAIL - com.google.android.googlequicksearchbox:search:81a35b7d (4ms):
+      startTime=2026-11-12 21:38:59.895 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #29 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:4834b8c4 (1ms):
+      startTime=2026-11-12 21:39:10.441 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #30 TYPE_HIDE - STATUS_FAIL - com.google.android.googlequicksearchbox:search:ad39bd30 (9ms):
+      startTime=2026-11-12 21:39:10.639 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #31 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:8f97dcb1 (4ms):
+      startTime=2026-11-12 21:39:11.474 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #28 TYPE_HIDE - STATUS_FAIL - com.google.android.contacts:f25f5b06 (3336ms):
+      startTime=2026-11-12 21:39:09.348 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_SERVER_APPLY_IME_VISIBILITY
+      requestWindowName=7ed5a20 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+    #32 TYPE_HIDE - STATUS_FAIL - com.google.android.contacts:269a3b56 (1519ms):
+      startTime=2026-11-12 21:39:11.491 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_REMOVE_CLIENT PHASE_SERVER_APPLY_IME_VISIBILITY
+      requestWindowName=null
+    #33 TYPE_HIDE - STATUS_CANCEL - com.google.android.contacts:9528804c (0ms):
+      startTime=2026-11-12 21:39:18.009 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #34 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:db10752 (1ms):
+      startTime=2026-11-12 21:39:18.837 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #35 TYPE_SHOW - STATUS_SUCCESS - com.google.android.contacts:15acda76 (1234ms):
+      startTime=2026-11-12 21:39:23.823 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=53fc609 com.google.android.contacts/com.google.android.apps.contacts.editor.ContactEditorActivity
+ 
+Input method client state for android.view.inputmethod.InputMethodManager@b303780:
+  mFallbackInputConnection=RemoteInputConnectionImpl{connection=android.view.inputmethod.BaseInputConnection@170d1b9 finished=false mParentInputMethodManager.isActive()=true mServedView=null}
+  mActive=true mRestartOnNextWindowFocus=false mBindSequence=18 mCurImeId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME
+  mFullscreenMode=false
+  mCurMethod=com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy@b05d9fe
+  mCurRootView=android.view.ViewRootImpl@25d655f
+  mServedView=com.google.android.material.textfield.TextInputEditText{6f142bc VFED..CL. .F...... 0,0-796,149 #6 aid=1073741826}
+  mNextServedView=com.google.android.material.textfield.TextInputEditText{6f142bc VFED..CL. .F...... 0,0-796,149 #6 aid=1073741826}
+  mServedConnecting=false
+  mCurrentEditorInfo:
+    inputType=0x2061 imeOptions=0xa000005 privateImeOptions=com.google.android.inputmethod.latin.requestPhoneticOutput
+    actionLabel=null actionId=0
+    initialSelStart=0 initialSelEnd=0 initialToolType=1 initialCapsMode=0x2000
+    hintText=First name label=null
+    packageName=com.google.android.contacts autofillId=1073741826 fieldId=6 fieldName=null
+    hintLocales=null
+    supportedHandwritingGestureTypes=SELECT|SELECT_RANGE|INSERT|DELETE|DELETE_RANGE|REMOVE_SPACE|JOIN_OR_SPLIT
+    supportedHandwritingGesturePreviewTypes=SELECT|SELECT_RANGE|DELETE|DELETE_RANGE
+    contentMimeTypes=null
+  mServedInputConnection=RemoteInputConnectionImpl{connection=cll@d214bac finished=false mParentInputMethodManager.isActive()=true mServedView=com.google.android.material.textfield.TextInputEditText{6f142bc VFED..CL. .F...... 0,0-796,149 #6 aid=1073741826}}
+  mServedInputConnectionHandler=null
+  mCompletions=null
+  mCursorRect=Rect(0, 0 - 0, 0)
+  mCursorSelStart=5 mCursorSelEnd=5 mCursorCandStart=0 mCursorCandEnd=5
+ 
+Input method service state for helium314.keyboard.latin.LatinIME@182ac39:
+  mViewsCreated=true
+  mDecorViewVisible=true mDecorViewWasVisible=true mWindowVisible=true mInShowWindow=false
+  Configuration={1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h842dp 420dpi nrml long port night finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 128 - 1080, 2337) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.3 s.595 fontWeightAdjustment=0}
+  mToken=android.os.BinderProxy@655a492
+  mInputBinding=InputBinding{android.os.BinderProxy@ee29e90 / uid 10154 / pid 6951}
+  mInputConnection=RemoteInputConnection{idHash=#62d9389}
+  mStartedInputConnection=RemoteInputConnection{idHash=#951bf8e}
+  mInputStarted=true mInputViewStarted=true mCandidatesViewStarted=false
+  mInputEditorInfo:
+    inputType=0x2061 imeOptions=0xa000005 privateImeOptions=com.google.android.inputmethod.latin.requestPhoneticOutput
+    actionLabel=null actionId=0
+    initialSelStart=0 initialSelEnd=0 initialToolType=1 initialCapsMode=0x2000
+    hintText=First name label=null
+    packageName=com.google.android.contacts autofillId=1073741826 fieldId=6 fieldName=null
+    hintLocales=null
+    supportedHandwritingGestureTypes=SELECT|SELECT_RANGE|INSERT|DELETE|DELETE_RANGE|REMOVE_SPACE|JOIN_OR_SPLIT
+    supportedHandwritingGesturePreviewTypes=SELECT|SELECT_RANGE|DELETE|DELETE_RANGE
+    contentMimeTypes=null
+  mShowInputRequested=true mLastShowInputRequested=true mShowInputFlags=0x1
+  mCandidatesVisibility=4 mFullscreenApplied=true mIsFullscreen=false mExtractViewHidden=false
+  mExtractedText: null
+  mExtractedToken=0
+  mIsInputViewShown=true mStatusIcon=0
+Last computed insets:
+  contentTopInsets=1274 visibleTopInsets=1274 touchableInsets=3 touchableRegion=SkRegion((0,1274,1080,2246))
+ mSettingsObserver=SettingsObserver{mShowImeWithHardKeyboard=2}
+ mNavigationBarController={mImeDrawsImeNavBar=true mNavigationBarFrame=android.inputmethodservice.navigationbar.NavigationBarFrame{52825dc V.E...... ........ 0,2146-1080,2272} mShouldShowImeSwitcherWhenImeIsShown=true mAppearance=0x0 mDarkIntensity=0.0 mDrawLegacyNavigationBarBackground=false}
