@@ -1,0 +1,31 @@
+# Aksansız yazıldığında da geçerli ve yaygın olan kelimeler: DeasciifySource bunları boşlukta
+# hiçbir zaman aksanlı biçime çevirmez (öneri çubuğunda aksanlı biçim yine gösterilir).
+#
+# Liste, main_tr.dict'te aksanlı eşi kendisinden ≥30 sıklık puanı önde olan ~500 ASCII biçimin
+# en sık ~400'ü elle gözden geçirilerek çıkarıldı (bkz. docs/reports/faz2-deasciifier-prototip.md).
+# Lisans: CC0-1.0, elle yazıldı.
+ari       # arı
+bakir     # bakır
+buyur     # büyür
+dol       # döl
+ilik      # ılık
+iste      # işte
+kok       # kök
+koy       # köy
+koyun     # köyün
+kursun    # kurşun
+kus       # kuş
+mars      # marş
+mudur     # müdür
+obur      # öbür
+olum      # ölüm (konuşma dilinde "oğlum")
+seker     # şeker
+sinirli   # sınırlı
+sok       # şok
+sure      # süre
+sus       # süs
+tas       # taş
+turu      # türü
+tutun     # tütün
+yas       # yaş
+atik      # atık

@@ -22,6 +22,7 @@ eval/private/*
 !eval/private/README.md
 # ölçüm çıktıları
 eval/out/
+data/out/
 __pycache__/
 *.pyc
 # Android / Gradle (Faz 1)
