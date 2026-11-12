@@ -59,12 +59,14 @@ jobs:
   publish:
     name: Görüntüleri ci-screenshots dalına yaz
     needs: capture
-    if: always() && github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'workflow_dispatch'
+    # İptal edilen koşularda (yeni push) atlanır; capture başarısız olsa da çekilen görüntüler yazılır.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
+        continue-on-error: true # capture görüntü yükleyemeden düştüyse
         with:
           name: kboard-screenshots
           path: /tmp/shots
@@ -74,6 +76,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          [ -n "$(ls -A /tmp/shots 2>/dev/null)" ] || { echo "Görüntü yok"; exit 0; }
           git init -q repo && cd repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
