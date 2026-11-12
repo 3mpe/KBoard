@@ -1,0 +1,12 @@
+// KBOARD CI: her birim test görevine zaman aşımı ve ayrıntılı test günlüğü ekler.
+// Upstream build dosyalarına dokunmamak için init script olarak verilir.
+allprojects {
+    tasks.withType(Test).configureEach {
+        timeout = java.time.Duration.ofMinutes(20)
+        testLogging {
+            events "started", "passed", "skipped", "failed"
+            exceptionFormat "full"
+            showStandardStreams = true
+        }
+    }
+}
