@@ -1,0 +1,68 @@
+name: Ekran görüntüleri
+
+# Debug APK'yı emülatöre kurar, KBoard'u varsayılan klavye yapar ve klavyenin
+# ekran görüntülerini `ci-screenshots` dalına <commit>/ klasörü olarak yazar.
+# Zorunlu kontrol değildir; yalnızca görsel inceleme içindir.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    name: Emülatörde ekran görüntüsü
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Debug APK
+        run: ./gradlew assembleDebug
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emülatör + ekran görüntüleri
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash .github/ci/screenshots.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kboard-screenshots
+          path: screenshots/
+      - name: ci-screenshots dalına yaz
+        if: always()
+        run: |
+          set -euo pipefail
+          [ -d screenshots ] || exit 0
+          sha="${{ github.event.pull_request.head.sha || github.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mv screenshots /tmp/shots
+          git fetch origin ci-screenshots || true
+          if git rev-parse --verify -q origin/ci-screenshots >/dev/null; then
+            git checkout -B ci-screenshots origin/ci-screenshots
+          else
+            git checkout --orphan ci-screenshots && git rm -rfq .
+          fi
+          rm -rf "$sha" && mkdir -p "$sha" && cp -r /tmp/shots/. "$sha/"
+          git add "$sha" && git commit -qm "Ekran görüntüleri: $sha" && git push origin ci-screenshots
