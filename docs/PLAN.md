@@ -49,7 +49,7 @@ KBoard/
 
 | Bileşen | Sürüm | Not |
 |---|---|---|
-| JDK | 17+ (Android Studio'nun gömülü JBR'ı yeterli) | `compileOptions` Java 17 |
+| JDK | 21 (Android Studio'nun gömülü JBR'ı yeterli) | `compileOptions` Java 17 hedefliyor; Robolectric testleri (SDK 36) Java 21 istiyor |
 | Gradle | 9.7.1 (wrapper) | elle kurulum gerekmez |
 | Android Gradle Plugin | 9.1.1 | |
 | Kotlin | 2.4.0 | |

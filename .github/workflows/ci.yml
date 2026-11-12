@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  eval:
+    name: Ölçüm aracı testleri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Birim testler
+        working-directory: eval
+        run: python -W error -m unittest discover -s tests -t . -v
+      - name: Test setini doğrula
+        working-directory: eval
+        run: python -m kboard_eval validate testset/*.jsonl
+
+  android:
+    name: Debug APK + izin kontrolü
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21' # Robolectric, SDK 35+ için Java 21 istiyor
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Debug APK
+        run: ./gradlew assembleDebug
+      - name: İzin listesi (ağ izni olmamalı)
+        run: |
+          set -euo pipefail
+          apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
+          "$aapt2" dump permissions "$apk" | tee perms.txt
+          # İzin listesi: bunların dışındaki her izin (özellikle ağ) CI'ı kırar.
+          allowed='READ_USER_DICTIONARY|WRITE_USER_DICTIONARY|RECEIVE_BOOT_COMPLETED|VIBRATE|READ_CONTACTS'
+          extra=$(grep -oE "uses-permission: name='[^']+'" perms.txt | sed -E "s/.*name='([^']+)'/\1/" \
+            | grep -vE "^android\.permission\.($allowed)$" | grep -vE "\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION$" || true)
+          if [ -n "$extra" ]; then
+            echo "::error::İzin listesinde olmayan izin(ler): $extra"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: KBoard-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+  upstream-tests:
+    # HeliBoard'un kendi birim test paketi. Bizim CI'ımızda henüz hiç yeşil olmadı
+    # (bkz. #30). Zorunlu kontrol DEĞİL, ama başarısız olursa kırmızı görünür:
+    # continue-on-error yok, hiçbir test atlanmıyor. Yeşile dönünce zorunlu yapılacak.
+    name: Upstream birim testleri (zorunlu değil)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21' # Robolectric, SDK 35+ için Java 21 istiyor
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Birim testler (runTests varyantı)
+        run: ./gradlew --init-script .github/ci/test-logging.init.gradle testRunTestsUnitTest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: upstream-test-reports
+          path: app/build/reports/tests

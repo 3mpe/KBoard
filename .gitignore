@@ -1,3 +1,22 @@
+*.iml
+.idea
+.gradle
+.kotlin
+local.properties
+.DS_Store
+Gemfile
+build
+app/build
+app/release
+app/.cxx
+app/.attach_*
+fastlane/Appfile
+tools/*.txt
+*.patch
+*.diff
+*.sh
+
+# --- KBoard ---
 # kişisel test verisi cihazdan/bilgisayardan çıkmaz
 eval/private/*
 !eval/private/README.md
@@ -11,3 +30,7 @@ build/
 local.properties
 .idea/
 *.iml
+# HeliBoard kurallarının bizim dizinlerimizi yutmaması için
+!eval/**/*.sh
+!data/**/*.sh
+!engine/**/*.sh
