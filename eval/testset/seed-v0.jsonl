@@ -1,0 +1,31 @@
+{"id": "sohbet-0001", "text": "Yarın akşam ne yapıyorsun?", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0002", "text": "Toplantı yarım saat ertelendi, haberin olsun.", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0003", "text": "Eve gelince seni ararım.", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0004", "text": "Bugün çok yoruldum, erken yatacağım.", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0005", "text": "Market alışverişini ben hallederim.", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0006", "text": "Kitabı okuduktan sonra sana veririm.", "category": "sohbet", "tags": ["ek", "unsuz_yumusamasi"], "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0007", "text": "Annemlerle hafta sonu kahvaltıya gidiyoruz.", "category": "sohbet", "tags": ["ek"], "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0008", "text": "Arabanın lastiği patlamış, biraz gecikeceğim.", "category": "sohbet", "tags": ["ek"], "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0009", "text": "Çocuklar okuldan döndü mü?", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "sohbet-0010", "text": "Teşekkür ederim, çok naziksin.", "category": "sohbet", "source": "elle", "license": "CC0-1.0"}
+{"id": "ozel-0001", "text": "Ankara'dan dün akşam döndük.", "category": "ozel_isim", "tags": ["ek", "kesme"], "source": "elle", "license": "CC0-1.0"}
+{"id": "ozel-0002", "text": "İstanbul'da hava bugün çok güzel.", "category": "ozel_isim", "tags": ["ek", "kesme"], "source": "elle", "license": "CC0-1.0"}
+{"id": "ozel-0003", "text": "Ayşe'ye mesaj attım ama cevap vermedi.", "category": "ozel_isim", "tags": ["ek", "kesme"], "source": "elle", "license": "CC0-1.0"}
+{"id": "ksoz-0001", "text": "Yarın Kadıköy'de buluşalım mı?", "category": "kullanici_sozlugu", "tags": ["ek", "kesme"], "user_words": ["Kadıköy"], "source": "elle (brif örneği)", "license": "CC0-1.0"}
+{"id": "ksoz-0002", "text": "Kadıköy'den vapura binip geliyorum.", "category": "kullanici_sozlugu", "tags": ["ek", "kesme"], "user_words": ["Kadıköy"], "source": "elle (brif örneği)", "license": "CC0-1.0"}
+{"id": "ksoz-0003", "text": "Moda'daki kafede oturuyoruz.", "category": "kullanici_sozlugu", "tags": ["ek", "kesme"], "user_words": ["Moda"], "source": "elle", "license": "CC0-1.0"}
+{"id": "ksoz-0004", "text": "Pamuk'u veterinere götürdüm, aşısı yapıldı.", "category": "kullanici_sozlugu", "tags": ["ek", "kesme"], "user_words": ["Pamuk"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0001", "text": "Şimdi çıkıyorum, çok az kaldı.", "input": "Simdi cikiyorum, cok az kaldi.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0002", "text": "Güzel bir gün geçirdik.", "input": "Guzel bir gun gecirdik.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0003", "text": "Öğlen yemeğe çıkalım mı?", "input": "Oglen yemege cikalim mi?", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "mi → mı: yazılan biçim de geçerli bir kelime", "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0004", "text": "Şu an müsait değilim, sonra konuşuruz.", "input": "Su an musait degilim, sonra konusuruz.", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "Su → Şu: yazılan biçim de geçerli bir kelime", "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0005", "text": "Işıkları kapatmayı unutma.", "input": "Isiklari kapatmayi unutma.", "category": "sohbet", "tags": ["deasciify"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0006", "text": "Bu elbise çok şık olmuş.", "input": "Bu elbise cok sik olmus.", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "sik → şık/sık belirsizliği; bağlam gerekir", "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0007", "text": "Sık sık buraya gelir misin?", "input": "Sik sik buraya gelir misin?", "category": "sohbet", "tags": ["deasciify", "belirsiz"], "note": "aynı ascii biçim, farklı hedef (bkz. aksan-0006)", "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0008", "text": "Kadıköy'de görüşürüz.", "input": "Kadikoy'de gorusuruz.", "category": "kullanici_sozlugu", "tags": ["deasciify", "kesme"], "user_words": ["Kadıköy"], "source": "elle", "license": "CC0-1.0"}
+{"id": "dogru-0001", "text": "Sus artık, film başlıyor.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "note": "'sus' doğru; 'şuş' gibi bir forma çevrilmemeli", "source": "elle", "license": "CC0-1.0"}
+{"id": "dogru-0002", "text": "Kurs yarın saat onda başlıyor.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "source": "elle", "license": "CC0-1.0"}
+{"id": "dogru-0003", "text": "Kar yağıyor, yollar kapalı.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "note": "'kar' → 'kâr' yapılmamalı", "source": "elle", "license": "CC0-1.0"}
+{"id": "dogru-0004", "text": "Sinema bileti aldım.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "source": "elle", "license": "CC0-1.0"}
+{"id": "dogru-0005", "text": "Masada iki bardak çay var.", "category": "dogru_yazim", "tags": ["oto_duzeltme_tuzagi"], "source": "elle", "license": "CC0-1.0"}
+{"id": "aksan-0009", "text": "Irmak kenarında ılık bir akşam.", "input": "irmak kenarinda ilik bir aksam.", "category": "sohbet", "tags": ["deasciify", "buyuk_I"], "note": "küçük i ile yazılmış Irmak / ılık", "source": "elle", "license": "CC0-1.0"}
