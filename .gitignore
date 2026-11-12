@@ -31,3 +31,7 @@ build/
 local.properties
 .idea/
 *.iml
+# HeliBoard kurallarının bizim dizinlerimizi yutmaması için
+!eval/**/*.sh
+!data/**/*.sh
+!engine/**/*.sh
