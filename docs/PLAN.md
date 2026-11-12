@@ -136,7 +136,9 @@ aynı metriklerle karşılaştırılır.
 
 `typed` = o kelimenin o ana kadar yazılmış öneki (`input` metninden), `""` = sonraki kelime
 tahmini anı. Kelimenin tamamı + boşluk anı için `"commit": true` satırı otomatik düzeltme
-sonucunu (`autocorrect`: boşluğa basınca metne geçecek kelime) taşır.
+sonucunu (`autocorrect`: boşluğa basınca metne geçecek kelime) taşır. Commit satırının `suggestions` alanı boşluğa basılmadan **hemen önceki**
+öneri çubuğudur (boşluktan sonra çubuk sonraki kelime tahminine geçer; cihaz sürücüsü onu bu ana
+yazmamalı).
 
 ### 4.3 Metrikler
 

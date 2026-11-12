@@ -2,7 +2,7 @@
 
 - `seed-v0.jsonl`: elle yazılmış tohum set (CC0-1.0). Format: `docs/PLAN.md` §4.1.
 
-## seed-v0 dağılımı (327 vaka, 1249 kelime)
+## seed-v0 dağılımı (327 vaka, 1250 kelime)
 
 | Grup | Kimlik öneki | Vaka | Ölçtüğü metrik |
 |---|---|---|---|
@@ -12,7 +12,9 @@
 | Yazım hatası (`yazim_hatasi` etiketi) | `yazim-` | 57 | yazım hatası düzeltme doğruluğu |
 | Genel sohbet / özel isim | `sohbet-`, `ozel-` | 13 | ilk-3, sonraki kelime |
 
-Kelime düzeyinde: 903 doğru yazılmış, 289 yalnızca aksanı eksik, 57 yazım hatalı kelime.
+Gruplar örtüşür (aksansız yazılmış kişisel sözlük vakası iki grupta sayılır), toplam 327'yi aşar.
+
+Kelime düzeyinde: 904 doğru yazılmış, 289 yalnızca aksanı eksik, 57 yazım hatalı kelime.
 
 Etiketler: `oto_duzeltme_tuzagi` (yazılan doğru kelimenin aksanlı/şapkalı başka bir kelimesi var:
 kas/kaş, on/ön, hala/hâlâ), `belirsiz` (ascii biçim de geçerli kelime), `sik_hata` (sık yanlış
@@ -26,3 +28,8 @@ düştüğü için yazım hatası değil, aksan farkı sayılır; bu yüzden yaz
 
 Yeni vaka eklerken: `input` ile `text` aynı sayıda kelime içermeli, `source` ve `license` doldurulmalı.
 Doğrulama: `cd eval && python -m kboard_eval validate testset/*.jsonl`
+
+Not: cümle başındaki belirsiz çiftler (`Su` → `Şu` ile `Su içmeyi unutma`, `On`/`Ön`, `Cam`/`Çam`)
+kasıtlı olarak iki yönde de var. Commit boşlukta ve sağ bağlam olmadan yapıldığı için hiçbir klavye
+%100 aksan düzeltme ile %0 yanlış otomatik düzeltmeyi birlikte tutturamaz; raporlarda `belirsiz`
+kırılımına ayrıca bakılmalı.

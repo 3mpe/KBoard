@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from .testset import Case
 from .trace import Event
-from .turkish import is_deasciify_pair, is_typo_pair, normalize, same_word
+from .turkish import is_deasciify_pair, normalize, same_word
 
 TOP_N = 3
 TOP_AT_K = (0, 1, 2, 3)
@@ -137,7 +137,7 @@ def score(cases: list[Case], events: list[Event]) -> dict:
                         b.deasciify.add(same_word(committed, target))
                     elif normalize(typed) == normalize(target):
                         b.false_autocorrect.add(not same_word(committed, typed))
-                    elif is_typo_pair(typed, target):
+                    else:  # is_typo_pair(typed, target)
                         # Yazım hatası (aksan dışı fark): boşluğa basınca hedefe düzeltildi mi,
                         # düzeltilmediyse hedef en azından öneri çubuğunun ilk 3'ünde miydi?
                         b.typo_correction.add(same_word(committed, target))

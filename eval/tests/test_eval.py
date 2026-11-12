@@ -164,6 +164,12 @@ class MetricsTest(unittest.TestCase):
         r = metrics.score([case()], [])["overall"]
         self.assertEqual(r["missing_events"], 2)
 
+    def test_missing_commit_on_typo_word_reported(self):
+        c = case(text="geliyorum", input="geliyorm")
+        r = metrics.score([c], [Event("c1", 0, "", [])])["overall"]
+        self.assertEqual(r["missing_events"], 1)
+        self.assertEqual(r["typo_correction_accuracy"]["total"], 0)
+
 
 class EndToEndTest(unittest.TestCase):
     def test_freq_predictor_pipeline(self):
