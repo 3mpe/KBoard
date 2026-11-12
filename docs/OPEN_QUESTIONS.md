@@ -46,4 +46,4 @@ ilerlenir; geri alınması zor adımlar (fork'u içeri alma, bağımlılık ekle
 - ★ a) Kişisel kullanım; yine de yalnızca dağıtıma uygun lisanslı veri kullan (sonradan sorun çıkmasın).
 - b) F-Droid / Play Store planı var; veri listesi en baştan buna göre denetlensin.
 
-**OQ-11. HeliBoard test bulguları** (brif Bölüm 8): tuş hissi, ekli kelime önerileri, aksan düzeltme, yanlış otomatik düzeltme, sonraki kelime. Hazır olduğunda #issue (Faz 0.3) altına yazılması yeterli.
+**OQ-11. HeliBoard test bulguları** (brif Bölüm 8): tuş hissi, ekli kelime önerileri, aksan düzeltme, yanlış otomatik düzeltme, sonraki kelime. Hazır olduğunda #12 (Faz 0.3) altına yorum olarak yazılması yeterli.

@@ -199,3 +199,15 @@ Kırılım: kategori ve etikete göre.
   öğrenme; gerekirse küçük TFLite/ONNX LM. Bitiş: sonraki kelime isabeti Gboard'u geçer, p95 gecikme < 50 ms.
 
 Her faz sonunda ölçüm yapılır, devam kararı skora göre verilir.
+
+## 7. Issue haritası
+
+| Faz | Epic | Görevler |
+|---|---|---|
+| 0 | #1 | 0.1 #7 · 0.2 #8 · 0.3 #12 · 0.4 #9 · 0.5 #10 · 0.6 #11 |
+| 1 | #2 | 1.1 #17 · 1.2 #13 · 1.3 #14 · 1.4 #15 · 1.5–1.6 #18 · 1.7 #16 · 1.8 #19 |
+| 2 | #3 | 2.1 #20 |
+| 3 | #4 | 3.1 #21 |
+| 4 | #5 | 4.1 #22 |
+
+Açık sorular: #6.
