@@ -1,4 +1,4 @@
-"""Komut satırı: python -m kboard_eval {validate,simulate,score} ..."""
+"""Komut satırı: python -m kboard_eval {validate,simulate,drive,score} ..."""
 
 from __future__ import annotations
 
@@ -52,6 +52,58 @@ def _cmd_simulate(args) -> int:
     return 0
 
 
+def _cmd_drive(args) -> int:
+    from . import adb_driver
+
+    cases = testset.load(args.testset)
+    if args.case:
+        wanted = set(args.case)
+        cases = [c for c in cases if c.id in wanted]
+        unknown = wanted - {c.id for c in cases}
+        if unknown:
+            raise SystemExit("bilinmeyen vaka: " + ", ".join(sorted(unknown)))
+    if args.limit:
+        cases = cases[: args.limit]
+    keymap = adb_driver.KeyMap.load(args.keymap)
+    skipped = []
+    for c in list(cases):
+        missing = keymap.missing_chars(" ".join(c.typed_words))
+        if missing or (args.skip_user_words and c.user_words):
+            skipped.append((c.id, "".join(sorted(missing)) if missing else "user_words"))
+            cases.remove(c)
+    for cid, why in skipped:
+        print(f"atlandı: {cid} ({why})", file=sys.stderr)
+    if not cases:
+        raise SystemExit("yazılacak vaka yok")
+    driver = adb_driver.DeviceDriver(
+        adb_driver.Adb(args.serial, adb=args.adb), keymap, verify_field=not args.no_verify)
+    runs = []
+    for r in range(1, args.runs + 1):
+        if args.runs > 1:
+            print(f"koşu {r}/{args.runs}", file=sys.stderr)
+        try:
+            events = list(driver.drive(cases))
+        except adb_driver.DriveError as exc:
+            print(f"HATA {exc}", file=sys.stderr)
+            return 2
+        # Her koşu bitince yazılır: sonraki koşudaki bir hata öncekileri kaybettirmez.
+        out = args.output if r == 1 else args.output.with_name(f"{args.output.stem}.run{r}{args.output.suffix}")
+        trace.write(events, out)
+        print(f"iz yazıldı: {out} ({len(cases)} vaka, {len(skipped)} atlandı)")
+        runs.append(events)
+    status = 0
+    for r, other in enumerate(runs[1:], 2):
+        diffs = adb_driver.diff_traces(runs[0], other)
+        if diffs:
+            status = 1
+            print(f"koşu 1 ile koşu {r} farklı ({len(diffs)} fark):", file=sys.stderr)
+            for d in diffs[:20]:
+                print("  " + d, file=sys.stderr)
+    if args.runs > 1 and status == 0:
+        print(f"{args.runs} koşu aynı izi verdi (deterministik)")
+    return status
+
+
 def _cmd_score(args) -> int:
     cases = testset.load(args.testset)
     events = trace.read(args.trace)
@@ -80,6 +132,19 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--wordlist", type=Path, help="freq: kelime[<TAB>frekans] listesi")
     s.add_argument("--command", help="subprocess: çalıştırılacak motor komutu")
     s.set_defaults(func=_cmd_simulate)
+
+    d = sub.add_parser("drive", help="gerçek klavyede adb ile yaz, iz üret")
+    d.add_argument("testset", nargs="+", type=Path)
+    d.add_argument("-o", "--output", type=Path, required=True)
+    d.add_argument("-k", "--keymap", type=Path, required=True, help="klavye + cihaz tuş haritası (JSON)")
+    d.add_argument("-s", "--serial", help="adb cihaz seri numarası")
+    d.add_argument("--adb", default="adb", help="adb yürütülebilir dosyası")
+    d.add_argument("--case", action="append", help="yalnızca bu vaka(lar) (tekrarlanabilir)")
+    d.add_argument("--limit", type=int, help="ilk N vaka")
+    d.add_argument("--runs", type=int, default=1, help="N kez koş, izleri karşılaştır (determinizm)")
+    d.add_argument("--skip-user-words", action="store_true", help="user_words içeren vakaları atla")
+    d.add_argument("--no-verify", action="store_true", help="metin kutusu içeriğini doğrulama")
+    d.set_defaults(func=_cmd_drive)
 
     r = sub.add_parser("score", help="izi puanla")
     r.add_argument("testset", nargs="+", type=Path)
