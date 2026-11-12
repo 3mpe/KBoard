@@ -100,6 +100,7 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
 
     private void addWordsLocked(Cursor cursor) {
         if (cursor == null) return;
+        final java.util.ArrayList<String> kboardWords = new java.util.ArrayList<>(); // KBOARD
         if (cursor.moveToFirst()) {
             int indexWord = cursor.getColumnIndex(Words.WORD);
             int indexShortcut = cursor.getColumnIndex(Words.SHORTCUT);
@@ -111,6 +112,7 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
                 int adjustedFrequency = scaleFrequencyFromDefaultToLatinIme(frequency);
                 // Safeguard against adding really long words.
                 if (word.length() <= MAX_WORD_LENGTH) {
+                    kboardWords.add(word); // KBOARD
                     runGCIfRequiredLocked(true);
                     addUnigramLocked(word, adjustedFrequency, null, 0,
                         false, false, BinaryDictionary.NOT_A_VALID_TIMESTAMP);
@@ -123,5 +125,7 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
                 cursor.moveToNext();
             }
         }
+        // KBOARD: kişisel sözlük kelimeleri motorun çekim üreticisine (Kadıköy → Kadıköy'de)
+        helium314.keyboard.kboard.KBoardSuggestions.INSTANCE.setUserWords(mLocale, kboardWords);
     }
 }

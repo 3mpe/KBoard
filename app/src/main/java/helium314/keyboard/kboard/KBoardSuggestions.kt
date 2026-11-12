@@ -10,6 +10,7 @@ import io.github.kboard.engine.Query
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.morph.UserWordSuffixSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -29,17 +30,34 @@ object KBoardSuggestions {
      */
     private const val SCORE_SCALE = 1_000_000
 
+    /** Kişisel sözlük kelimelerinin çekimleri (her zaman açık; sözlük boşken aday üretmez). */
+    private val userMorph = UserWordSuffixSource()
+
     @Volatile
-    var engine: SuggestionEngine = SuggestionEngine()
+    var engine: SuggestionEngine = SuggestionEngine(listOf(userMorph))
 
     /** Etkin aksan düzeltici; otomatik düzeltme kararı ([autoCorrection]) bundan alınır. */
     @Volatile
     private var deasciifier: DeasciifySource? = null
 
+    @Volatile
+    private var userWords: List<String> = emptyList()
+
     /** Aksan düzelticiyi bağlar ya da (null) kaldırır. */
+    @Synchronized
     fun setDeasciifier(source: DeasciifySource?) {
         deasciifier = source
-        engine = SuggestionEngine(listOfNotNull(source))
+        engine = SuggestionEngine(listOfNotNull(source, userMorph)).also { it.setUserWords(userWords) }
+    }
+
+    /** Kişisel sözlük (yalnız Türkçe) değiştiğinde `UserBinaryDictionary` çağırır. */
+    @JvmStatic
+    @Synchronized
+    fun setUserWords(locale: Locale, words: Collection<String>) {
+        if (locale.language != "tr") return
+        userWords = words.toList()
+        engine.setUserWords(userWords)
+        userMorph.setUserWords(userWords) // motor henüz kurulmadıysa da hazır olsun
     }
 
     /** Motorun bir yazılan kelime için otomatik düzeltme görüşü. */
@@ -53,10 +71,11 @@ object KBoardSuggestions {
     }
 
     fun autoCorrection(typedWord: String, locale: Locale): AutoCorrection {
-        val d = deasciifier ?: return AutoCorrection.NoOpinion
         if (locale.language != "tr" || typedWord.isEmpty()) return AutoCorrection.NoOpinion
-        d.autocorrection(typedWord)?.let { return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it)) }
-        return if (d.isProtected(typedWord)) AutoCorrection.Keep else AutoCorrection.NoOpinion
+        engine.suggest(Query(emptyList(), typedWord)).autocorrect?.let {
+            return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it))
+        }
+        return if (deasciifier?.isProtected(typedWord) == true) AutoCorrection.Keep else AutoCorrection.NoOpinion
     }
 
     /**
