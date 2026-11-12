@@ -10,6 +10,8 @@ import io.github.kboard.engine.CandidateSource
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
+import io.github.kboard.engine.deasciify.DeasciifyIndex
+import io.github.kboard.engine.deasciify.DeasciifySource
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,7 +37,17 @@ class KBoardSuggestionsTest {
     @After
     fun reset() {
         KBoardSuggestions.engine = SuggestionEngine()
+        KBoardSuggestions.setDeasciifier(null)
     }
+
+    private fun deasciifier() = DeasciifySource(DeasciifyIndex.build(listOf(
+        DeasciifyIndex.Companion.Entry("çok", 200), DeasciifyIndex.Companion.Entry("şimdi", 138),
+        DeasciifyIndex.Companion.Entry("simdi", 99), DeasciifyIndex.Companion.Entry("süs", 116),
+        DeasciifyIndex.Companion.Entry("sus", 84, DeasciifyIndex.FLAG_PROTECTED),
+    )))
+
+    private fun info(word: String) = SuggestedWordInfo(word, "", 100, SuggestedWordInfo.KIND_COMPLETION,
+        KBoardDictionary(tr), SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
 
     private fun composed(word: String) = ComposedData(InputPointers(1), false, word)
 
@@ -70,5 +82,43 @@ class KBoardSuggestionsTest {
             NgramContext.WordInfo.BEGINNING_OF_SENTENCE_WORD_INFO, NgramContext.WordInfo("dün")
         )
         assertEquals(listOf("eve", "gidelim"), KBoardSuggestions.contextWords(ctx))
+    }
+
+    @Test
+    fun deasciifierDecidesAutoCorrection() {
+        KBoardSuggestions.setDeasciifier(deasciifier())
+        val heli = false to false
+
+        // cok → çok: listede olmasa da başa eklenir ve otomatik düzeltme açılır
+        val list = mutableListOf(info("cop"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", list, tr, true, heli))
+        assertEquals("çok", list[0].word)
+
+        // Cok → Çok: büyük harf yazılandan taşınır
+        val list1 = mutableListOf<SuggestedWordInfo>()
+        KBoardSuggestions.mergeAutoCorrection("Cok", list1, tr, true, heli)
+        assertEquals("Çok", list1[0].word)
+
+        // Simdi → Şimdi: listedeki kayıt başa taşınır, büyük harf korunur
+        val list2 = mutableListOf(info("Sinema"), info("Şimdi"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("Simdi", list2, tr, true, heli))
+        assertEquals(listOf("Şimdi", "Sinema"), list2.map { it.word })
+
+        // sus korunur: HeliBoard düzeltmek istese de düzeltme yok
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("sus", mutableListOf(info("süs")), tr, true, true to true))
+
+        // görüş yoksa ya da düzeltme kapalıysa HeliBoard'un kararı aynen kalır
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("merhba", mutableListOf(info("merhaba")), tr, true, true to true))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, false, heli))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), Locale.ENGLISH, true, heli))
+    }
+
+    @Test
+    fun deasciifierSuggestsWhileTyping() {
+        KBoardSuggestions.setDeasciifier(deasciifier())
+        val words = KBoardSuggestions.getSuggestions(composed("sim"), NgramContext.BEGINNING_OF_SENTENCE, tr).map { it.word }
+        assertTrue("şimdi" in words, words.toString())
+        KBoardSuggestions.setDeasciifier(null)
+        assertTrue(KBoardSuggestions.getSuggestions(composed("sim"), NgramContext.BEGINNING_OF_SENTENCE, tr).isEmpty())
     }
 }

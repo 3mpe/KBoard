@@ -35,6 +35,18 @@ class DeasciifySourceTest {
     private fun auto(typed: String) = SuggestionEngine(listOf(src)).suggest(Query(emptyList(), typed)).autocorrect
 
     @Test
+    fun protectedWords() {
+        assertTrue(src.isProtected("sus"))
+        assertTrue(src.isProtected("Sus"))
+        assertTrue(src.isProtected("ilik"))
+        assertTrue(!src.isProtected("süs"))
+        assertTrue(!src.isProtected("cok"))   // sözlükte yok: korunmaz, düzeltilir
+        assertTrue(!src.isProtected("xyz"))
+        val user = DeasciifySource(index).apply { setUserWords(listOf("Kadikoy")) }
+        assertTrue(user.isProtected("kadikoy")) // kullanıcı sözlüğündeki biçim korunur
+    }
+
+    @Test
     fun roundTripAndSortedByFoldedKey() {
         val buf = ByteArrayOutputStream()
         val n = DeasciifyIndex.write(entries, buf)

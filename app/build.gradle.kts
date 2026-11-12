@@ -146,3 +146,30 @@ dependencies {
     testImplementation("androidx.test:runner:1.7.0")
     testImplementation("androidx.test:core:1.7.0")
 }
+
+// KBOARD: engine/ derleme sırasında üretilen aksan düzeltici dizinini assets/kboard/ altına koyar.
+abstract class KBoardAssetsTask : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val deasciifyIndex: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val dir = outputDir.get().asFile.resolve("kboard")
+        dir.deleteRecursively()
+        dir.mkdirs()
+        deasciifyIndex.get().asFile.copyTo(dir.resolve("deasciify-tr.kbd"))
+    }
+}
+
+val kboardAssets = tasks.register<KBoardAssetsTask>("kboardAssets") {
+    dependsOn(":engine:buildDeasciifyIndex")
+    deasciifyIndex.set(rootProject.layout.projectDirectory.file("engine/build/kboard/deasciify-tr.kbd"))
+}
+
+androidComponents.onVariants { variant ->
+    variant.sources.assets?.addGeneratedSourceDirectory(kboardAssets, KBoardAssetsTask::outputDir)
+}

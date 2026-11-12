@@ -137,6 +137,9 @@
     <!-- Option to enable auto correction -->
     <string name="autocorrect">Auto-correction</string>
     <!-- Description for auto correction -->
+    <!-- KBOARD -->
+    <string name="kboard_deasciify">Turkish accent correction</string>
+    <string name="kboard_deasciify_summary">Suggest and auto-correct Turkish letters typed without accents (cok → çok)</string>
     <string name="auto_correction_summary">Spacebar and punctuation automatically correct mistyped words</string>
     <!-- Option to enable auto correction for many fields that do not request auto correction -->
     <string name="more_autocorrect">More auto-correction</string>
