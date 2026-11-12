@@ -51,7 +51,7 @@ jobs:
             exit 1
           fi
       - name: Birim testler
-        run: ./gradlew testRunTestsUnitTest
+        run: ./gradlew testRunTestsUnitTest :engine:test
       - uses: actions/upload-artifact@v4
         with:
           name: KBoard-debug-apk

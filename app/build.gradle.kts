@@ -116,6 +116,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":engine")) // KBOARD: öneri motoru
+
     // androidx
     implementation("androidx.core:core-ktx:1.17.0") // 1.18.0 requires minSdk 23
     implementation("androidx.recyclerview:recyclerview:1.4.0")

@@ -1,0 +1,45 @@
+package io.github.kboard.engine
+
+/** Öneri isteği: metne geçmiş önceki kelimeler (eskiden yeniye) ve yazılmakta olan kelimenin öneki. */
+data class Query(
+    val context: List<String>,
+    val prefix: String,
+) {
+    val isNextWord: Boolean get() = prefix.isEmpty()
+}
+
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, OTHER }
+
+/**
+ * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası
+ * karşılaştırma [Ranker]'ın işidir.
+ */
+data class Candidate(
+    val word: String,
+    val score: Double,
+    val source: Source,
+    /** Boşluğa basınca yazılanın yerine geçmeye uygun mu (ör. "cok" → "çok"). */
+    val autocorrectable: Boolean = false,
+)
+
+/** Aday üreten tek bir kaynak (deasciifier, morfoloji, n-gram...). Thread-safe olmalı. */
+interface CandidateSource {
+    val name: String
+    fun candidates(query: Query, limit: Int): List<Candidate>
+}
+
+/** Kaynaklardan gelen adayları birleştirip sıralar. */
+fun interface Ranker {
+    fun rank(query: Query, candidates: List<Candidate>, limit: Int): List<Candidate>
+}
+
+/** Kullanıcının kişisel sözlüğünü dinleyen kaynaklar (ör. morfoloji, köklerin çekimleri için). */
+interface UserWordsAware {
+    fun setUserWords(words: Collection<String>)
+}
+
+data class Suggestions(
+    val candidates: List<Candidate>,
+    /** Boşlukta yazılanın yerine geçecek kelime; null = yazıldığı gibi kalsın. */
+    val autocorrect: String?,
+)
