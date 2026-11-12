@@ -135,6 +135,12 @@ class DeasciifySource(
         return self.user || self.flags and DeasciifyIndex.FLAG_PROTECTED != 0
     }
 
+    /** Yazılan kelime (büyük/küçük harf dışında) sözlükte ya da kişisel sözlükte aynen var mı? ("kısa") */
+    fun isKnown(typed: String): Boolean {
+        val lowerTyped = TurkishText.lower(typed)
+        return exactForms(typed).any { TurkishText.lower(it.word) == lowerTyped }
+    }
+
     /** Katlanmış biçimi tam [typed] olan, aksanlarla uyumlu biçimler; sıklığa göre azalan. */
     private fun exactForms(typed: String): List<Form> {
         val key = TurkishText.fold(typed)

@@ -45,6 +45,7 @@ jobs:
       - name: 327 vakalık sette ölçüm
         working-directory: eval
         run: |
+          mkdir -p out
           python -m kboard_eval simulate testset/seed-v0.jsonl -o out/engine.jsonl --predictor subprocess \
             --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd"
           python -m kboard_eval score testset/seed-v0.jsonl -t out/engine.jsonl --json out/engine.json --markdown out/engine.md

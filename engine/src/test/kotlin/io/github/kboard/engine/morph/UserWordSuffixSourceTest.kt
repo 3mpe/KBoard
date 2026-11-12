@@ -55,6 +55,36 @@ class UserWordSuffixSourceTest {
     }
 
     @Test
+    fun knownWordIsNotAutocorrectedToInflection() {
+        val index = DeasciifyIndex.build(listOf(Entry("kısa", 200), Entry("kasa", 180), Entry("ise", 210), Entry("se", 120),
+            Entry("sen", 220), Entry("sene", 170), Entry("seni", 190), Entry("serin", 140), Entry("selam", 160)))
+        val deasc = DeasciifySource(index)
+        val engine = SuggestionEngine(listOf(deasc, UserWordSuffixSource { deasc.isKnown(it) }))
+        engine.setUserWords(listOf("kış", "kaş", "iş"))
+        for (typed in listOf("kısa", "kasa", "ise")) {
+            val r = engine.suggest(Query(emptyList(), typed))
+            assertNull(r.autocorrect, "$typed → ${r.autocorrect}")
+        }
+        // Sözlükte olmayan yazım hâlâ düzeltilir
+        engine.setUserWords(listOf("köşk"))
+        assertEquals("köşkte", engine.suggest(Query(emptyList(), "koskte")).autocorrect)
+    }
+
+    @Test
+    fun stemPrefixDoesNotFloodSuggestions() {
+        // Kök öneki yazılırken kök başına en çok bir çekim, en az 3 harfle
+        assertTrue(words("Se").none { it.startsWith("Selin'") })
+        assertEquals(1, words("Sel").count { it.startsWith("Selin'") })
+        val index = DeasciifyIndex.build(listOf(Entry("sen", 220), Entry("sene", 170), Entry("seni", 190),
+            Entry("serin", 140), Entry("selam", 160)))
+        val engine = SuggestionEngine(listOf(DeasciifySource(index), UserWordSuffixSource()))
+        engine.setUserWords(listOf("Selin"))
+        val se = engine.suggest(Query(emptyList(), "se")).candidates.map { it.word }
+        assertTrue(se.count { it.startsWith("Selin") } <= 1, se.toString())
+        assertTrue("sen" in se, se.toString())
+    }
+
+    @Test
     fun casingAndAccentConstraints() {
         assertTrue("Kankalar" in words("Kankal"))
         assertTrue(words("Şel").isEmpty()) // yazılan ş, kökte s

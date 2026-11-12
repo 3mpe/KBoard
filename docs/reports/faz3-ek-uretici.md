@@ -47,8 +47,12 @@ Sıra, öneri sıralamasındaki önceliktir: `-DA`, `-(y)A`, `-DAn`, `-(n)In`, `
 - Çekimler katlanmış ve kesme işaretsiz anahtara göre sıralı dizide durur (`Kadıköy'de` →
   `kadikoyde`). Sorgu: ikili arama + önek aralığı. `Kadikoy'd`, `kadıköy'd`, `Kadikoyd` hepsi eşleşir.
   Yazılanda aksanlı harf varsa çekim aynı konumda aynı harfi taşımalıdır.
-- Kök yazılıyorken (`Kadık`): kök DeasciifySource'tan 1.0 ile gelir, çekimler 0.86'dan ek sırasıyla
-  azalır; sözlükteki sık tam eşleşmeleri ezmez.
+- Kök yazılıyorken (`Kadık`, en az 3 harf): kök DeasciifySource'tan 1.0 ile gelir, kök başına
+  yalnız en sık çekim 0.80 ile eklenir. Sözlük tamamlamaları (en çok 0.85) öne geçer; tek bir
+  kişisel kelime ("Selin") `se` yazarken öneri şeridini doldurmaz.
+- Yazılan kelime sözlükte ya da kişisel sözlükte zaten geçerliyse ("kısa", "kasa", "ise") çekim
+  ("kış" → "kışa") önerilir ama otomatik düzeltme yapılmaz.
+- Kişisel sözlük süreç başında da motora verilir; telefon yeniden başlatılınca çekimler kaybolmaz.
 - Kök geçildiyse (`Kadıköy'`, `Kadıköy'd`): 0.97'den ek sırasıyla azalan.
 - Tam eşleşme (`Kadikoy'de`): 1.0; oto. düzeltilebilir yalnızca yazılan farklıysa **ve** ya kesme
   işareti yazılmış ya da çekim kesmesizse (cins isim). `modada` → `Moda'da` düzeltilmez (gerçek
@@ -63,12 +67,18 @@ data/out/deasciify-tr.kbd"` (327 vaka, 1250 kelime). Önce = aynı komut, ek ür
 |---|---|---|---|---|---|---|
 | **Genel**, önce | %8.2 | %11.8 | %24.7 | %17.1 | %78.2 | %0.1 |
 | **Genel**, sonra | %9.5 | %13.3 | %26.4 | %19.3 | %78.2 | %0.1 |
+| **Genel**, inceleme sonrası | %8.2 | %11.8 | %25.9 | %18.7 | %78.2 | %0.1 |
 | kullanici_sozlugu, önce | %11.7 | %15.1 | %21.0 | %14.4 | %92.3 | %0.0 |
 | kullanici_sozlugu, sonra | %20.3 | %24.0 | **%30.4** | **%26.9** | %92.3 | %0.0 |
+| kullanici_sozlugu, inceleme sonrası | %11.7 | %15.1 | **%27.6** | **%23.4** | %92.3 | %0.0 |
 | etiket: kesme, önce | %5.0 | %9.1 | %13.9 | %10.3 | %91.7 | %0.0 |
 | etiket: kesme, sonra | %14.9 | %19.3 | **%24.2** | **%23.8** | %91.7 | %0.0 |
 | etiket: ek, önce | %5.6 | %9.7 | %13.4 | %11.2 | %87.5 | %0.0 |
 | etiket: ek, sonra | %15.2 | %19.4 | %23.2 | %24.1 | %87.5 | %0.0 |
+
+"İnceleme sonrası" satırları kod incelemesindeki üç düzeltmeden sonra: kök öneki yazılırken çekim
+sayısı sınırlandığı için @1/@2 düştü, @3 eşiğin (%25) üstünde kaldı. Gerçek kullanımda sözlük
+tamamlamalarını ezmemek bu kayıptan daha önemli.
 
 Diğer kategoriler (dogru_yazim, sohbet, ozel_isim) değişmedi: kaynak kişisel sözlük boşken aday
 döndürmez. Gecikme p95 0,36 → 0,34 ms (gürültü içinde).

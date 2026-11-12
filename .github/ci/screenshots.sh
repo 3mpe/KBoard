@@ -74,8 +74,10 @@ capture_set kboard
 
 # Kişisel sözlük + ek: "Kadıköy" eklenir, "Kadikoy'd" yazılır → "Kadıköy'de" önerilmeli.
 adb shell content insert --uri content://user_dictionary/words --bind word:s:Kadıköy \
-  --bind locale:s:tr --bind frequency:i:250 --bind appid:i:0 || true
+  --bind locale:s:tr --bind frequency:i:250 --bind appid:i:0 || log "UYARI: kişisel sözlüğe eklenemedi"
 sleep 3
+# Klavye sürecini öldür: kelimeler, sözlük yeniden kurulmadan da (süreç başında) motora gelmeli.
+adb shell am force-stop "$pkg"; sleep 5
 adb shell cmd uimode night no; sleep 1
 open_field
 type_word "Kadikoy\\'d"; shot "kboard-07-kisisel-sozluk-ek" 3

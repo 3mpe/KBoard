@@ -34,7 +34,7 @@ object KBoardSuggestions {
     private val USER_SOURCES = setOf(Dictionary.TYPE_USER, Dictionary.TYPE_CONTACTS, Dictionary.TYPE_USER_HISTORY)
 
     /** Kişisel sözlük kelimelerinin çekimleri (her zaman açık; sözlük boşken aday üretmez). */
-    private val userMorph = UserWordSuffixSource()
+    private val userMorph = UserWordSuffixSource { deasciifier?.isKnown(it) == true }
 
     @Volatile
     var engine: SuggestionEngine = SuggestionEngine(listOf(userMorph))
@@ -59,8 +59,7 @@ object KBoardSuggestions {
     fun setUserWords(locale: Locale, words: Collection<String>) {
         if (locale.language != "tr") return
         userWords = words.toList()
-        engine.setUserWords(userWords)
-        userMorph.setUserWords(userWords) // motor henüz kurulmadıysa da hazır olsun
+        engine.setUserWords(userWords) // motor her zaman userMorph'u içerir
     }
 
     /** Motorun bir yazılan kelime için otomatik düzeltme görüşü. */

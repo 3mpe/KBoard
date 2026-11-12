@@ -73,6 +73,7 @@ class EvalServer(private val engine: SuggestionEngine) {
  */
 fun main(args: Array<String>) {
     val sources = mutableListOf<CandidateSource>()
+    var deasciify: DeasciifySource? = null
     val indexPath = argValue(args, "--deasciify") ?: System.getenv("KBOARD_DEASCIIFY_INDEX")
     if (indexPath != null) {
         val index = File(indexPath).inputStream().buffered().use { DeasciifyIndex.read(it) }
@@ -80,9 +81,9 @@ fun main(args: Array<String>) {
         argValue(args, "--deasciify-valid-margin")?.let {
             config = config.copy(validWordMargin = if (it == "off") Int.MAX_VALUE else it.toInt())
         }
-        sources += DeasciifySource(index, config)
+        deasciify = DeasciifySource(index, config).also { sources += it }
     }
-    if ("--no-user-morph" !in args) sources += UserWordSuffixSource()
+    if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
     val server = EvalServer(SuggestionEngine(sources))
     val out = System.out.bufferedWriter(Charsets.UTF_8)
     System.`in`.bufferedReader(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.forEach {

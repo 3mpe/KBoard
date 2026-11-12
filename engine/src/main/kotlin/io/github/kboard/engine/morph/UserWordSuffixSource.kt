@@ -21,13 +21,19 @@ import io.github.kboard.engine.deasciify.DeasciifySource
  *   yazılmışsa ya da çekimde kesme yoksa oto. düzeltilebilir (`Kadikoy'de` → `Kadıköy'de`).
  *   Kesmesiz yazılmış özel isim çekimi (`modada`) düzeltilmez: gerçek kelimeyle çakışabilir.
  * - Yazılan kökü geçmişse (ek yazılıyor): 0.97'den ek sırasına göre azalan.
- * - Yazılan kökün öneki: 0.86'dan azalan (sözlükteki sık tam eşleşmeleri ezmesin).
+ * - Yazılan kökün öneki (en az [MIN_STEM_PREFIX] harf): kök başına yalnız en sık çekim, 0.80
+ *   (sözlük tamamlamaları en çok 0.85; tek bir kişisel kelime öneri şeridini doldurmasın).
+ *
+ * [isKnownWord]: yazılan kelime sözlükte ya da kişisel sözlükte geçerli bir kelimeyse ("kısa")
+ * çekim ("kış" → "kışa") önerilir ama otomatik düzeltme yapılmaz.
  */
-class UserWordSuffixSource : CandidateSource, UserWordsAware {
+class UserWordSuffixSource(
+    private val isKnownWord: (String) -> Boolean = { false },
+) : CandidateSource, UserWordsAware {
 
     override val name = "morph-user"
 
-    private class Entry(val key: String, val word: String, val stemKeyLen: Int, val rank: Int)
+    private class Entry(val key: String, val word: String, val stemKeyLen: Int, val rank: Int, val stem: Int)
 
     @Volatile
     private var entries: Array<Entry> = emptyArray()
@@ -35,12 +41,12 @@ class UserWordSuffixSource : CandidateSource, UserWordsAware {
     override fun setUserWords(words: Collection<String>) {
         val list = ArrayList<Entry>()
         val seen = HashSet<String>()
-        for (w in words) {
+        for ((stemId, w) in words.withIndex()) {
             val stem = w.trim()
             if (stem.isEmpty()) continue
             val stemKey = key(stem)
             for (f in SuffixGenerator.generate(stem)) {
-                if (seen.add(TurkishText.lower(f.word))) list += Entry(key(f.word), f.word, stemKey.length, f.rank)
+                if (seen.add(TurkishText.lower(f.word))) list += Entry(key(f.word), f.word, stemKey.length, f.rank, stemId)
             }
         }
         list.sortWith(compareBy<Entry> { it.key }.thenBy { it.rank })
@@ -57,6 +63,8 @@ class UserWordSuffixSource : CandidateSource, UserWordsAware {
         val typedHasApo = typed.any { it == '\'' || it == '’' }
 
         val out = ArrayList<Candidate>()
+        val prefixStems = HashMap<Int, Entry>() // kök öneki yazılırken kök başına en sık çekim
+        var known: Boolean? = null
         var i = lowerBound(es, typedKey)
         while (i < es.size && es[i].key.startsWith(typedKey)) {
             val e = es[i++]
@@ -66,13 +74,22 @@ class UserWordSuffixSource : CandidateSource, UserWordsAware {
                 e.key.length == typedKey.length -> {
                     val formHasApo = e.word.contains('\'')
                     val differs = TurkishText.lower(word) != TurkishText.lower(typed).replace('’', '\'')
-                    Candidate(word, 1.0, Source.MORPHOLOGY, autocorrectable = differs && (typedHasApo || !formHasApo))
+                    var ac = differs && (typedHasApo || !formHasApo)
+                    if (ac) ac = !(known ?: isKnownWord(typed).also { known = it })
+                    Candidate(word, 1.0, Source.MORPHOLOGY, autocorrectable = ac)
                 }
                 typedKey.length >= e.stemKeyLen -> Candidate(word, 0.97 - e.rank * 0.002, Source.MORPHOLOGY)
-                else -> Candidate(word, 0.86 - e.rank * 0.002, Source.MORPHOLOGY)
+                else -> {
+                    if (typedKey.length >= MIN_STEM_PREFIX) {
+                        val prev = prefixStems[e.stem]
+                        if (prev == null || e.rank < prev.rank) prefixStems[e.stem] = e
+                    }
+                    null
+                }
             }
-            out += c
+            if (c != null) out += c
         }
+        for (e in prefixStems.values) out += Candidate(DeasciifySource.applyCase(typed, e.word), 0.80, Source.MORPHOLOGY)
         out.sortWith(compareByDescending<Candidate> { it.score }.thenBy { it.word.length })
         return if (out.size > limit) out.subList(0, limit) else out
     }
@@ -102,6 +119,9 @@ class UserWordSuffixSource : CandidateSource, UserWordsAware {
             }
             return true
         }
+
+        /** Kök öneki yazılırken çekim önermek için gereken en az harf. */
+        const val MIN_STEM_PREFIX = 3
 
         const val TURKISH_ACCENTED = "çğıöşüâîûÇĞÖŞÜİÂÎÛ"
     }
