@@ -1,0 +1,13 @@
+# kişisel test verisi cihazdan/bilgisayardan çıkmaz
+eval/private/*
+!eval/private/README.md
+# ölçüm çıktıları
+eval/out/
+__pycache__/
+*.pyc
+# Android / Gradle (Faz 1)
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
