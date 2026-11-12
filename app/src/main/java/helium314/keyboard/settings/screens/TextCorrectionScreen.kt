@@ -63,6 +63,7 @@ fun TextCorrectionScreen(
         R.string.settings_category_correction,
         Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
         Settings.PREF_AUTO_CORRECTION,
+        Settings.PREF_KBOARD_DEASCIIFY, // KBOARD
         if (autocorrectEnabled) Settings.PREF_MORE_AUTO_CORRECTION else null,
         if (autocorrectEnabled) Settings.PREF_AUTOCORRECT_SHORTCUTS else null,
         if (autocorrectEnabled) Settings.PREF_AUTOCORRECT_CAPITALIZED_SUGGESTION else null,
@@ -120,6 +121,11 @@ fun createCorrectionSettings(context: Context) = listOf(
         R.string.autocorrect, R.string.auto_correction_summary
     ) {
         SwitchPreference(it, Defaults.PREF_AUTO_CORRECTION)
+    },
+    Setting(context, Settings.PREF_KBOARD_DEASCIIFY, // KBOARD
+        R.string.kboard_deasciify, R.string.kboard_deasciify_summary
+    ) {
+        SwitchPreference(it, Defaults.PREF_KBOARD_DEASCIIFY)
     },
     Setting(context, Settings.PREF_MORE_AUTO_CORRECTION,
         R.string.more_autocorrect, R.string.more_autocorrect_summary

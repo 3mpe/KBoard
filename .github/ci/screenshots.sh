@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Emülatörde KBoard ekran görüntüleri. android-emulator-runner içinden çalışır.
+# Emülatörde ekran görüntüleri: önce imajdaki Gboard (karşılaştırma için), sonra KBoard.
+# android-emulator-runner içinden çalışır.
 set -uo pipefail
 out=screenshots; mkdir -p "$out"
 shot() { sleep "${2:-2}"; adb exec-out screencap -p > "$out/$1.png"; echo "görüntü: $1"; }
@@ -8,51 +9,68 @@ log() { echo "== $*"; }
 apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
 adb install -r "$apk"
 pkg=$(adb shell pm list packages | tr -d '\r' | sed 's/^package://' | grep -m1 kboard)
-log "paket: $pkg"
-ime=$(adb shell ime list -a -s | tr -d '\r' | grep -m1 "^$pkg/")
-log "IME: $ime"
+kboard="$pkg/helium314.keyboard.latin.LatinIME"
+log "paket: $pkg, IME: $kboard"
 adb shell settings put secure show_ime_with_hard_keyboard 1
-adb shell ime enable "$ime"
-adb shell ime set "$ime"
-adb shell settings get secure default_input_method
-
-# Metin alanı: yeni kişi formu (ad alanı odaklı açılır).
-open_field() {
-  adb shell am force-stop com.android.contacts >/dev/null 2>&1
-  adb shell am start -W -a android.intent.action.INSERT -t vnd.android.cursor.dir/contact
-  sleep 4
-  adb shell input keyevent KEYCODE_ESCAPE >/dev/null 2>&1 # olası "hesap" iletişim kutusu
-  sleep 1
-  # Odak yoksa ilk düzenlenebilir alana dokun.
-  if ! adb shell dumpsys input_method | grep -q "mInputShown=true"; then
-    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-    b=$(adb shell cat /sdcard/ui.xml | tr '>' '\n' | grep -m1 'class="android.widget.EditText"' | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
-    if [ -n "$b" ]; then set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); fi
-  fi
+sleep 20 # açılış sonrası sistem arayüzü otursun (ilk koşuda "System UI isn't responding" çıktı)
+for i in 1 2 3 4 5; do
+  adb shell ime list -a -s | tr -d '\r' | grep -q "^$kboard$" && break
   sleep 2
+done
+log "kurulu klavyeler:"; adb shell ime list -a -s
+gboard=$(adb shell ime list -a -s | tr -d '\r' | grep -m1 "com.google.android.inputmethod.latin/" || true)
+log "Gboard: ${gboard:-yok}"
+
+# Metin alanı: yeni kişi formu, ilk düzenlenebilir alana dokunulur.
+open_field() {
+  adb shell am force-stop com.google.android.contacts >/dev/null 2>&1
+  adb shell am force-stop com.android.contacts >/dev/null 2>&1
+  adb shell am start -W -a android.intent.action.INSERT -t vnd.android.cursor.dir/contact >/dev/null
+  sleep 4
+  adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 # "yanıt vermiyor" kutusu
+  b=""
+  for i in 1 2 3; do
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+    b=$(adb shell cat /sdcard/ui.xml 2>/dev/null | tr '>' '\n' | grep -m1 'class="android.widget.EditText"' \
+        | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
+    [ -n "$b" ] && break
+    sleep 2
+  done
+  [ -n "$b" ] || b="137 803 933 952" # pixel_6, kişi formunun "Ad" alanı
+  log "metin alanı: $b"
+  set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
+  sleep 3
+  adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId" | head -2
 }
 
-adb shell cmd uimode night no
-open_field
-adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId" || true
-shot 01-acik-tema-bos 3
-adb shell dumpsys window | grep -E "mInputMethodWindow|InputMethod.*frame" | head -5 || true
+type_word() { adb shell input text "$1"; }
 
-# Yazılmış metin: input text ASCII gönderir; öneri çubuğu bu metne göre dolar.
-adb shell input text "cok"
-shot 02-acik-tema-cok 3
-adb shell input keyevent KEYCODE_SPACE
-adb shell input text "guzel"
-shot 03-acik-tema-guzel 3
+capture_set() { # $1 = önek
+  adb shell cmd uimode night no; sleep 1
+  open_field
+  shot "$1-01-acik-bos" 2
+  type_word "cok"; shot "$1-02-acik-cok" 3
+  adb shell input keyevent KEYCODE_SPACE; shot "$1-03-acik-cok-bosluk" 2
+  type_word "guzel"; shot "$1-04-acik-guzel" 3
+  adb shell cmd uimode night yes; sleep 2
+  open_field
+  shot "$1-05-koyu-bos" 2
+  type_word "simdi"; shot "$1-06-koyu-simdi" 3
+}
 
-adb shell cmd uimode night yes
-sleep 2
-open_field
-shot 04-koyu-tema-bos 3
-adb shell input text "simdi"
-shot 05-koyu-tema-simdi 3
+if [ -n "$gboard" ]; then
+  adb shell ime set "$gboard"
+  capture_set gboard
+fi
+
+adb shell ime enable "$kboard"
+adb shell ime set "$kboard"
+log "varsayılan: $(adb shell settings get secure default_input_method)"
+sleep 3 # aksan dizini arka planda yüklenir
+capture_set kboard
 
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
+adb logcat -d -s KBoardEngineLoader:* > "$out/logcat-kboard.txt" 2>&1 || true
 ls -la "$out"
 exit 0

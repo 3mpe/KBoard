@@ -57,7 +57,7 @@ KBoard/
 | NDK | **28.0.13004108** | native sözlük motoru (JNI) için zorunlu |
 | CMake | gerekmez | `ndkBuild` kullanılıyor |
 | Android Studio | Gradle 9 / AGP 9.1 destekleyen güncel kararlı sürüm | |
-| Python | 3.10+ | yalnızca `eval/` için, ek paket yok |
+| Python | 3.10+ (`python3` PATH'te) | `eval/` ve APK derlemesi (aksan dizini `data/tools/dict_dump.py` ile üretilir); ek paket yok |
 
 Derleme yeri (OQ-7): önerilen yol GitHub Actions'ta debug APK üretmek; kullanıcının
 Windows makinesinde yalnızca Android Studio + cihaz testi.

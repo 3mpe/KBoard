@@ -4,6 +4,7 @@ package helium314.keyboard.latin
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import helium314.keyboard.kboard.KBoardEngineLoader // KBOARD
 import helium314.keyboard.keyboard.emoji.SupportedEmojis
 import helium314.keyboard.latin.define.DebugFlags
 import helium314.keyboard.latin.dictionary.ExpandableDictionaryUtils
@@ -46,6 +47,7 @@ class App : Application() {
         runBlocking { jobs.joinAll() } // word should be finished before anything else is started
 
         scope.launch { // do some uncritical work in background for faster startup
+            KBoardEngineLoader.init(this@App) // KBOARD: Türkçe öneri motoru kaynakları
             SupportedEmojis.load(this@App)
             ExpandableDictionaryUtils.initUpToDateDicts(this@App)
             LayoutUtilsCustom.removeMissingLayouts(this@App)

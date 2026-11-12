@@ -4,21 +4,29 @@ package helium314.keyboard.kboard
 import helium314.keyboard.latin.NgramContext
 import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.common.InputPointers
+import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.suggestions.SuggestedWordInfo
 import io.github.kboard.engine.Candidate
 import io.github.kboard.engine.CandidateSource
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
+import io.github.kboard.engine.deasciify.DeasciifyIndex
+import io.github.kboard.engine.deasciify.DeasciifySource
+import android.app.Application
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+// Düz Application: HeliBoard'un App.onCreate'i her testte arka plan coroutine'leri başlatıyor; testler
+// arasında bunlar ölen iş parçacıklarıyla takılıyor (#30). Bu testler App'e ihtiyaç duymaz.
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class KBoardSuggestionsTest {
     private val tr = Locale.forLanguageTag("tr")
     private var lastQuery: Query? = null
@@ -35,7 +43,17 @@ class KBoardSuggestionsTest {
     @After
     fun reset() {
         KBoardSuggestions.engine = SuggestionEngine()
+        KBoardSuggestions.setDeasciifier(null)
     }
+
+    private fun deasciifier() = DeasciifySource(DeasciifyIndex.build(listOf(
+        DeasciifyIndex.Companion.Entry("çok", 200), DeasciifyIndex.Companion.Entry("şimdi", 138),
+        DeasciifyIndex.Companion.Entry("simdi", 99), DeasciifyIndex.Companion.Entry("süs", 116),
+        DeasciifyIndex.Companion.Entry("sus", 84, DeasciifyIndex.FLAG_PROTECTED),
+    )))
+
+    private fun info(word: String) = SuggestedWordInfo(word, "", 100, SuggestedWordInfo.KIND_COMPLETION,
+        KBoardDictionary(tr), SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
 
     private fun composed(word: String) = ComposedData(InputPointers(1), false, word)
 
@@ -70,5 +88,65 @@ class KBoardSuggestionsTest {
             NgramContext.WordInfo.BEGINNING_OF_SENTENCE_WORD_INFO, NgramContext.WordInfo("dün")
         )
         assertEquals(listOf("eve", "gidelim"), KBoardSuggestions.contextWords(ctx))
+    }
+
+    @Test
+    fun deasciifierDecidesAutoCorrection() {
+        KBoardSuggestions.setDeasciifier(deasciifier())
+        val heli = false to false
+
+        // cok → çok: listede olmasa da başa eklenir ve otomatik düzeltme açılır
+        val list = mutableListOf(info("cop"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", list, tr, true, heli))
+        assertEquals("çok", list[0].word)
+
+        // Cok → Çok: büyük harf yazılandan taşınır
+        val list1 = mutableListOf<SuggestedWordInfo>()
+        KBoardSuggestions.mergeAutoCorrection("Cok", list1, tr, true, heli)
+        assertEquals("Çok", list1[0].word)
+
+        // Simdi → Şimdi: listedeki kayıt başa taşınır, büyük harf korunur
+        val list2 = mutableListOf(info("Sinema"), info("Şimdi"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("Simdi", list2, tr, true, heli))
+        assertEquals(listOf("Şimdi", "Sinema"), list2.map { it.word })
+
+        // sus korunur: HeliBoard düzeltmek istese de düzeltme yok
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("sus", mutableListOf(info("süs")), tr, true, true to true))
+
+        // kişisel sözlük / geçmiş / kişilerdeki kelime düzeltilmez (geri alınan düzeltme tekrarlanmaz)
+        for (type in listOf(Dictionary.TYPE_USER, Dictionary.TYPE_USER_HISTORY, Dictionary.TYPE_CONTACTS)) {
+            val l = mutableListOf(info("cop"))
+            assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", l, tr, true, heli, type))
+            assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", l, tr, true, true to true, type))
+            assertEquals(listOf("cop"), l.map { it.word }) // liste değişmez
+        }
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, heli, Dictionary.TYPE_MAIN))
+
+        // sondaki tırnak korunur: cok' → çok'
+        val quoted = mutableListOf(info("çok'"))
+        KBoardSuggestions.mergeAutoCorrection("cok", quoted, tr, true, heli, null, 1)
+        assertEquals(listOf("çok'"), quoted.map { it.word })
+
+        // görüş yoksa ya da düzeltme kapalıysa HeliBoard'un kararı aynen kalır
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("merhba", mutableListOf(info("merhaba")), tr, true, true to true))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, false, heli))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), Locale.ENGLISH, true, heli))
+    }
+
+    @Test
+    fun toggleOffLeavesHeliBoardAlone() {
+        KBoardSuggestions.setDeasciifier(null)
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, true to true, Dictionary.TYPE_USER_HISTORY))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("sus", mutableListOf(), tr, true, true to true))
+        assertEquals(false to false, KBoardSuggestions.mergeAutoCorrection("cok", mutableListOf(), tr, true, false to false))
+    }
+
+    @Test
+    fun deasciifierSuggestsWhileTyping() {
+        KBoardSuggestions.setDeasciifier(deasciifier())
+        val words = KBoardSuggestions.getSuggestions(composed("sim"), NgramContext.BEGINNING_OF_SENTENCE, tr).map { it.word }
+        assertTrue("şimdi" in words, words.toString())
+        KBoardSuggestions.setDeasciifier(null)
+        assertTrue(KBoardSuggestions.getSuggestions(composed("sim"), NgramContext.BEGINNING_OF_SENTENCE, tr).isEmpty())
     }
 }

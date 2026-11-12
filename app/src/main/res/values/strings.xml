@@ -136,6 +136,9 @@
     <string name="prefs_block_potentially_offensive_summary">Do not suggest potentially offensive words</string>
     <!-- Option to enable auto correction -->
     <string name="autocorrect">Auto-correction</string>
+    <!-- KBOARD -->
+    <string name="kboard_deasciify">Turkish accent correction</string>
+    <string name="kboard_deasciify_summary">Suggest and auto-correct Turkish letters typed without accents (cok → çok)</string>
     <!-- Description for auto correction -->
     <string name="auto_correction_summary">Spacebar and punctuation automatically correct mistyped words</string>
     <!-- Option to enable auto correction for many fields that do not request auto correction -->

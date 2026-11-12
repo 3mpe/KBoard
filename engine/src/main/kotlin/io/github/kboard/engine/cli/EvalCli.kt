@@ -1,7 +1,11 @@
 package io.github.kboard.engine.cli
 
 import io.github.kboard.engine.Query
+import io.github.kboard.engine.CandidateSource
 import io.github.kboard.engine.SuggestionEngine
+import io.github.kboard.engine.deasciify.DeasciifyIndex
+import io.github.kboard.engine.deasciify.DeasciifySource
+import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -58,12 +62,33 @@ class EvalServer(private val engine: SuggestionEngine) {
     }
 }
 
-fun main() {
-    val server = EvalServer(SuggestionEngine())
+/**
+ * Seçenekler:
+ *   --deasciify <dizin.kbd>   DeasciifySource'u etkinleştirir (ortam değişkeni: KBOARD_DEASCIIFY_INDEX)
+ *   --deasciify-valid-margin <n|off>  sözlükte olan biçimi düzeltme eşiği (varsayılan 30)
+ * Seçeneksiz çalıştırma Faz 1.7 davranışıdır: kaynak yok, öneri yok.
+ */
+fun main(args: Array<String>) {
+    val sources = mutableListOf<CandidateSource>()
+    val indexPath = argValue(args, "--deasciify") ?: System.getenv("KBOARD_DEASCIIFY_INDEX")
+    if (indexPath != null) {
+        val index = File(indexPath).inputStream().buffered().use { DeasciifyIndex.read(it) }
+        var config = DeasciifySource.Config()
+        argValue(args, "--deasciify-valid-margin")?.let {
+            config = config.copy(validWordMargin = if (it == "off") Int.MAX_VALUE else it.toInt())
+        }
+        sources += DeasciifySource(index, config)
+    }
+    val server = EvalServer(SuggestionEngine(sources))
     val out = System.out.bufferedWriter(Charsets.UTF_8)
     System.`in`.bufferedReader(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.forEach {
         out.write(server.handle(it))
         out.newLine()
         out.flush()
     }
+}
+
+private fun argValue(args: Array<String>, name: String): String? {
+    val i = args.indexOf(name)
+    return if (i >= 0 && i + 1 < args.size) args[i + 1] else null
 }
