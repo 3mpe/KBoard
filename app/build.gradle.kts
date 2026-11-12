@@ -10,11 +10,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "helium314.keyboard"
+        applicationId = "io.github.kboard.tr" // KBOARD: HeliBoard ile yan yana kurulabilsin
         minSdk = 21
         targetSdk = 37
         versionCode = 4300
-        versionName = "4.3-beta1"
+        versionName = "0.1.0" // KBOARD: taban HeliBoard 4.3-beta1+, bkz. docs/UPSTREAM.md (versionCode upstream ile aynı tutulur)
         ndk {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
@@ -58,7 +58,7 @@ android {
         androidComponents.onVariants { variant: ApplicationVariant ->
             if (variant.buildType == "debug") {
                 // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
-                variant.androidResources.ignoreAssetsPatterns = listOf("main_ro.dict")
+                variant.androidResources.ignoreAssetsPatterns = listOf("main_ro.dict") // KBOARD: yalnızca TR sözlüğü var, etkisiz
                 variant.proguardFiles = emptyList()
                 //noinspection ProguardAndroidTxtUsage we intentionally use the "normal" file here
                 variant.proguardFiles.add(project.layout.buildDirectory.file(project.buildFile.parent + "/dontoptimize.pro"))
@@ -66,7 +66,7 @@ android {
             }
             variant.outputs.forEach { output ->
                 if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
-                    output.outputFileName = "HeliBoard_${defaultConfig.versionName}-${variant.buildType}.apk"
+                    output.outputFileName = "KBoard_${defaultConfig.versionName}-${variant.buildType}.apk" // KBOARD
                 }
             }
         }

@@ -9,7 +9,7 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"
     tools:ignore="MissingTranslation">
     <!-- Name of Android spell checker service. The app name should not be translated. -->
-    <string name="spell_checker_service_name">HeliBoard Spell Checker</string>
+    <string name="spell_checker_service_name">KBoard Spell Checker</string>
     <!-- Title for IME settings screen. The app name should not be translated. -->
     <string name="ime_settings">HeliBoard Settings</string>
     <!-- Title for the spell checking service settings screen. The app name should not be translated. -->

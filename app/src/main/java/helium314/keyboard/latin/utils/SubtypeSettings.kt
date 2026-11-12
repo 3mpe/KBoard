@@ -218,6 +218,11 @@ object SubtypeSettings {
     @Suppress("SameReturnValue")
     private fun getDefaultEnabledSubtypes(): List<InputMethodSubtype> {
         if (systemSubtypes.isNotEmpty()) return systemSubtypes
+        // KBOARD: yalnızca Türkçe; sistem dilinden bağımsız olarak varsayılan alt tip Türkçe Q
+        resourceSubtypesByLocale[Locale.forLanguageTag("tr")]?.firstOrNull()?.let {
+            systemSubtypes.add(it)
+            return systemSubtypes
+        }
         val subtypes = systemLocales.mapNotNull { locale ->
             val subtypesOfLocale = resourceSubtypesByLocale[locale]
             // get best match

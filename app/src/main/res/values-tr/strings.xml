@@ -105,7 +105,7 @@
     <string name="delete_swipe">Kadırarak silme</string>
     <string name="key_borders">Tuş kenarlıkları</string>
     <string name="day_night_mode">Otomatik gündüz/gece modu</string>
-    <string name="spell_checker_service_name">HeliBoard yazım denetleyicisi</string>
+    <string name="spell_checker_service_name">KBoard yazım denetleyicisi</string>
     <string name="abbreviation_unit_minutes">%sdak.</string>
     <string name="settings_category_suggestions">Öneriler</string>
     <string name="show_emoji_key">Emoji tuşu</string>
