@@ -46,7 +46,7 @@ ayrı alındığı için sözlük + kurulum medyanı toplam medyanına tam eşit
 
 **Yorum.** Üç tahminin üçü de masaüstünde beklenenden iyi çıktı: açılış "saniye mertebesi" yerine
 ~0,6 sn, bellek "onlarca–yüzlerce MB" yerine ~42 MB, boyut "birkaç on MB" yerine 8,3 MB.
-Belirsizlik giderme modelini çıkarmak yalnız ~1,7 MB yığın ve ~50 ms kazandırıyor; maliyetin
+Belirsizlik giderme modelini çıkarmak yalnız ~1,7 MB yığın ve ~40 ms kurulum süresi kazandırıyor (`build()` medyanı 262 → 224 ms; toplam açılışta koşular arası gürültü içinde); maliyetin
 asıl kaynağı sözlük ve morfotaktik grafik. Klavye açısından:
 
 | Boyut | Ölçülen (masaüstü) | Klavye için anlamı |

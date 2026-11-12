@@ -193,7 +193,7 @@ public final class Spike {
     md.append("Her sütunun medyanı ayrı alınır (bu yüzden sözlük + kurulum medyanı toplam medyanına ")
         .append("tam eşit olmayabilir); parantezde en düşük–en yüksek.\n\n");
     md.append("| Yapılandırma | Koşu | Sözlük yükleme ms | Morfoloji kurulum ms | Toplam ms | ")
-        .append("Tutulan yığın MB | Kullanım sonrası MB | İlk 120 farklı kelime ms | ")
+        .append("Tutulan yığın MB | Kullanım sonrası MB | Her farklı kelime bir kez ms | ")
         .append("İlk 1000 çağrı ms | 1000 kelime sıcak ms |\n");
     md.append("|---|---|---|---|---|---|---|---|---|---|\n");
     md.append(row("JIT, varsayılan (model dahil)", series(words, base, dflt, runs)));
