@@ -1,0 +1,36 @@
+{
+  "name": "heliboard-ornek-1080x2400",
+  "_not": "ÖRNEK: konumlar kalibre edilmedi. Kendi cihazınızda README'deki adımlarla düzeltin.",
+  "package": "helium314.keyboard",
+  "layers": {
+    "base": {
+      "rows": [
+        {"y": 1745, "x0": 45, "dx": 90, "keys": "qwertyuıopğü"},
+        {"y": 1905, "x0": 49, "dx": 98, "keys": "asdfghjklşi"},
+        {"y": 2065, "x0": 235, "dx": 87, "keys": "zxcvbnmöç"}
+      ],
+      "keys": {
+        "shift": [80, 2065],
+        "delete": [1000, 2065],
+        "symbols": [100, 2225],
+        "space": [540, 2225],
+        "enter": [990, 2225]
+      }
+    },
+    "shift": {"from_base": "upper", "enter": ["shift"]},
+    "symbols": {
+      "enter": ["symbols"],
+      "exit": ["abc"],
+      "rows": [
+        {"y": 1745, "x0": 54, "dx": 108, "keys": "1234567890"},
+        {"y": 1905, "x0": 54, "dx": 108, "keys": "@#₺_&-+()/"},
+        {"y": 2065, "x0": 249, "dx": 97, "keys": "*\"':;!?"}
+      ],
+      "keys": {"abc": [100, 2225]}
+    }
+  },
+  "suggestion_strip": {"bounds": [0, 1560, 1080, 1680], "max": 3},
+  "settle_ms": 150,
+  "stable_reads": 2,
+  "max_reads": 8
+}
