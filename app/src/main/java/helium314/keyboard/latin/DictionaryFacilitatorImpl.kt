@@ -5,6 +5,7 @@
  */
 package helium314.keyboard.latin
 
+import helium314.keyboard.kboard.KBoardSuggestions // KBOARD
 import android.Manifest
 import android.content.Context
 import android.provider.UserDictionary
@@ -572,6 +573,9 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 suggestions.add(info)
             }
         }
+        // KBOARD: Türkçe öneri motorundan (engine/) gelen adaylar
+        KBoardSuggestions.getSuggestions(composedData, ngramContext, dictGroup.locale)
+            .filterNotTo(suggestions) { isBlacklisted(it.word) }
         return suggestions
     }
 

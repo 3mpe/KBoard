@@ -40,9 +40,8 @@ object ShadowLocaleManagerCompat {
 class ShadowInputMethodManager2 : ShadowInputMethodManager() {
     @Implementation
     override fun getInputMethodList() = listOf(
-        if (BuildConfig.BUILD_TYPE == "debug" || BuildConfig.BUILD_TYPE == "debugNoMinify")
-            InputMethodInfo("helium314.keyboard.debug", "LatinIME", "HeliBoard debug", null)
-        else InputMethodInfo("helium314.keyboard", "LatinIME", "HeliBoard", null),
+        // KBOARD: paket adı applicationId'den gelir (debug son ekini de içerir)
+        InputMethodInfo(BuildConfig.APPLICATION_ID, "LatinIME", "KBoard", null),
     )
     @Implementation
     fun getShortcutInputMethodsAndSubtypes() = emptyMap<InputMethodInfo, List<InputMethodSubtype>>()
