@@ -10,6 +10,7 @@ import io.github.kboard.engine.Query
 import io.github.kboard.engine.SuggestionEngine
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * HeliBoard öneri hattı ile KBoard motoru (engine/) arasındaki adaptör.
@@ -20,23 +21,27 @@ import java.util.concurrent.ConcurrentHashMap
 object KBoardSuggestions {
     const val TYPE_KBOARD = "kboard"
 
-    /** Ana sözlük skorlarıyla aynı ölçeğe getirmek için çarpan. Faz 2'de ölçümle ayarlanacak. */
+    /**
+     * Ana sözlük skorlarıyla aynı ölçeğe getirmek için çarpan. Faz 2'de ölçümle ayarlanacak:
+     * otomatik düzeltme eşiği (AutoCorrectionUtils) bu skordan hesaplanır, weightForLocale uygulanmaz.
+     */
     private const val SCORE_SCALE = 1_000_000
 
     @Volatile
     var engine: SuggestionEngine = SuggestionEngine()
 
-    /** Son çağrı sayısı; adaptörün hatta bağlı olduğunu testlerde/hata ayıklamada doğrulamak için. */
-    @Volatile
-    var callCount: Long = 0
-        private set
+    private val calls = AtomicLong()
+
+    /** Çağrı sayısı; adaptörün hatta bağlı olduğunu testlerde/hata ayıklamada doğrulamak için. */
+    val callCount: Long get() = calls.get()
 
     private val dictionaries = ConcurrentHashMap<Locale, KBoardDictionary>()
 
     fun getSuggestions(composedData: ComposedData, ngramContext: NgramContext, locale: Locale): List<SuggestedWordInfo> {
-        callCount++
+        calls.incrementAndGet()
         val e = engine
-        if (e.isEmpty || composedData.mIsBatchMode) return emptyList()
+        // Motor yalnızca Türkçe için; diğer dil gruplarına (ör. yazım denetleyicisinin kendi örneği) aday eklemez.
+        if (e.isEmpty || composedData.mIsBatchMode || locale.language != "tr") return emptyList()
         val query = Query(contextWords(ngramContext), composedData.mTypedWord)
         val dict = dictionaries.getOrPut(locale) { KBoardDictionary(locale) }
         return e.suggest(query).candidates.map { it.toWordInfo(query, dict) }

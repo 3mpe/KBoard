@@ -57,8 +57,7 @@ android {
 
         androidComponents.onVariants { variant: ApplicationVariant ->
             if (variant.buildType == "debug") {
-                // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
-                variant.androidResources.ignoreAssetsPatterns = listOf("main_ro.dict") // KBOARD: yalnızca TR sözlüğü var, etkisiz
+                // KBOARD: HeliBoard burada main_ro.dict'i hariç tutuyordu; KBoard'da yalnızca TR sözlüğü var
                 variant.proguardFiles = emptyList()
                 //noinspection ProguardAndroidTxtUsage we intentionally use the "normal" file here
                 variant.proguardFiles.add(project.layout.buildDirectory.file(project.buildFile.parent + "/dontoptimize.pro"))
