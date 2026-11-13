@@ -1,0 +1,14 @@
+BILGI öğrenmeden önce 'mavi' sonrası 'kaplumbağa' önerilmiyor (beklenen)
+BILGI yazılan: "Nqcp is a NV q nqcp IQ I bbq q nqcp is I just q nqcp I I NV q q nqcp is I NV q q "
+GECTI öğrenilenler dosyaya yazıldı: 31 bayt
+KALDI uygulama yeniden açılınca 'kaplumbağa' önerilmiyor
+GECTI 'herşey' + boşluk → "Her şey " (iki kelime yazıldı)
+GECTI geri silme düzeltmeyi geri aldı: "Herşey"
+GECTI geri alma dosyaya yazıldı (kural-geri-alinan.tsv)
+GECTI yeniden açılınca geri alınan 'herşey' düzeltilmedi
+BILGI yerel yedek dosyası bulunamadı, yedek dışlama denenemedi
+GECTI yeniden başlatma sonrası dosya duruyor
+KALDI yeniden başlatma sonrası 'kaplumbağa' önerilmiyor
+GECTI 'Öğrenilenleri sil' sonrası dosya silindi
+GECTI 'Öğrenilenleri sil' sonrası geri alma dosyası silindi
+GECTI silme sonrası 'kaplumbağa' artık önerilmiyor
