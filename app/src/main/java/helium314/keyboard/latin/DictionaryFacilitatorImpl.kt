@@ -5,6 +5,7 @@
  */
 package helium314.keyboard.latin
 
+import helium314.keyboard.kboard.KBoardPersonal // KBOARD
 import helium314.keyboard.kboard.KBoardSuggestions // KBOARD
 import android.Manifest
 import android.content.Context
@@ -403,6 +404,11 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             dictionaryGroup
         ) ?: return
 
+        // KBOARD: kişisel öğrenme (yalnız Türkçe). Buraya yalnız kullanıcı geçmişi sözlüğü varken
+        // (kişiselleştirme açık) ve gizli mod / önerisiz alan değilken gelinir; geri alma aşağıda
+        // unlearnFromUserHistory'de.
+        if (dictionaryGroup.locale.language == "tr") KBoardPersonal.learn(wordToUse, ngramContext)
+
         // We demote unrecognized words (frequency <= 0) by specifying them as "invalid".
         // We don't add words with 0-frequency (assuming they would be profanity etc.).
         val isValid = mainFreq > 0
@@ -497,6 +503,8 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                     timeStampInSeconds: Long, event: DictionaryFacilitator.UnlearnEvent) {
         val job = synchronized(wordsWaitingForHistory) { wordsWaitingForHistory.remove(word) } ?: return
         job.cancel()
+        // KBOARD: kelime son 25 saniyede yazılmıştı (geçmişe eklenmesi bekliyordu): kişisel modelden de geri al
+        KBoardPersonal.unlearn(word)
     }
 
     // TODO: Revise the way to fusion suggestion results.
@@ -608,6 +616,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         for (dictionaryGroup in dictionaryGroups) {
             dictionaryGroup.getSubDict(Dictionary.TYPE_USER_HISTORY)?.clear()
         }
+        KBoardPersonal.clear() // KBOARD: geçmiş silinince (ve kişiselleştirme kapatılınca) öğrenilenler de
     }
 
     override fun localesAndConfidences(): String? {

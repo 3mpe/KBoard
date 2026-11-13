@@ -558,4 +558,8 @@
     <!-- KBOARD -->
     <string name="kboard_deasciify">Türkçe aksan düzeltme</string>
     <string name="kboard_deasciify_summary">Aksansız yazılan Türkçe harfleri öner ve otomatik düzelt (cok → çok)</string>
+    <string name="kboard_clear_personal">Öğrenilenleri sil</string>
+    <string name="kboard_clear_personal_summary">Yazdıklarınızdan öğrenilen kelimeleri ve kelime çiftlerini unut. Bunlar yalnız bu cihazda tutulur.</string>
+    <string name="kboard_clear_personal_message">Klavyenin yazdıklarınızdan öğrendiği her şey silinsin mi? Bu geri alınamaz.</string>
+    <string name="kboard_clear_personal_button">Sil</string>
 </resources>
