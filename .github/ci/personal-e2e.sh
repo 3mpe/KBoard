@@ -21,12 +21,29 @@ field_text() {
 }
 personal_file() { adb shell run-as "$pkg" ls -l "$de_dir" 2>&1 | tr -d '\r' | grep -E "personal-tr\.bin$" || true; }
 
+# KBoard seçili değilse (yeniden başlatmadan sonra sistem Gboard'a dönebiliyor) yeniden seç.
+ensure_kboard() {
+  local n cur
+  for n in 1 2 3 4 5; do
+    cur=$(adb shell settings get secure default_input_method | tr -d '\r')
+    [ "$cur" = "$kboard" ] && return 0
+    echo "   klavye: $cur, KBoard seçiliyor ($n)" >&2
+    adb shell ime enable "$kboard" >/dev/null 2>&1; adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3
+  done
+  return 1
+}
+
 # "mavi " yazıldıktan sonra şeritteki üç öneriden hangisi $WORD? 0 = orta, 1 = sol, 2 = sağ, -1 = yok.
 # Her yuva için alan baştan açılır (open_field uygulamayı kapatıp açar: dosyadan yükleme de denenir).
 which_slot() { # $1 = görüntü adı
   local i txt
   for i in 0 1 2; do
-    open_field >/dev/null
+    ensure_kboard; open_field >/dev/null
+    if ! adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard"; then
+      echo "   etkin klavye KBoard değil, yeniden seçiliyor" >&2
+      [ -n "${gboard:-}" ] && adb shell ime set "$gboard" >/dev/null 2>&1
+      adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3; adb shell input tap 540 400; sleep 3
+    fi
     type_word "mavi"; tap_space; sleep 3
     [ "$i" = 0 ] && shot "$1" 1 >&2
     adb shell input tap ${SLOTS[$i]}; sleep 2
@@ -89,7 +106,8 @@ adb shell bmgr transport com.android.localtransport/.LocalTransport >/dev/null 2
 adb shell bmgr backupnow "$pkg" 2>&1 | tail -2
 if adb root >/dev/null 2>&1; then
   sleep 3; adb wait-for-device
-  bk=$(adb shell "find /data/cache/backup -path '*$pkg*' -type f 2>/dev/null" | tr -d '\r' | head -5)
+  adb shell "find /data/cache/backup /cache/backup /data/backup -type f 2>/dev/null" | tr -d '\r' > "$out/yedek-dosyalar.txt"
+  bk=$(grep -F "$pkg" "$out/yedek-dosyalar.txt" | head -5)
   if [ -n "$bk" ]; then
     : > "$out/yedek-icerik.txt"
     for x in $bk; do
@@ -108,14 +126,16 @@ else result BILGI "adb root yok, yedek dışlama denenemedi"; fi
 log "yeniden başlatılıyor"
 adb reboot
 if wait_boot; then
-  adb shell ime set "$kboard" >/dev/null 2>&1
+  ensure_kboard || log "KBoard seçilemedi"
+  adb shell dumpsys input_method | grep -E "mCurMethodId" | head -1
   [ -n "$(personal_file)" ] && result GECTI "yeniden başlatma sonrası dosya duruyor" || result KALDI "yeniden başlatma sonrası dosya yok"
   s=$(which_slot kboard-e2e-3-yeniden-baslatma)
   if [ "$s" != "-1" ]; then result GECTI "yeniden başlatma sonrası '$WORD' hâlâ öneriliyor (yuva $s)"
   else result KALDI "yeniden başlatma sonrası '$WORD' önerilmiyor"; fi
 else result KALDI "emülatör yeniden açılmadı"; fi
 
-# 5) Ayarlar → Metin düzeltme → Öğrenilenleri sil → Sil.
+# 5) Ayarlar (KBoard seçili değilse ayarlar kurulum sihirbazını açar)
+# Metin düzeltme → Öğrenilenleri sil → Sil.
 adb shell am force-stop "$pkg"
 adb shell am start -W -n "$pkg/helium314.keyboard.settings.SettingsActivity" >/dev/null; sleep 4
 shot kboard-e2e-4-ayarlar 1
