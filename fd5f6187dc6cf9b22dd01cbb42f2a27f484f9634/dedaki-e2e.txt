@@ -1,0 +1,4 @@
+GECTI 'dedimki' → şeritte 'dedim ki' (yuva 0), dokununca alan: "Dedim ki"
+KALDI öneri seçildikten sonra geri silme: alan "Dedim k" ('Dedimki' bekleniyordu)
+GECTI 'dedimki' + boşluk yazıldığı gibi kaldı (otomatik düzeltme yok)
+GECTI 'bu akşam bizde' ilk öneri ayrım değil: "Bu akşam bizden"

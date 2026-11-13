@@ -1,0 +1,82 @@
+--------- beginning of main
+11-13 16:30:39.186  1429  1534 I KBoardPersonal: kişisel model yüklendi, 3 ms
+11-13 16:30:39.289  1429  1491 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 101 ms
+11-13 16:30:39.512  1429  1491 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 84 ms
+11-13 16:30:43.108  1429  1670 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 3594 ms
+11-13 16:31:23.958  4338  4398 I KBoardPersonal: kişisel model yüklendi, 2 ms
+11-13 16:31:24.006  4338  4393 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 39 ms
+11-13 16:31:24.220  4338  4393 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 46 ms
+11-13 16:31:25.762  4338  4409 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1540 ms
+11-13 16:31:46.048  4589  4624 I KBoardPersonal: kişisel model yüklendi, 0 ms
+11-13 16:31:46.084  4589  4616 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 29 ms
+11-13 16:31:46.231  4589  4616 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 45 ms
+11-13 16:31:47.438  4589  4627 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1202 ms
+11-13 16:32:28.773  4982  5008 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 38 ms
+11-13 16:32:28.981  4982  5008 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 37 ms
+11-13 16:32:29.899  4982  5020 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 917 ms
+11-13 16:32:47.775  5161  5188 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 27 ms
+11-13 16:32:47.958  5161  5188 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 33 ms
+11-13 16:32:48.882  5161  5202 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 922 ms
+11-13 16:33:03.789  5326  5359 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 48 ms
+11-13 16:33:04.032  5326  5359 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 33 ms
+11-13 16:33:05.600  5326  5374 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1566 ms
+11-13 16:33:20.883  5498  5521 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 41 ms
+11-13 16:33:21.066  5498  5521 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 33 ms
+11-13 16:33:22.618  5498  5535 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1549 ms
+11-13 16:33:58.674  6053  6084 I KBoardPersonal: kişisel model yüklendi, 1 ms
+11-13 16:33:58.720  6053  6076 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 33 ms
+11-13 16:33:58.941  6053  6076 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 32 ms
+11-13 16:33:59.878  6053  6091 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 934 ms
+11-13 16:34:24.282  6258  6286 I KBoardPersonal: kişisel model yüklendi, 0 ms
+11-13 16:34:24.316  6258  6278 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 30 ms
+11-13 16:34:24.496  6258  6278 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 36 ms
+11-13 16:34:25.468  6258  6293 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 969 ms
+11-13 16:35:04.787  6864  6888 I KBoardPersonal: kişisel model yüklendi, 0 ms
+11-13 16:35:04.817  6864  6883 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 25 ms
+11-13 16:35:05.007  6864  6883 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 45 ms
+11-13 16:35:05.808  6864  6895 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 792 ms
+11-13 16:36:01.894  7616  7635 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 25 ms
+11-13 16:36:02.076  7616  7635 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 29 ms
+11-13 16:36:02.846  7616  7647 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 766 ms
+11-13 16:36:05.332  7666  7697 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 25 ms
+11-13 16:36:05.523  7666  7697 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 27 ms
+11-13 16:36:07.041  7666  7716 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1513 ms
+11-13 16:36:24.641  7857  7880 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 25 ms
+11-13 16:36:24.854  7857  7880 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 48 ms
+11-13 16:36:26.322  7857  7892 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1466 ms
+11-13 16:36:46.655  8031  8053 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 26 ms
+11-13 16:36:46.832  8031  8053 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 26 ms
+11-13 16:36:47.726  8031  8068 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 891 ms
+11-13 16:37:02.475  8175  8198 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 22 ms
+11-13 16:37:02.703  8175  8198 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 41 ms
+11-13 16:37:03.469  8175  8208 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 760 ms
+11-13 16:37:58.233  8558  8579 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 24 ms
+11-13 16:37:58.413  8558  8579 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 43 ms
+11-13 16:37:59.397  8558  8594 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 982 ms
+11-13 16:38:17.284  8730  8752 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 28 ms
+11-13 16:38:17.493  8730  8752 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 35 ms
+11-13 16:38:18.476  8730  8766 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 981 ms
+11-13 16:38:33.262  8876  8897 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 23 ms
+11-13 16:38:33.463  8876  8897 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 33 ms
+11-13 16:38:34.364  8876  8912 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 900 ms
+11-13 16:38:48.888  9017  9040 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 22 ms
+11-13 16:38:49.090  9017  9040 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 20 ms
+11-13 16:38:49.819  9017  9049 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 726 ms
+11-13 16:39:39.621  9357  9386 I KBoardPersonal: kişisel model yüklendi, 1 ms
+11-13 16:39:39.649  9357  9378 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 23 ms
+11-13 16:39:39.845  9357  9378 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 38 ms
+11-13 16:39:40.737  9357  9393 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 890 ms
+11-13 16:40:01.356  9538  9566 I KBoardPersonal: kişisel model yüklendi, 1 ms
+11-13 16:40:01.393  9538  9558 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 32 ms
+11-13 16:40:01.518  9538  9558 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 43 ms
+11-13 16:40:02.856  9538  9569 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1336 ms
+11-13 16:40:24.634  9538  9558 W KBoardTransfer: içe aktarma dosyası reddedildi: NOT_KBOARD
+11-13 16:40:42.590  9875  9896 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 22 ms
+11-13 16:40:42.777  9875  9896 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 40 ms
+11-13 16:40:43.743  9875  9911 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 959 ms
+11-13 16:41:06.024 10153 10174 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 25 ms
+11-13 16:41:06.220 10153 10174 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 23 ms
+11-13 16:41:07.259 10153 10189 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1037 ms
+11-13 16:41:19.295 10308 10332 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 25 ms
+11-13 16:41:19.478 10308 10332 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 37 ms
+11-13 16:41:20.406 10308 10347 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 926 ms
