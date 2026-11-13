@@ -1,0 +1,20 @@
+--------- beginning of main
+11-13 05:53:08.665  4594  4719 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 543 ms
+11-13 05:54:18.351  6012  6053 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 368 ms
+11-13 05:54:58.861  6512  6542 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 753 ms
+11-13 05:55:16.093  6512  6563 D KBoardSuggestions: merge typed=co allowed=false base=(false, false) src=main locale=tr deasc=true ac=NoOpinion
+11-13 05:55:16.595  6512  6563 D KBoardSuggestions: merge typed=co allowed=false base=(false, false) src=main locale=tr deasc=true ac=NoOpinion
+11-13 05:55:17.429  6512  6563 D KBoardSuggestions: merge typed=cok allowed=false base=(true, false) src=null locale=tr deasc=true ac=Replace(word=çok)
+11-13 05:55:24.111  6512  6563 D KBoardSuggestions: merge typed= allowed=false base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 05:55:33.733  6512  6563 D KBoardSuggestions: merge typed=gu allowed=false base=(true, false) src=main locale=tr deasc=true ac=NoOpinion
+11-13 05:55:34.021  6512  6563 D KBoardSuggestions: merge typed= allowed=false base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 05:55:34.578  6512  6563 D KBoardSuggestions: merge typed=guzel allowed=false base=(true, false) src=null locale=tr deasc=true ac=Replace(word=güzel)
+11-13 05:55:47.621  6781  6801 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 239 ms
+11-13 05:56:06.015  6781  6818 D KBoardSuggestions: merge typed=s allowed=false base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 05:56:07.176  6781  6818 D KBoardSuggestions: merge typed=simd allowed=false base=(true, false) src=null locale=tr deasc=true ac=Replace(word=SIMD)
+11-13 05:56:07.177  6781  6818 D KBoardSuggestions: merge typed= allowed=false base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 05:56:07.457  6781  6818 D KBoardSuggestions: merge typed=simdi allowed=false base=(true, false) src=main locale=tr deasc=true ac=Replace(word=şimdi)
+11-13 05:56:28.117  7323  7345 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 161 ms
+11-13 05:56:38.005  7323  7395 D KBoardSuggestions: merge typed=Ka allowed=false base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 05:56:38.443  7323  7395 D KBoardSuggestions: merge typed=Kadik allowed=false base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 05:56:39.306  7323  7395 D KBoardSuggestions: merge typed=Kadikoy'd allowed=false base=(true, false) src=null locale=tr deasc=true ac=Replace(word=Kadıköy'd)
