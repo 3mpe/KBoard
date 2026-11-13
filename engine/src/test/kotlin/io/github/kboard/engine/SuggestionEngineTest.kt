@@ -60,4 +60,25 @@ class SuggestionEngineTest {
         assertTrue(src.received.isEmpty())
         assertTrue(server.handle("bozuk").contains("error"))
     }
+
+    @Test
+    fun denylistBlocksSuggestionsButNotTypedOrUserWords() {
+        val src = object : CandidateSource {
+            override val name = "t"
+            override fun candidates(query: Query, limit: Int) = listOf(
+                Candidate("orospu", 0.9, Source.DEASCIIFY),
+                Candidate("orospu'ya", 0.8, Source.DEASCIIFY),
+                Candidate("orman", 0.7, Source.DEASCIIFY),
+                Candidate("haşan", 0.6, Source.USER),
+                Candidate("ör", 0.5, Source.DEASCIIFY, autocorrectable = true),
+            )
+        }
+        val deny = Denylist.parse(sequenceOf("# yorum", "orospu*", "haşan", "ör  # satır sonu yorumu"))
+        val words = SuggestionEngine(listOf(src), denylist = deny).suggest(Query(emptyList(), "or"), 10)
+        assertEquals(listOf("orman", "haşan"), words.candidates.map { it.word })
+        assertNull(words.autocorrect)
+        // yazılanın kendisi engellenmez
+        val typed = SuggestionEngine(listOf(src), denylist = deny).suggest(Query(emptyList(), "Orospu"), 10)
+        assertTrue(typed.candidates.any { it.word == "orospu" })
+    }
 }

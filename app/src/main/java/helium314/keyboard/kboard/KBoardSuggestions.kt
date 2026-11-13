@@ -6,6 +6,7 @@ import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.suggestions.SuggestedWordInfo
 import io.github.kboard.engine.Candidate
+import io.github.kboard.engine.Denylist
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
@@ -55,6 +56,16 @@ object KBoardSuggestions {
     @Volatile
     private var userWords: List<String> = emptyList()
 
+    @Volatile
+    private var denylist: Denylist = Denylist.EMPTY
+
+    /** Önerilmeyecek kelimeleri bağlar (`assets/kboard/denylist-tr.txt`). */
+    @Synchronized
+    fun setDenylist(list: Denylist) {
+        denylist = list
+        rebuild()
+    }
+
     /** Aksan düzelticiyi bağlar ya da (null) kaldırır. */
     @Synchronized
     fun setDeasciifier(source: DeasciifySource?) {
@@ -70,7 +81,8 @@ object KBoardSuggestions {
     }
 
     private fun rebuild() {
-        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, userMorph)).also { it.setUserWords(userWords) }
+        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, userMorph), denylist = denylist)
+            .also { it.setUserWords(userWords) }
     }
 
     /** Kişisel sözlük (yalnız Türkçe) değiştiğinde `UserBinaryDictionary` çağırır. */

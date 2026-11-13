@@ -7,6 +7,7 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.prefs
+import io.github.kboard.engine.Denylist
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.ngram.NgramModel
@@ -27,6 +28,7 @@ object KBoardEngineLoader {
     private const val TAG = "KBoardEngineLoader"
     const val DEASCIIFY_ASSET = "kboard/deasciify-tr.kbd"
     const val NGRAM_ASSET = "kboard/kboard-tr.kbn"
+    const val DENYLIST_ASSET = "kboard/denylist-tr.txt"
 
     private var index: DeasciifyIndex? = null
     // Güçlü referans: SharedPreferences dinleyicileri zayıf tutar.
@@ -36,6 +38,7 @@ object KBoardEngineLoader {
     fun init(context: Context) {
         val app = context.applicationContext
         val prefs = app.prefs()
+        loadDenylist(app)
         apply(app, prefs)
         // Dil modeli (~0,5 s) aksan düzelticiyi ve uygulama açılışını bekletmesin.
         thread(name = "kboard-ngram") { loadNgram(app) }
@@ -44,6 +47,16 @@ object KBoardEngineLoader {
         }
         listener = l
         prefs.registerOnSharedPreferenceChangeListener(l)
+    }
+
+    /** Hiçbir kaynağın önermeyeceği kelimeler (küfür, OCR hatası, konuşma dili kısaltması). */
+    private fun loadDenylist(context: Context) {
+        try {
+            val list = context.assets.open(DENYLIST_ASSET).bufferedReader().useLines { Denylist.parse(it.toList().asSequence()) }
+            KBoardSuggestions.setDenylist(list)
+        } catch (e: Exception) {
+            Log.e(TAG, "öneri yasağı listesi yüklenemedi", e)
+        }
     }
 
     private fun loadNgram(context: Context) {
