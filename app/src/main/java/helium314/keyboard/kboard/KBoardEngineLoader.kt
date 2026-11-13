@@ -10,6 +10,8 @@ import helium314.keyboard.latin.utils.prefs
 import io.github.kboard.engine.Denylist
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.morph.SuffixChainModel
+import io.github.kboard.engine.morph.SuffixChainSource
 import io.github.kboard.engine.ngram.NgramModel
 import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.typo.TypoSource
@@ -25,6 +27,10 @@ import kotlin.concurrent.thread
  * Dil modeli (`assets/kboard/kboard-tr.kbn`, ~0,9 MB, bellekte ~2,4 MB) `data/corpus/`'tan üretilir
  * (engine/build.gradle.kts: buildNgramModel). Aksan düzeltici ayarından bağımsız, hep yüklenir.
  *
+ * Ek zinciri modeli (`assets/kboard/suffix-tr.kbs`, ~7 KB) `data/suffix/chains-tr.tsv`'den üretilir
+ * (engine/build.gradle.kts: buildSuffixModel); kök sınıfları aksan dizininin bayraklarındadır, bu
+ * yüzden kaynak dizinle birlikte bağlanır ve kaldırılır.
+ *
  * Kişisel öğrenme ([KBoardPersonal]) HeliBoard'un kişiselleştirme ayarını izler
  * (`Settings.PREF_KEY_USE_PERSONALIZED_DICTS`).
  */
@@ -33,8 +39,10 @@ object KBoardEngineLoader {
     const val DEASCIIFY_ASSET = "kboard/deasciify-tr.kbd"
     const val NGRAM_ASSET = "kboard/kboard-tr.kbn"
     const val DENYLIST_ASSET = "kboard/denylist-tr.txt"
+    const val SUFFIX_ASSET = "kboard/suffix-tr.kbs"
 
     private var index: DeasciifyIndex? = null
+    private var suffixModel: SuffixChainModel? = null
     // Güçlü referans: SharedPreferences dinleyicileri zayıf tutar.
     private var listener: SharedPreferences.OnSharedPreferenceChangeListener? = null
 
@@ -85,6 +93,7 @@ object KBoardEngineLoader {
         if (!prefs.getBoolean(Settings.PREF_KBOARD_DEASCIIFY, Defaults.PREF_KBOARD_DEASCIIFY)) {
             KBoardSuggestions.setDeasciifier(null)
             KBoardSuggestions.setTypo(null)
+            KBoardSuggestions.setSuffix(null)
             return
         }
         val idx = index ?: try {
@@ -100,5 +109,17 @@ object KBoardEngineLoader {
         KBoardSuggestions.setDeasciifier(DeasciifySource(idx))
         // Yazım hatası önerileri aynı dizini kullanır; yalnız öneri çubuğunda (oto. düzeltme kapalı).
         KBoardSuggestions.setTypo(TypoSource(idx, isKnownWord = KBoardSuggestions::isLmKnown))
+        val model = suffixModel ?: try {
+            val start = System.nanoTime()
+            context.assets.open(SUFFIX_ASSET).buffered().use { SuffixChainModel.read(it) }.also {
+                Log.i(TAG, "ek zinciri modeli yüklendi: ${it.byteSize} bayt, ${(System.nanoTime() - start) / 1_000_000} ms")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "ek zinciri modeli yüklenemedi", e)
+            null
+        }
+        suffixModel = model
+        // Dil modeli bağlantısını KBoardSuggestions.rebuild() yapar
+        KBoardSuggestions.setSuffix(model?.let { SuffixChainSource(idx, it) })
     }
 }

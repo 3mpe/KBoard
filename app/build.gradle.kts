@@ -147,7 +147,7 @@ dependencies {
     testImplementation("androidx.test:core:1.7.0")
 }
 
-// KBOARD: engine/ derleme sırasında üretilen aksan düzeltici dizinini ve dil modelini assets/kboard/ altına koyar.
+// KBOARD: engine/ derleme sırasında üretilen aksan düzeltici dizinini, dil modelini ve ek zinciri modelini assets/kboard/ altına koyar.
 abstract class KBoardAssetsTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -156,6 +156,10 @@ abstract class KBoardAssetsTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val ngramModel: RegularFileProperty
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val suffixModel: RegularFileProperty
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -171,14 +175,16 @@ abstract class KBoardAssetsTask : DefaultTask() {
         dir.mkdirs()
         deasciifyIndex.get().asFile.copyTo(dir.resolve("deasciify-tr.kbd"))
         ngramModel.get().asFile.copyTo(dir.resolve("kboard-tr.kbn"))
+        suffixModel.get().asFile.copyTo(dir.resolve("suffix-tr.kbs"))
         denylist.get().asFile.copyTo(dir.resolve("denylist-tr.txt"))
     }
 }
 
 val kboardAssets = tasks.register<KBoardAssetsTask>("kboardAssets") {
-    dependsOn(":engine:buildDeasciifyIndex", ":engine:buildNgramModel")
+    dependsOn(":engine:buildDeasciifyIndex", ":engine:buildNgramModel", ":engine:buildSuffixModel")
     deasciifyIndex.set(rootProject.layout.projectDirectory.file("engine/build/kboard/deasciify-tr.kbd"))
     ngramModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/kboard-tr.kbn"))
+    suffixModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/suffix-tr.kbs"))
     denylist.set(rootProject.layout.projectDirectory.file("data/ngram-denylist.txt"))
 }
 

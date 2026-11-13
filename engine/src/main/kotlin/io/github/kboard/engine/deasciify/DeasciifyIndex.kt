@@ -122,6 +122,31 @@ class DeasciifyIndex private constructor(
         /** Yazıldığı gibi geçerli bir ASCII kelime; asla otomatik düzeltilmez (koruma listesi). */
         const val FLAG_PROTECTED = 0x02
 
+        // Kök sınıfı ve çekim özellikleri (ek zinciri modeli, morph/SuffixChainSource;
+        // data/suffix/stems-tr.tsv'den). Dizin boyutu değişmez: bayrak baytının boş bitleri.
+        /** İsim/sıfat kökü (büyük harfle başlayan kayıtta özel isim). */
+        const val FLAG_STEM_NOUN = 0x04
+        /**
+         * Fiil kökü. Kayıt -mak/-mek ile bitiyorsa taşıyıcıdır: kök mastar ekinden öncesidir
+         * (kökün kendisi sözlükte yoksa: "anlaşmak" → anlaş).
+         */
+        const val FLAG_STEM_VERB = 0x08
+        /** Son ünsüz ünlüyle başlayan ekten önce yumuşar (kitap → kitabı, git → gidiyor). */
+        const val FLAG_STEM_VOICING = 0x10
+        /** İsim: ince ek alır (saat → saate). */
+        const val FLAG_STEM_FRONT = 0x20
+        /** Fiil: ettirgen -t (ara → arat). İsimdeki [FLAG_STEM_FRONT] ile aynı bit. */
+        const val FLAG_STEM_CAUS_T = 0x20
+        /** Fiil: geniş zaman -Ir (gel → gelir). */
+        const val FLAG_STEM_AORIST_I = 0x40
+        /**
+         * İsim: özel isim (sözlükte küçük harfle olsa da: "ılgaz" → Ilgaz'a). [FLAG_STEM_AORIST_I] ile
+         * aynı bit; yalnız fiil bayrağı olmayan kayıtta geçerli.
+         */
+        const val FLAG_STEM_PROPER = 0x40
+        /** İsim: ünlüyle başlayan ek alamaz (ağız → ağzı, hak → hakkı; üretilmez). */
+        const val FLAG_STEM_NO_VOWEL = 0x80
+
         private val MAGIC = byteArrayOf('K'.code.toByte(), 'B'.code.toByte(), 'D'.code.toByte(), 'A'.code.toByte())
         private const val VERSION = 1
 

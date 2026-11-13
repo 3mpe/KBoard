@@ -1,0 +1,13 @@
+KBoard
+Copyright (C) KBoard katkıcıları. Uygulama kodu GPL-3.0-only (LICENSE).
+
+Bu dağıtım üçüncü taraf bileşenlerden türetilmiş veriler içerir:
+
+data/suffix/stems-tr.tsv ve ondan derlenen kök bayrakları (assets/kboard/deasciify-tr.kbd)
+  Zemberek-NLP 0.17.1 kök sözlüğünden (lexicon) türetilmiştir.
+  Zemberek-NLP: https://github.com/ahmetaa/zemberek-nlp
+  Copyright Ahmet A. Akın ve Zemberek-NLP katkıcıları.
+  Apache License 2.0 altında lisanslıdır (LICENSE-Apache-2.0).
+  Değişiklik: kök sözlüğündeki isim, sıfat, özel isim ve fiil köklerinin main_tr.dict'te olanları
+  seçildi; Zemberek öznitelikleri (Voicing, InverseHarmony, Aorist_I, Causative_t, LastVowelDrop,
+  Doubling) tek harfli kodlara çevrildi.

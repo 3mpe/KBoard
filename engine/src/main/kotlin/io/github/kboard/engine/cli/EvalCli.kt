@@ -6,6 +6,8 @@ import io.github.kboard.engine.Denylist
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.morph.SuffixChainModel
+import io.github.kboard.engine.morph.SuffixChainSource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramModel
 import io.github.kboard.engine.ngram.NgramSource
@@ -90,6 +92,9 @@ class EvalServer(private val engine: SuggestionEngine, private val personal: Per
  *   --ngram-params a,b,na,nb  skor eşlemesi: offset, slope, sonraki-kelime offset, slope
  *   --denylist <dosya>        önerilmeyecek kelimeler (data/ngram-denylist.txt)
  *   --no-user-morph           kişisel sözlük çekimlerini (UserWordSuffixSource) kapatır
+ *   --suffix <model.kbs>      ek zinciri tamamlaması (SuffixChainSource; --deasciify dizininin kök
+ *                             bayraklarını kullanır); ortam: KBOARD_SUFFIX
+ *   --suffix-params ad=değer,...  SuffixChainSource.Config alanları (ör. oovMargin=0.5,minChainLogProb=-4)
  *   --no-typo                 yazım hatası önerilerini (TypoSource, --deasciify dizinini kullanır) kapatır
  *   --typo-autocorrect        TypoSource oto. düzeltmesini açar (varsayılan kapalı; yalnızca ölçüm için)
  *   --personal                kişisel model (PersonalSource, dil modelini sarar); `learn` ile öğrenir
@@ -156,6 +161,27 @@ fun main(args: Array<String>) {
         // kelimedir: hiç yazım hatası sayılmaz
         val lmKnown: (String) -> Boolean = { w -> lm?.isKnown(w) == true || ps?.isKnown(w) == true }
         sources += TypoSource(index, TypoSource.Config(autocorrect = "--typo-autocorrect" in args), lmKnown)
+    }
+    val suffixPath = argValue(args, "--suffix") ?: System.getenv("KBOARD_SUFFIX")
+    if (index != null && suffixPath != null) {
+        val model = File(suffixPath).inputStream().buffered().use { SuffixChainModel.read(it) }
+        var config = SuffixChainSource.Config()
+        argValue(args, "--suffix-params")?.split(',')?.forEach { kv ->
+            val (k, v) = kv.split('=').let { it[0] to it[1].toDouble() }
+            config = when (k) {
+                "base" -> config.copy(base = v)
+                "slope" -> config.copy(slope = v)
+                "oovMargin" -> config.copy(oovMargin = v)
+                "maxScore" -> config.copy(maxScore = v)
+                "priorWeight" -> config.copy(priorWeight = v)
+                "priorA" -> config.copy(priorA = v)
+                "priorB" -> config.copy(priorB = v)
+                "minChainLogProb" -> config.copy(minChainLogProb = v)
+                "perStem" -> config.copy(perStem = v.toInt())
+                else -> error("bilinmeyen --suffix-params anahtarı: $k")
+            }
+        }
+        sources += SuffixChainSource(index, model, config).also { it.lm = ngramSource }
     }
     if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
     val server = EvalServer(SuggestionEngine(sources, denylist = denylist), personal)

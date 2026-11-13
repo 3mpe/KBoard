@@ -1,12 +1,15 @@
 package io.github.kboard.engine.deasciify
 
 import io.github.kboard.engine.Query
+import io.github.kboard.engine.TurkishText
 import java.io.File
 
 /**
  * Masaüstü aracı:
  *
- *   build <kelimeler.tsv> <koruma.txt|-> <çıktı.kbd>   TSV: kelime<TAB>sıklık[<TAB>1 = saldırgan]
+ *   build <kelimeler.tsv> <koruma.txt|-> <çıktı.kbd> [<kökler.tsv>]
+ *                                                      TSV: kelime<TAB>sıklık[<TAB>1 = saldırgan]
+ *                                                      kökler: data/suffix/stems-tr.tsv (kök sınıfı bayrakları)
  *   bench <dizin.kbd>                                  yükleme süresi, bellek, sorgu gecikmesi
  *
  * Çalıştırma: java -cp "engine/build/install/engine/lib/(tüm jar'lar)" io.github.kboard.engine.deasciify.DeasciifyToolKt ...
@@ -14,7 +17,9 @@ import java.io.File
 fun main(args: Array<String>) {
     when (args.firstOrNull()) {
         "build" -> {
-            require(args.size == 4) { "kullanım: build <kelimeler.tsv> <koruma.txt|-> <çıktı.kbd>" }
+            require(args.size == 4 || args.size == 5) { "kullanım: build <kelimeler.tsv> <koruma.txt|-> <çıktı.kbd> [<kökler.tsv>]" }
+            val stems = if (args.size == 5) readStems(File(args[4])) else emptyMap()
+            var stemHits = 0
             val protectedWords = if (args[2] == "-") emptySet() else File(args[2]).readLines()
                 .map { it.substringBefore('#').trim() }.filter { it.isNotEmpty() }.toSet()
             val seen = HashSet<String>()
@@ -26,15 +31,48 @@ fun main(args: Array<String>) {
                 var flags = 0
                 if (cols.getOrNull(2) == "1") flags = flags or DeasciifyIndex.FLAG_OFFENSIVE
                 if (w in protectedWords) { flags = flags or DeasciifyIndex.FLAG_PROTECTED; seen += w }
+                stems[TurkishText.lower(w)]?.let { flags = flags or it; stemHits++ }
                 DeasciifyIndex.Companion.Entry(w, cols[1].toInt(), flags)
             }.toList()
             val n = File(args[3]).outputStream().buffered().use { DeasciifyIndex.write(entries, it) }
             (protectedWords - seen).forEach { System.err.println("uyarı: koruma listesindeki '$it' sözlükte yok") }
+            if (stems.isNotEmpty()) println("kök bayrağı: ${stems.size} kökten $stemHits kayıt")
             println("${entries.size} satır → $n kayıt, ${File(args[3]).length()} bayt: ${args[3]}")
         }
         "bench" -> bench(File(args[1]))
         else -> System.err.println("kullanım: build | bench (bkz. kaynak)")
     }
+}
+
+/**
+ * `kelime<TAB>sınıf<TAB>öznitelikler` (kelime küçük harf; sınıf N, V ya da NV; öznitelikler P özel isim, Y yumuşama, F ince ek,
+ * T ettirgen -t, I geniş zaman -Ir, X ünlüyle başlayan ek yok; "-" hiçbiri) → bayraklar.
+ */
+internal fun readStems(file: File): Map<String, Int> {
+    val out = HashMap<String, Int>()
+    file.forEachLine(Charsets.UTF_8) { raw ->
+        val line = raw.substringBefore('#').trimEnd()
+        if (line.isBlank()) return@forEachLine
+        val cols = line.split('\t')
+        require(cols.size == 3) { "geçersiz kök satırı: $raw" }
+        var f = 0
+        for (c in cols[1]) f = f or when (c) {
+            'N' -> DeasciifyIndex.FLAG_STEM_NOUN
+            'V' -> DeasciifyIndex.FLAG_STEM_VERB
+            else -> error("bilinmeyen sınıf '$c': $raw")
+        }
+        if (cols[2] != "-") for (c in cols[2]) f = f or when (c) {
+            'P' -> DeasciifyIndex.FLAG_STEM_PROPER
+            'Y' -> DeasciifyIndex.FLAG_STEM_VOICING
+            'F' -> DeasciifyIndex.FLAG_STEM_FRONT
+            'T' -> DeasciifyIndex.FLAG_STEM_CAUS_T
+            'I' -> DeasciifyIndex.FLAG_STEM_AORIST_I
+            'X' -> DeasciifyIndex.FLAG_STEM_NO_VOWEL
+            else -> error("bilinmeyen öznitelik '$c': $raw")
+        }
+        out[cols[0]] = f
+    }
+    return out
 }
 
 private fun bench(file: File) {
