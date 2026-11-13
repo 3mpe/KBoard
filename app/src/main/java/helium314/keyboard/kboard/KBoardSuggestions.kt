@@ -303,6 +303,13 @@ object KBoardSuggestions {
         }
     }
 
+    /**
+     * `InputLogic.onPickSuggestionManually` içindeki `// KBOARD:` satırı: elle seçilen öneri, hemen ardından
+     * geri silmeyle yazılan kelimeye döndürülebilir mi? Yalnız ayrık bağlaç önerisi ("dedimki" → "dedim ki").
+     */
+    @JvmStatic
+    fun isRevertiblePick(info: SuggestedWordInfo): Boolean = isSplitSuggestion(info)
+
     /** Motorun ayrık bağlaç önerisi mi (KBoard kaynağı, boşluklu, otomatik düzeltmeye uygun değil)? */
     private fun isSplitSuggestion(info: SuggestedWordInfo): Boolean =
         info.sourceDict.mDictType == TYPE_KBOARD && !info.isAppropriateForAutoCorrection && ' ' in info.word

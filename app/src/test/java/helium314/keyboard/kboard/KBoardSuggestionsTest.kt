@@ -160,6 +160,9 @@ class KBoardSuggestionsTest {
         assertFalse(ki[0].isAppropriateForAutoCorrection)
         assertEquals(SuggestedWordInfo.KIND_COMPLETION, ki[0].kind)
         assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("dedimki", tr))
+        // seçildikten sonra geri silme yazılanı geri getirebilir; sıradan öneri seçimi geri alınmaz
+        assertTrue(KBoardSuggestions.isRevertiblePick(ki[0]))
+        assertFalse(KBoardSuggestions.isRevertiblePick(info("dedim")))
         // HeliBoard ilk öneriyi puanıyla otomatik düzeltmek istese de ayrım düzeltme olmaz
         assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("dedimki", ki.toMutableList(), tr, true, true to true))
         // başka bir ilk öneride HeliBoard'un kararı aynen kalır
