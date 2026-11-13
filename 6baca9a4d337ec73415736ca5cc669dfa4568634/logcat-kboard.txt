@@ -1,0 +1,30 @@
+--------- beginning of main
+11-13 07:02:46.125  5160  5232 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 207 ms
+11-13 07:03:23.495  6203  6242 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 221 ms
+11-13 07:03:46.505  6203  6477 D KBoardSuggestions: correction=true composing=true digits=false resumed=true mostlyCaps=false
+11-13 07:03:46.509  6203  6477 D KBoardSuggestions: merge typed=simdi allowed=false base=(true, false) src=main locale=tr deasc=true ac=Replace(word=şimdi)
+11-13 07:03:51.690  6542  6568 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 147 ms
+11-13 07:04:25.409  6920  6947 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 52 ms
+11-13 07:04:27.974  6920  6953 D KBoardSuggestions: correction=true composing=false digits=false resumed=false mostlyCaps=false
+11-13 07:04:27.974  6920  6953 D KBoardSuggestions: merge typed= allowed=false base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:04:38.009  6920  6953 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:04:38.032  6920  6953 D KBoardSuggestions: merge typed=S allowed=true base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:04:38.261  6920  6953 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:04:38.263  6920  6953 D KBoardSuggestions: merge typed=Sim allowed=true base=(false, false) src=main locale=tr deasc=true ac=NoOpinion
+11-13 07:04:38.566  6920  6953 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:04:38.568  6920  6953 D KBoardSuggestions: merge typed=Simd allowed=true base=(true, true) src=null locale=tr deasc=true ac=Replace(word=SIMD)
+11-13 07:04:38.775  6920  6953 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:04:38.781  6920  6953 D KBoardSuggestions: merge typed=Simdi allowed=true base=(true, false) src=main locale=tr deasc=true ac=Replace(word=Şimdi)
+11-13 07:04:51.062  7129  7152 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 50 ms
+11-13 07:04:59.433  7129  7179 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:04:59.441  7129  7179 D KBoardSuggestions: merge typed=Ka allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:04:59.767  7129  7179 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:04:59.776  7129  7179 D KBoardSuggestions: merge typed=Kad allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:05:00.112  7129  7179 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:05:00.114  7129  7179 D KBoardSuggestions: merge typed=Kadik allowed=true base=(true, true) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:05:00.310  7129  7179 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:05:00.311  7129  7179 D KBoardSuggestions: merge typed=Kadiko allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:05:00.611  7129  7179 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:05:00.613  7129  7179 D KBoardSuggestions: merge typed=Kadikoy allowed=true base=(true, true) src=null locale=tr deasc=true ac=Replace(word=Kadıköy)
+11-13 07:05:00.806  7129  7179 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:05:00.807  7129  7179 D KBoardSuggestions: merge typed=Kadikoyd allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
