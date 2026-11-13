@@ -45,7 +45,25 @@ open_field() {
   adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId|inputType=0x[1-9a-f]" | head -3
 }
 
-type_word() { adb shell input text "$1"; }
+# KBoard'a ekrandaki tuşlara dokunarak yazılır (gerçek kullanım). `input text` donanım tuşu olayı
+# gönderir; HeliBoard bu yolda otomatik düzeltmeyi açmıyor. Koordinatlar: pixel_6 (1080x2400),
+# KBoard Türkçe Q, varsayılan yükseklik (kboard-01 görüntüsünden ölçüldü).
+declare -A KEY=(
+  [q]="45 1602" [w]="135 1602" [e]="225 1602" [r]="315 1602" [t]="405 1602" [y]="495 1602"
+  [u]="585 1602" [ı]="675 1602" [o]="765 1602" [p]="855 1602" [ğ]="945 1602" [ü]="1035 1602"
+  [a]="49 1788" [s]="147 1788" [d]="245 1788" [f]="343 1788" [g]="441 1788" [h]="539 1788"
+  [j]="637 1788" [k]="735 1788" [l]="833 1788" [ş]="931 1788" [i]="1029 1788"
+  [z]="180 1973" [x]="270 1973" [c]="360 1973" [v]="450 1973" [b]="540 1973" [n]="630 1973"
+  [m]="720 1973" [ö]="810 1973" [ç]="900 1973"
+)
+type_word() { # $1 = kelime (küçük harf)
+  if [ "${current_ime:-}" != "$kboard" ]; then adb shell input text "$1"; return; fi
+  local w="$1" i ch
+  for (( i=0; i<${#w}; i++ )); do
+    ch="${w:i:1}"
+    if [ -n "${KEY[$ch]:-}" ]; then adb shell input tap ${KEY[$ch]}; else adb shell input text "$ch"; fi
+  done
+}
 # Ekrandaki boşluk tuşu (pixel_6, 1080x2400). `input keyevent SPACE` donanım tuşu sayılır ve
 # otomatik düzeltmeyi tetiklemez; gerçek kullanımı göstermek için tuşa dokunulur.
 tap_space() { adb shell input tap 540 2160; }
@@ -76,7 +94,7 @@ log "varsayılan: $(adb shell settings get secure default_input_method)"
 sleep 3 # aksan dizini arka planda yüklenir
 capture_set kboard
 
-# Kişisel sözlük + ek: "Kadıköy" eklenir, "Kadikoy'd" yazılır → "Kadıköy'de" önerilmeli.
+# Kişisel sözlük + ek: "Kadıköy" eklenir, "Kadikoyd" yazılır → "Kadıköy'de" önerilmeli.
 adb shell content insert --uri content://user_dictionary/words --bind word:s:Kadıköy \
   --bind locale:s:tr --bind frequency:i:250 --bind appid:i:0 || log "UYARI: kişisel sözlüğe eklenemedi"
 sleep 3
@@ -84,7 +102,7 @@ sleep 3
 # motora gelmeli.
 adb shell cmd uimode night no; sleep 1
 open_field
-type_word "Kadikoy\\'d"; shot "kboard-07-kisisel-sozluk-ek" 3
+type_word "kadikoyd"; shot "kboard-07-kisisel-sozluk-ek" 3 # cümle başı: K otomatik büyük
 
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
