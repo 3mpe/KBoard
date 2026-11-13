@@ -53,17 +53,32 @@ check_hold() { # $1 = ad, $2 = basılı tutma süresi (ms)
   fi
 }
 
-ensure_kboard
+# Alanı KBoard etkin olarak aç. Ayarlar/yeniden başlatma denemesinden sonra sistem ilk açılışta
+# Gboard'u gösterebiliyor (ilk koşuda öyle oldu); etkin klavye denetlenip gerekirse yeniden seçilir.
+open_kboard_field() {
+  local n
+  for n in 1 2 3; do
+    ensure_kboard; open_field >/dev/null
+    adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard" && return 0
+    log "silme e2e: etkin klavye KBoard değil, yeniden seçiliyor ($n)"
+    [ -n "${gboard:-}" ] && adb shell ime set "$gboard" >/dev/null 2>&1
+    adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3
+    adb shell input tap 540 400; sleep 3
+    adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard" && return 0
+  done
+  return 1
+}
+
 adb shell cmd uimode night no; sleep 1
 
 # 1) Ekrandaki tuşlara dokunarak yazılmış cümle (otomatik düzeltme kelimeleri değiştirebilir; alandaki
 #    gerçek metin ölçülür).
-open_field >/dev/null
+open_kboard_field || del_result KALDI "yazilan: KBoard etkin klavye yapılamadı"
 for w in bir iki masa kalem defter kitap kapı pencere bahçe ağaç elma; do type_word "$w"; tap_space; done
 type_word "armut"; sleep 2
 check_hold yazilan 1300
 
 # 2) Kesme işaretli ek: donanım tuşu olayıyla yazılır (otomatik düzeltme yok, metin aynen kalır).
-open_field >/dev/null
+open_kboard_field || del_result KALDI "kesme: KBoard etkin klavye yapılamadı"
 adb shell "input text \"Yarin%sogleden%ssonra%ssaat%sikide%sBugun%sKadikoy'de%sbulusalim\""; sleep 2
 check_hold kesme 1000
