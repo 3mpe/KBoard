@@ -1,6 +1,10 @@
 # Test seti
 
 - `seed-v0.jsonl`: elle yazılmış tohum set (CC0-1.0). Format: `docs/PLAN.md` §4.1.
+- `kisisel-v0.jsonl`: kişisel öğrenme seti (Faz 7): 8 sentetik kullanıcı × 40 mesaj, yapay zekâ ile
+  üretildi, seed-v0 okunmadan yazıldı (CC0-1.0). `user` alanı bir kullanıcının yazma akışıdır
+  (vakaları ardışık olmalı; dev/test ayrımı kullanıcıya göre), `new_words` sözlükte ve dil modeli
+  korpusunda olmayan kelimeler. `simulate --online` ile ölçülür; bkz. `docs/reports/faz7-kisisel.md`.
 
 ## seed-v0 dağılımı (327 vaka, 1250 kelime)
 

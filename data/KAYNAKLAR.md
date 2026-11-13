@@ -9,6 +9,7 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 | `data/sohbet/sohbet-v1.txt` | Sohbet dili korpusu (sonraki kelime modeli, 2 801 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, insan gözden geçirdi (karar: aşağıda "Sentetik sohbet metni") |
 | [Zemberek-NLP](https://github.com/ahmetaa/zemberek-nlp) 0.17.1 | Ön hesaplama ve ölçüm (masaüstü, `tools/zemberek-spike`) | Apache-2.0 | doğrulandı (depodaki LICENSE) |
 | `eval/testset/seed-v0.jsonl` | Test seti | CC0-1.0 | elle yazıldı |
+| `eval/testset/kisisel-v0.jsonl` | Kişisel öğrenme test seti (8 sentetik kullanıcı × 40 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, seed-v0 okunmadan; dil modeline sızıntı süzgeciyle girmez (bkz. "Sentetik sohbet metni") |
 | [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
 
 ## Türetilen veriler (depoya girmez)
