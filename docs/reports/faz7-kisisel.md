@@ -117,13 +117,32 @@ akışına bağlı olduğundan (bağımsız değil) aralıklar iyimserdir.
 
 **Kaçırılan hedef: ilk kez yazılan kelimelerde @0 testte −0,9 puan** (hedef en çok −0,5; dev'de −0,3).
 561 kelimede 5 kayıp, 0 kazanç: "Kızılay'da → bir", "Elifçik → ve", "olsun → çok", "dokuzda → orada",
-"saat → kaçta". Hepsinde bağlamda bir kez görülmüş kişisel ardıl ("saat → beşte", "Elifçik →
-okuldan") genel bir kelimeyi ilk 3'ün dışına itiyor; dev'deki 3 kayıp da aynı türden ("Handoş → bu",
-"Kodbahçe'de → bu": önceki kelime dil modelinde yok, dil modeli yalnız genel sık kelimeleri öneriyor). Güven aralıkları büyük
-ölçüde örtüşüyor, ama nokta tahmini hedefin dışında. Test kullanıcılarına bakılarak ayar yapılmadı.
-Seçenekler (karar Fable'ın): (a) hedefi bu haliyle kabul etmek; (b) bağlam satırında tek gözlemli
-ikilinin ağırlığını düşürmek (K'yı büyütmek ya da c(v, w) ≥ 2 şartı), tekrar @0'ı hedefin üstünde
-(≥ %45) tutarak dev'de yeniden ayarlamak. CI eşiği (`.github/ci/personal-gate.py`) bu satırda 0,5
+"saat → kaçta" (olay sayımıyla cümle başında "Bu" da 4 kez). Kullanıcı geçmişi yeniden oynatılınca
+iki tür çıkıyor: bir kez görülmüş kişisel ardıllar ("razı olsun → oğlum / ellerine / kızım", "Elifçik →
+bugün / okuldan") ve üç kez görülmüş ikililer (cümle başında Tolgiş, Halı, Serko). Dev'deki 3 kayıp da
+aynı türden. Güven aralıkları büyük ölçüde örtüşüyor, ama nokta tahmini hedefin dışında. Test
+kullanıcılarına bakılarak ayar yapılmadı.
+
+**Denenip reddedilen: tek gözlemli ikili sınırı.** Sonraki kelimede ilk 3'ün en çok N'i, ikilisi bir
+kez görülmüş (sönmüş sayı < 1,5) ve dil modelinin kendi ilk 3'ünde olmayan kişisel adaya verildi.
+(Önce yalnız liste sırası değiştirildi; motor skora göre yeniden sıraladığı için etkisi olmadı, skorlar
+da sırayla azalacak biçimde düzeltildi.) Kabul kuralı ölçümden önce belirlendi: dev'de tekrar @0 en çok
+2 puan düşecek ve ilk kez @0 sınırsızdan (−0,3) kötü olmayacak.
+
+| | sınır yok | N = 1 | N = 2 |
+|---|---|---|---|
+| dev tekrar @0 | %91,7 | %79,6 | %89,8 |
+| dev ilk kez @0 farkı | −0,3 | −0,8 | −0,8 |
+| test tekrar @0 | %91,0 | %82,1 | %90,3 |
+| test ilk kez @0 farkı | −0,9 | −0,7 | −0,9 |
+
+İkisi de kuralı geçemedi. Sınır, kullanıcı için doğru olan bir kez görülmüş tahminleri de itiyor
+("Barışko → yine", "Akşam → Alsancak'ta", "Annem → aradı"). "İlk kez" kırılımı yalnız hedef kelimenin
+yeni olup olmadığına bakıyor; kullanıcıya göre doğru kişisel adayları cezalandırıyor. Bu yüzden sınır
+kaldırıldı ve −0,9 kabul edildi (Fable kararı, seçenek a). Bu denge, `eval/private`'taki gerçek metinle
+yeniden değerlendirilecek.
+
+CI eşiği (`.github/ci/personal-gate.py`) bu satırda 0,5
 puanı aşınca **uyarı** verir, 1,5 puanı aşınca kırar; diğer bütün hedefler kırıcıdır.
 
 ### seed-v0 (327 vaka, tüm set)

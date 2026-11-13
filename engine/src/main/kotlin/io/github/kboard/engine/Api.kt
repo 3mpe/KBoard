@@ -29,7 +29,12 @@ data class Candidate(
     val autocorrectable: Boolean = false,
 )
 
-/** Aday üreten tek bir kaynak (deasciifier, morfoloji, n-gram...). Thread-safe olmalı. */
+/**
+ * Aday üreten tek bir kaynak (deasciifier, morfoloji, n-gram...). Thread-safe olmalı.
+ *
+ * Motor bütün kaynakların adaylarını skora göre yeniden sıralar: bir kaynak döndürdüğü listenin
+ * sırasıyla değil, yalnız skorlarla sıralamayı etkileyebilir.
+ */
 interface CandidateSource {
     val name: String
     fun candidates(query: Query, limit: Int): List<Candidate>
