@@ -1,0 +1,65 @@
+--------- beginning of system
+11-13 21:32:50.359   538   538 W InputMethodManagerService: Session failed to close due to remote exception
+11-13 21:32:50.359   538   538 W InputMethodManagerService: android.os.DeadObjectException
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.os.BinderProxy.transactNative(Native Method)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy.finishSession(IInputMethodSession.java:358)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.finishSessionLocked(InputMethodManagerService.java:2938)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionLocked(InputMethodManagerService.java:2910)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionsLocked(InputMethodManagerService.java:2971)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.clearCurMethodAndSessions(InputMethodBindingController.java:381)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.-$$Nest$mclearCurMethodAndSessions(InputMethodBindingController.java:0)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController$2.onServiceDisconnected(InputMethodBindingController.java:352)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2191)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at android.os.Looper.loop(Looper.java:294)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.SystemServer.run(SystemServer.java:970)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.server.SystemServer.main(SystemServer.java:664)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at java.lang.reflect.Method.invoke(Native Method)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-13 21:32:50.359   538   538 W InputMethodManagerService: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:949)
+11-13 21:32:50.428   538   640 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 21:32:50.571   538   558 W ActivityManager: setHasOverlayUi called on unknown pid: 10222
+11-13 21:33:06.370   538  2405 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 21:33:07.420   538   640 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 21:33:07.639   538   558 W ActivityManager: setHasOverlayUi called on unknown pid: 10441
+11-13 21:33:23.246   538  1663 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 21:33:24.357   538   640 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 21:33:24.652   538   558 W ActivityManager: setHasOverlayUi called on unknown pid: 10609
+11-13 21:33:25.984   538  1844 W InputMethodManagerService: Ignoring hideSoftInput of uid 10169 : com.android.internal.inputmethod.IInputMethodClient$Stub$Proxy@afdbc8c
+11-13 21:33:40.456   538  2460 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 21:33:41.314   538   538 W InputMethodManagerService: Session failed to close due to remote exception
+11-13 21:33:41.314   538   538 W InputMethodManagerService: android.os.DeadObjectException
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.os.BinderProxy.transactNative(Native Method)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy.finishSession(IInputMethodSession.java:358)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.finishSessionLocked(InputMethodManagerService.java:2938)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionLocked(InputMethodManagerService.java:2910)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionsLocked(InputMethodManagerService.java:2971)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.clearCurMethodAndSessions(InputMethodBindingController.java:381)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.-$$Nest$mclearCurMethodAndSessions(InputMethodBindingController.java:0)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController$2.onServiceDisconnected(InputMethodBindingController.java:352)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2191)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at android.os.Looper.loop(Looper.java:294)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.SystemServer.run(SystemServer.java:970)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.server.SystemServer.main(SystemServer.java:664)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at java.lang.reflect.Method.invoke(Native Method)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-13 21:33:41.314   538   538 W InputMethodManagerService: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:949)
+11-13 21:33:41.423   538   640 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 21:33:41.802   538   558 W ActivityManager: setHasOverlayUi called on unknown pid: 10772
+11-13 21:33:42.092   538  2446 W ActivityManager: Slow operation: 62ms so far, now at attachApplicationLocked: immediately before bindApplication
+11-13 21:33:42.092   538  2446 W ActivityManager: Slow operation: 62ms so far, now at attachApplicationLocked: immediately after bindApplication
+11-13 21:33:42.092   538  2446 W ActivityManager: Slow operation: 62ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+11-13 21:33:56.831   538  2527 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 21:33:57.866   538   640 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 21:33:58.164   538   558 W ActivityManager: setHasOverlayUi called on unknown pid: 10943
+11-13 21:34:14.209   538   551 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 21:34:16.305   538  1619 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
