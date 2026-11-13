@@ -14,6 +14,7 @@ import helium314.keyboard.latin.common.nonWordCodePointAndNoSpaceBeforeCursor
 import helium314.keyboard.latin.common.singleEmojiRegex
 import helium314.keyboard.latin.common.splitOnWhitespace
 import helium314.keyboard.latin.common.stripTrailingSeparatorsAndConnectors
+import helium314.keyboard.latin.common.wordDeleteLength
 import helium314.keyboard.latin.settings.SpacingAndPunctuations
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -213,5 +214,28 @@ class StringUtilsTest {
         gi.text = text
         val lastGrapheme = text.substring(gi.preceding(text.length))
         return if (isEmoji(lastGrapheme)) lastGrapheme else ""
+    }
+
+    // KBoard: word-wise delete steps for long-pressed backspace
+    @Test fun `word delete length keeps Turkish words together`() {
+        val sp = SpacingAndPunctuations(ApplicationProvider.getApplicationContext<App>().resources, false, Locale.ROOT)
+        fun steps(text: String): List<String> {
+            var s = text
+            val out = mutableListOf<String>()
+            while (s.isNotEmpty()) {
+                val n = maxOf(1, s.wordDeleteLength(sp))
+                out.add(s.substring(s.length - n))
+                s = s.substring(0, s.length - n)
+            }
+            return out
+        }
+        assertEquals(listOf("buluşalım", "Kadıköy'de "), steps("Kadıköy'de buluşalım"))
+        assertEquals(listOf("içtik.", "çay ", "İstanbul’da "), steps("İstanbul’da çay içtik."))
+        assertEquals(listOf("nasılsın?", "Merhaba, "), steps("Merhaba, nasılsın?"))
+        assertEquals(listOf("geldi", "2026'da "), steps("2026'da geldi"))
+        assertEquals(listOf("ikinci", "\n\n", "bir", "satır "), steps("satır bir\n\nikinci"))
+        assertEquals(listOf("\uD83D\uDE00\uD83D\uDC4D\uD83C\uDFFD", "güzel ", "çok "), steps("çok güzel \uD83D\uDE00\uD83D\uDC4D\uD83C\uDFFD"))
+        assertEquals(listOf("s\u0327eker", "kus\u0327 "), steps("kus\u0327 s\u0327eker"))
+        assertEquals(listOf("com", "example."), steps("example.com"))
     }
 }

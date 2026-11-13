@@ -111,6 +111,8 @@ object Defaults {
     @JvmField
     val PREF_SPACE_VERTICAL_SWIPE = KeyboardActionListener.SwipeAction.NONE.name
     const val PREF_DELETE_SWIPE = 1
+    /** KBoard: 1 = basılı tutunca harf harf, 2 = kelime kelime sil */
+    const val PREF_DELETE_LONG_PRESS = 2
     const val PREF_AUTOSPACE_AFTER_PUNCTUATION = false
     const val PREF_AUTOSPACE_AFTER_SUGGESTION = true
     const val PREF_AUTOSPACE_AFTER_GESTURE_TYPING = true

@@ -116,6 +116,23 @@ class InputLogicTest {
         assertEquals("hello there ", text)
     }
 
+    // KBoard: holding delete sends DELETE_WORD repeats
+    @Test fun deleteWordKeepsTurkishApostropheSuffix() {
+        setText("Kadıköy'de buluşalım")
+        functionalKeyPress(KeyCode.DELETE_WORD)
+        assertEquals("Kadıköy'de ", text)
+        functionalKeyPress(KeyCode.DELETE_WORD)
+        assertEquals("", text)
+    }
+
+    @Test fun deleteWordRemovesPunctuationAndSpaceWithWord() {
+        setText("Merhaba, nasılsın? ")
+        functionalKeyPress(KeyCode.DELETE_WORD)
+        assertEquals("Merhaba, ", text)
+        functionalKeyPress(KeyCode.DELETE_WORD)
+        assertEquals("", text)
+    }
+
     @Test fun deleteInsideWord() {
         setText("hello you there")
         setCursorPosition(8) // after o in you
