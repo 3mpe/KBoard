@@ -1,0 +1,11 @@
+Archive:  screenshots/aktarim.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+      246  2026-11-13 20:09   kboard-aktarim.json
+       87  2026-11-13 20:09   ayarlar/preferences.json
+        2  2026-11-13 20:09   ayarlar/protected_preferences.json
+       25  2026-11-13 20:09   sozluk/kelimeler.tsv
+      294  2026-11-13 20:09   ogrenilen/personal-tr.bin
+        0  2026-11-13 20:09   ogrenilen/kural-geri-alinan.tsv
+---------                     -------
+      654                     6 files
