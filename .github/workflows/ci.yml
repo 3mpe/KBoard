@@ -171,10 +171,9 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
 
   upstream-tests:
-    # HeliBoard'un kendi birim test paketi. Bizim CI'ımızda henüz hiç yeşil olmadı
-    # (bkz. #30). Zorunlu kontrol DEĞİL, ama başarısız olursa kırmızı görünür:
-    # continue-on-error yok, hiçbir test atlanmıyor. Yeşile dönünce zorunlu yapılacak.
-    name: Upstream birim testleri (zorunlu değil)
+    # HeliBoard'un kendi birim test paketi (KBoard testleri dahil, tek JVM). #30'daki askı PR #49'da
+    # giderildi; continue-on-error yok, hiçbir test atlanmıyor. Dal korumasında zorunlu kontrol olacak.
+    name: Upstream birim testleri
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

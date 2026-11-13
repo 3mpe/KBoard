@@ -137,8 +137,9 @@ val defaultToolbarPref by lazy {
             others.joinToString(Separators.ENTRY) { it.name + Separators.KV + false }
 }
 
+// KBOARD: mikrofon varsayılan olarak sabit (öneriler görünürken de sağda); kayıtlı tercih korunur
 val defaultPinnedToolbarPref = entries.filterNot { it == CLOSE_HISTORY }.joinToString(Separators.ENTRY) {
-    it.name + Separators.KV + false
+    it.name + Separators.KV + (it == VOICE)
 }
 
 val defaultClipboardToolbarPref by lazy {

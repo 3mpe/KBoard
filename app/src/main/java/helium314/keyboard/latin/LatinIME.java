@@ -1244,6 +1244,8 @@ public class LatinIME extends InputMethodService implements
     // completely replace #onCodeInput.
     public void onEvent(@NonNull final Event event) {
         if (KeyCode.VOICE_INPUT == event.getKeyCode()) {
+            // KBOARD: ilk dokunuş yalnız "başka bir uygulamaya geçer" bildirimini gösterir, geçmez
+            if (!helium314.keyboard.kboard.KBoardVoice.onVoiceKey(this)) return;
             mRichImm.switchToShortcutIme(this);
         }
         InputTransaction completeInputTransaction =
