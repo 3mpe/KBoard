@@ -75,11 +75,22 @@ class TestSetTest(unittest.TestCase):
         self.assertGreaterEqual(len(cases), 30)
 
     def test_misaligned_input_rejected(self):
-        line = json.dumps({"id": "x", "text": "çok güzel", "input": "cokguzel", "category": "s",
+        for typed in ("cok", "cok guzel bence"):
+            line = json.dumps({"id": "x", "text": "çok güzel", "input": typed, "category": "s",
+                               "source": "t", "license": "CC0-1.0"}, ensure_ascii=False)
+            cases, errors = self._load([line])
+            self.assertEqual(cases, [], typed)
+            self.assertIn("hizalı değil", errors[0])
+
+    def test_one_typed_word_may_target_two_words(self):
+        line = json.dumps({"id": "x", "text": "Her şey yolunda, ya da öyle görünüyor.",
+                           "input": "Hersey yolunda, yada öyle görünüyor.", "category": "s",
                            "source": "t", "license": "CC0-1.0"}, ensure_ascii=False)
         cases, errors = self._load([line])
-        self.assertEqual(cases, [])
-        self.assertIn("hizalı değil", errors[0])
+        self.assertEqual(errors, [])
+        self.assertEqual(cases[0].aligned_targets, ["Her şey", "yolunda", "ya da", "öyle", "görünüyor"])
+        # eşit sayıda kelimede hizalama hedef kelimelerin kendisi
+        self.assertEqual(case(input="cok guzel").aligned_targets, ["çok", "güzel"])
 
     def test_missing_field_and_duplicate(self):
         ok = json.dumps({"id": "x", "text": "a", "category": "s", "source": "t", "license": "l"})
@@ -160,6 +171,26 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(r["deasciify_accuracy"]["total"], 1)
         self.assertEqual(r["false_autocorrect_rate"]["total"], 1)
         self.assertIn("Yazım hatası düzeltme", metrics.to_markdown(metrics.score([c], events)))
+
+    def test_two_word_target_and_precision_recall(self):
+        c = case(text="her şey yolunda bende kalsın", input="herşey yolunda bende kalsın")
+        events = [
+            Event("c1", 0, "herşey", ["her şey"], autocorrect="her şey", commit=True),
+            Event("c1", 1, "", ["yolunda"]),
+            Event("c1", 1, "yolunda", [], autocorrect=None, commit=True),
+            Event("c1", 2, "bende", [], autocorrect="ben de", commit=True),
+            Event("c1", 3, "kalsın", [], autocorrect=None, commit=True),
+        ]
+        r = metrics.score([c], events)["overall"]
+        self.assertEqual(r["words"], 4)
+        self.assertEqual(r["typo_correction_accuracy"], {"value": 1.0, "hit": 1, "total": 1})
+        self.assertEqual(r["autocorrect_precision"], {"value": 0.5, "hit": 1, "total": 2})
+        self.assertEqual(r["fix_recall"], {"value": 1.0, "hit": 1, "total": 1})
+        self.assertEqual(r["false_autocorrect_rate"], {"value": 1 / 3, "hit": 1, "total": 3})
+        # iki kelimelik hedeften sonraki kelimenin bağlamı iki kelimedir
+        p = RecordingPredictor()
+        list(simulate([c], p))
+        self.assertEqual(p.contexts[len("herşey") + 1], ["her", "şey"])
 
     def test_missing_events_reported(self):
         r = metrics.score([case()], [])["overall"]
@@ -251,8 +282,10 @@ class RecordingPredictor:
     def __init__(self):
         self.calls = []
         self.pairs = {}
+        self.contexts = []
 
     def predict(self, context, prefix):
+        self.contexts.append(list(context))
         prev = context[-1] if context else "<s>"
         nxt = self.pairs.get(prev)
         return Prediction([nxt] if nxt and nxt.startswith(prefix) else [], None)

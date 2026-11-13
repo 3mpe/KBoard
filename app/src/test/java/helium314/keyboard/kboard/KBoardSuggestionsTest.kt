@@ -118,6 +118,28 @@ class KBoardSuggestionsTest {
     }
 
     @Test
+    fun spellingRuleCommitsTwoWordsAndRespectsRevert() {
+        KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("herşey", 109), DeasciifyIndex.Companion.Entry("her", 200),
+            DeasciifyIndex.Companion.Entry("şey", 200),
+        ))))
+        val heli = false to false
+        val list = mutableListOf(info("herşey"))
+        // Sözlükte olsa da yanlış yazım listesi düzeltir; düzeltme boşluklu tek metin
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("herşey", list, tr, true, heli))
+        assertEquals("her şey", list[0].word)
+        assertTrue(list[0].isAppropriateForAutoCorrection)
+        assertEquals(KBoardSuggestions.AutoCorrection.Replace("Her şey"), KBoardSuggestions.autoCorrection("Herşey", tr))
+        // Kişisel sözlükten gelen kelimeye dokunulmaz
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("herşey", mutableListOf(info("herşey")), tr, true, heli,
+            typedWordSourceType = Dictionary.TYPE_USER))
+        // Geri alınan düzeltme bir daha yapılmaz
+        KBoardSuggestions.noteRevert("herşey", "her şey")
+        assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("herşey", tr))
+        KBoardSuggestions.setDeasciifier(null)
+    }
+
+    @Test
     fun deasciifierDecidesAutoCorrection() {
         KBoardSuggestions.setDeasciifier(deasciifier())
         val heli = false to false

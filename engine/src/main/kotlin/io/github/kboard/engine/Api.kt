@@ -14,8 +14,11 @@ data class Query(
     val isNextWord: Boolean get() = prefix.isEmpty()
 }
 
-/** [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource). */
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, OTHER }
+/**
+ * [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource).
+ * [RULE]: yazım kuralı düzeltmesi (rules/SpellingRuleSource: yanlış yazım listesi, bitişik soru eki).
+ */
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, RULE, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası
@@ -47,6 +50,17 @@ interface CandidateSource {
  */
 interface GapFillSource : CandidateSource {
     val maxInTop: Int get() = 1
+}
+
+/**
+ * Yazım kuralı düzeltmesi (yanlış yazım listesi, bitişik soru eki). Motor, yazılan kelime için
+ * kuralın verdiği düzeltmeyi diğer bütün kaynakların önüne koyar ve otomatik düzeltme yapar:
+ * kural bilinen kelimeyi de düzeltir ("herşey" → "her şey"). Kullanıcı istisnalarını (kişisel
+ * sözlük, kişisel modelde 2+ kullanım, geri alınmış düzeltme) kural kendisi uygular.
+ * Düzeltme birden çok kelime olabilir (boşluk içerir).
+ */
+interface RuleCorrector {
+    fun correction(query: Query): String?
 }
 
 /** Kaynaklardan gelen adayları birleştirip sıralar. */

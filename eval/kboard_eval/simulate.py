@@ -14,9 +14,10 @@ def simulate_case(case: Case, predictor: Predictor) -> Iterator[Event]:
     predictor.reset_user_words()
     if case.user_words:
         predictor.add_user_words(case.user_words)
-    targets = case.target_words
+    targets = case.aligned_targets
     for i, typed_word in enumerate(case.typed_words):
-        context = targets[:i]  # önceki kelimelerin doğru girildiği varsayılır
+        # önceki kelimelerin doğru girildiği varsayılır (iki kelimelik hedef iki bağlam kelimesidir)
+        context = [w for t in targets[:i] for w in t.split(" ")]
         for k in range(len(typed_word) + 1):
             prefix = typed_word[:k]
             t0 = time.perf_counter()

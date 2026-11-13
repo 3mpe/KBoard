@@ -233,6 +233,18 @@ class DeasciifySource(
         return exactForms(typed).any { TurkishText.lower(it.word) == lowerTyped }
     }
 
+    /**
+     * Sözlükte (ya da kişisel sözlükte) katlanmış biçimi yazılanınkiyle aynı, yazılan aksanlarla
+     * uyumlu bir biçim var mı? ("yapacakmisin" için "yapacakmısın" sözlükteyse true)
+     */
+    fun hasFoldForm(typed: String): Boolean = exactForms(typed).isNotEmpty()
+
+    /** Kelime kişisel sözlükte mi (büyük/küçük harf duyarsız)? */
+    fun isUserWord(typed: String): Boolean {
+        val lowerTyped = TurkishText.lower(typed)
+        return userWords.any { it.lower == lowerTyped }
+    }
+
     /** Katlanmış biçimi tam [typed] olan, aksanlarla uyumlu biçimler; sıklığa göre azalan. */
     private fun exactForms(typed: String): List<Form> {
         val key = TurkishText.fold(typed)
@@ -314,7 +326,7 @@ class DeasciifySource(
             mustMatch.all { (i, c) -> i < word.length && TurkishText.lower(word[i].toString())[0] == c }
 
         /** Ünlü uyumu istisnaları (kaynak dosyası; yoksa boş). */
-        private val FRONT_HARMONY_EXCEPTIONS: Set<String> by lazy {
+        val FRONT_HARMONY_EXCEPTIONS: Set<String> by lazy {
             DeasciifySource::class.java.getResourceAsStream("front-harmony-tr.txt")?.bufferedReader(Charsets.UTF_8)
                 ?.useLines { lines ->
                     lines.map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }

@@ -18,12 +18,23 @@ class SuggestionEngine(
 ) {
     private val baseSources = sources.filter { it !is GapFillSource }
     private val gapSources = sources.filterIsInstance<GapFillSource>()
+    private val rules = sources.filterIsInstance<RuleCorrector>()
 
     fun suggest(query: Query, limit: Int = DEFAULT_LIMIT): Suggestions {
         if (sources.isEmpty()) return EMPTY
         val base = allowed(query, baseSources.flatMap { it.candidates(query, limit) })
         var ranked = ranker.rank(query, base, limit)
         if (gapSources.isNotEmpty()) ranked = nonIncreasing(mergeGapFill(query, ranked, base, limit))
+        if (!query.isNextWord && rules.isNotEmpty()) {
+            val rule = rules.firstNotNullOfOrNull { it.correction(query) }
+            if (rule != null && !TurkishText.sameWord(rule, query.prefix)) {
+                val key = TurkishText.lower(rule)
+                // Sıra ve puan birlikte: kuralın düzeltmesi ilk yuvada, puanlar artmayan
+                ranked = nonIncreasing((listOf(Candidate(rule, 1.0, Source.RULE, autocorrectable = true)) +
+                    ranked.filter { TurkishText.lower(it.word) != key }).take(limit))
+                return Suggestions(ranked, rule)
+            }
+        }
         val autocorrect = if (query.isNextWord) null else ranked.firstOrNull {
             it.autocorrectable && !TurkishText.sameWord(it.word, query.prefix)
         }?.word

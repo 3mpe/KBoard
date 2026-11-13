@@ -1,0 +1,148 @@
+# Yanlış yazım listesi (KBoard, kural PR A). Lisans: CC0-1.0. Elle derlendi (2026-11-13); yayımlanmış
+# bir liste kopyalanmadı. Doğru biçimler TDK Yazım Kılavuzu kurallarına göredir (bitişik/ayrı yazım,
+# alıntı kelimelerin yazımı). Yalnız tek okunuşlu yanlışlar girer: başka bir okunuşta geçerli olan
+# biçimler ("birde": saat birde, "oda", "bende", "hala") girmez.
+#
+# Biçim: yanlış<TAB>doğru[<TAB>kök]. Küçük harf. Doğru biçim iki kelime olabilir. "kök" işaretli
+# kayıtta yanlış biçimle başlayan çekimler de düzeltilir (herkeze → herkese); düzeltilmiş çekim
+# sözlükte ya da dil modelinde olmalıdır. ASCII yazım (hersey) yalnız kendisi bir kelime değilse
+# düzeltilir. Motor: engine/.../rules/SpellingRuleSource.kt; rapor: docs/reports/faz-kural.md.
+yanlız	yalnız	kök
+yalnış	yanlış	kök
+herkez	herkes	kök
+herkesde	herkeste
+herşey	her şey	kök
+birşey	bir şey	kök
+hiçbirşey	hiçbir şey	kök
+herhangibir	herhangi bir
+hiçbirzaman	hiçbir zaman
+herzaman	her zaman
+hergün	her gün
+herbiri	her biri
+herbir	her bir
+herneyse	her neyse
+heryer	her yer	kök
+birsürü	bir sürü
+pekçok	pek çok
+birdaha	bir daha
+birkere	bir kere
+birtek	bir tek
+birgün	bir gün
+birşekilde	bir şekilde
+hiçbirşekilde	hiçbir şekilde
+birsonraki	bir sonraki
+hiçkimse	hiç kimse
+kimbilir	kim bilir
+nebileyim	ne bileyim
+ömürboyu	ömür boyu
+öbürgün	öbür gün
+ertesigün	ertesi gün
+yada	ya da
+şuan	şu an	kök
+tabiki	tabii ki
+iyiki	iyi ki
+yeterki	yeter ki
+öyleki	öyle ki
+belkide	belki de
+yinede	yine de
+hemde	hem de
+değilmi	değil mi
+# Bitişik soru eki kuralı dil modelinde olan kelimeye dokunmaz; korpusta geçen iki yaygın yanlış:
+biliyormusun	biliyor musun
+iyimisin	iyi misin
+varmı	var mı
+yokmu	yok mu
+sağol	sağ ol	kök
+hoşçakal	hoşça kal	kök
+geçmişolsun	geçmiş olsun
+kolaygelsin	kolay gelsin
+afiyetolsun	afiyet olsun
+iyigeceler	iyi geceler
+iyiakşamlar	iyi akşamlar
+teşekkürederim	teşekkür ederim
+haftasonu	hafta sonu	kök
+haftaiçi	hafta içi	kök
+doğumgünü	doğum günü	kök
+akşamyemeği	akşam yemeği	kök
+öğleyemeği	öğle yemeği	kök
+birbuçuk	bir buçuk
+yüzyüze	yüz yüze
+gözgöze	göz göze
+yanyana	yan yana
+karşıkarşıya	karşı karşıya
+arasıra	ara sıra
+çoğuzaman	çoğu zaman
+farket	fark et	kök
+farked	fark ed	kök
+hakket	hak et	kök
+hakked	hak ed	kök
+terket	terk et	kök
+terked	terk ed	kök
+kabulet	kabul et	kök
+kabuled	kabul ed	kök
+heralde	herhalde
+malesef	maalesef
+çünki	çünkü
+tamamiyle	tamamıyla
+itibariyle	itibarıyla
+bilimum	bilumum
+müsade	müsaade	kök
+mütaala	mütalaa	kök
+katagori	kategori	kök
+orjinal	orijinal	kök
+eşortman	eşofman	kök
+antreman	antrenman	kök
+antranör	antrenör	kök
+klavuz	kılavuz	kök
+pantalon	pantolon	kök
+sandoviç	sandviç	kök
+sandaviç	sandviç	kök
+deyil	değil	kök
+traş	tıraş	kök
+egzos	egzoz	kök
+egsoz	egzoz	kök
+eksoz	egzoz	kök
+süpriz	sürpriz	kök
+ambülans	ambulans	kök
+entellektüel	entelektüel	kök
+kollektif	kolektif	kök
+mütevazi	mütevazı	kök
+şarz	şarj	kök
+laboratuar	laboratuvar	kök
+pisikoloji	psikoloji	kök
+pisikolog	psikolog	kök
+tiren	tren	kök
+kıravat	kravat	kök
+espiri	espri	kök
+tıraktör	traktör	kök
+dinazor	dinozor	kök
+teşekür	teşekkür	kök
+sezeryan	sezaryen	kök
+kordina	koordina	kök
+aksesuvar	aksesuar	kök
+fasülye	fasulye	kök
+vejeteryan	vejetaryen	kök
+ekzersiz	egzersiz	kök
+şöför	şoför	kök
+anfi	amfi	kök
+eşşek	eşek	kök
+ilerki	ileriki	kök
+cimnastik	jimnastik	kök
+kiprik	kirpik	kök
+kapşon	kapüşon	kök
+konsentre	konsantre	kök
+sitres	stres	kök
+istres	stres	kök
+piroje	proje	kök
+hastahane	hastane	kök
+ünvan	unvan	kök
+kahfaltı	kahvaltı	kök
+kütüpane	kütüphane	kök
+matamatik	matematik	kök
+kurdale	kurdele	kök
+spageti	spagetti	kök
+aşşağı	aşağı	kök
+röpörtaj	röportaj	kök
+perşenbe	perşembe	kök
+çarşanba	çarşamba	kök
+metod	metot

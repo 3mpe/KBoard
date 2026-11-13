@@ -6,6 +6,11 @@
   (vakaları ardışık olmalı; dev/test ayrımı kullanıcıya göre), `new_words` sözlükte ve dil modeli
   korpusunda olmayan kelimeler. `simulate --online` ile ölçülür; bkz. `docs/reports/faz7-kisisel.md`.
 
+- `kural-v0.jsonl`: yazım kuralları seti (kural PR A): 196 vaka, yapay zekâ ile üretildi, seed-v0 ve
+  kisisel-v0 okunmadan yazıldı (CC0-1.0). Kategori `kural`; etiketler `kural_liste` (yanlış yazım
+  listesi), `kural_soru` (bitişik uzun soru eki), `kural_tuzak` (değişmemesi gereken doğru cümle),
+  `kural_dedaki` (de/da/ki, PR B için). Eşik: `.github/ci/kural-gate.py`; bkz. `docs/reports/faz-kural.md`.
+
 ## seed-v0 dağılımı (327 vaka, 1250 kelime)
 
 | Grup | Kimlik öneki | Vaka | Ölçtüğü metrik |
@@ -31,6 +36,10 @@ düştüğü için yazım hatası değil, aksan farkı sayılır; bu yüzden yaz
 - Kişisel/gerçek mesajlardan derlenen vakalar buraya **değil**, `eval/private/` altına konur (git dışı).
 
 Yeni vaka eklerken: `input` ile `text` aynı sayıda kelime içermeli, `source` ve `license` doldurulmalı.
+Tek istisna: yazılan bir kelimenin hedefi iki kelime olabilir ("Herşey yolunda" → "Her şey yolunda").
+Yükleyici yazılan her kelimeyi 1–2 ardışık hedef kelimeye hizalar (`testset.align`; birleşik hedefin
+katlanmış biçimi yazılana en çok 2 düzenleme uzaklığında olmalı); ölçümde hedef "her şey" tek kelime
+gibi puanlanır, sonraki kelimenin bağlamı "her", "şey" olur.
 Doğrulama: `cd eval && python -m kboard_eval validate testset/*.jsonl`
 
 Not: cümle başındaki belirsiz çiftler (`Su` → `Şu` ile `Su içmeyi unutma`, `On`/`Ön`, `Cam`/`Çam`)

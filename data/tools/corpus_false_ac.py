@@ -18,6 +18,11 @@ Her --run ad=ek-argümanlar bir motor yapılandırmasıdır (ek argümanlar boş
 --gate ad=oran: o yapılandırmanın oranı eşiği aşarsa çıkış kodu 1.
 --context: her yapılandırma ayrıca "ad+ctx" adıyla, her sözcük satırdaki önceki iki sözcükle
 birlikte sorularak da ölçülür (bağlama göre aksan seçimi ve soru eki uyumu yalnız bunda devreye girer).
+--compare yeni:taban=fark: "yeni"de olup "taban"da olmayan her yanlış düzeltme tek tek yazılır
+(ör. yazım kurallarının katkısı, taban = aynı yapılandırma --no-rules ile). Yazılan sözcüğün kendisi
+yanlış yazım listesindeyse ("birşey" → "bir şey": korpus TDK'ya göre yanlış yazılmış, düzeltme
+doğru) fark ayrıca işaretlenir. Ham oran farkı her zaman yazılır; eşik, listedeki korpus yanlışları
+dışarıda bırakılmış farka uygulanır (karar: docs/reports/faz-kural.md, "Korpus").
 """
 
 from __future__ import annotations
@@ -35,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_ngram as b  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+MISSPELLINGS = ROOT / "engine/src/main/resources/io/github/kboard/engine/rules/yazim-yanlislari-tr.tsv"
 CORPORA = [
     ("cv", ROOT / "data/corpus/commonvoice-tr.txt", 1),
     ("sohbet", ROOT / "data/sohbet/sohbet-v1.txt", 3),
@@ -66,6 +72,7 @@ def build_lm(specs: list[str], out: Path) -> None:
     cmd += [
         "--exclude-jsonl", str(ROOT / "eval/testset/seed-v0.jsonl"),
         "--exclude-jsonl", str(ROOT / "eval/testset/kisisel-v0.jsonl"),
+        "--exclude-jsonl", str(ROOT / "eval/testset/kural-v0.jsonl"),
         "--denylist", str(ROOT / "data/ngram-denylist.txt"),
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", str(out),
     ]
@@ -103,6 +110,25 @@ def run_engine(cmd: list[str], words: list[str], contexts: list[list[str]] | Non
     return out
 
 
+def misspelling_matcher():
+    """'... yazılan→düzeltme' anahtarındaki yazılan sözcük yanlış yazım listesinde mi (kök kayıtları dahil)?"""
+    exact, stems = set(), []
+    if MISSPELLINGS.exists():
+        for line in MISSPELLINGS.read_text(encoding="utf-8").splitlines():
+            line = line.split("#")[0].rstrip()
+            if not line.strip():
+                continue
+            p = line.split("\t")
+            exact.add(p[0])
+            if len(p) > 2 and p[2].strip() == "kök":
+                stems.append(p[0])
+
+    def listed(key: str) -> bool:
+        w = b.tr_lower(key.split("→")[0].split(" ")[-1])
+        return w in exact or any(w.startswith(s) for s in stems)
+    return listed
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--engine", required=True, type=Path)
@@ -113,7 +139,9 @@ def main() -> int:
     ap.add_argument("--json", type=Path)
     ap.add_argument("--examples", type=int, default=15)
     ap.add_argument("--context", action="store_true", help="bağlamlı ölçümü de yap (ad+ctx)")
+    ap.add_argument("--compare", action="append", default=[], help="yeni:taban=en yüksek oran farkı")
     args = ap.parse_args()
+    listed = misspelling_matcher()
 
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
@@ -134,7 +162,8 @@ def main() -> int:
             rate = n_bad / total if total else 0.0
             bad.sort(key=lambda x: -counts[x[0]])
             results[name] = {"args": extra, "false_autocorrect": n_bad, "tokens": total, "rate": rate,
-                             "examples": [f"{w}→{a} ({counts[w]})" for w, a in bad[: args.examples]]}
+                             "examples": [f"{w}→{a} ({counts[w]})" for w, a in bad[: args.examples]],
+                             "all": {f"{w}→{a}": counts[w] for w, a in bad}}
             print(f"{name:16s} yanlış oto. düzeltme {n_bad}/{total} = %{rate * 100:.2f}  "
                   + ", ".join(results[name]["examples"][:8]))
             if args.context:
@@ -148,13 +177,37 @@ def main() -> int:
                 rate = n_bad / len(inst) if inst else 0.0
                 cname = name + "+ctx"
                 results[cname] = {"args": extra, "false_autocorrect": n_bad, "tokens": len(inst), "rate": rate,
-                                  "examples": [f"{k} ({v})" for k, v in bad_c.most_common(args.examples)]}
+                                  "examples": [f"{k} ({v})" for k, v in bad_c.most_common(args.examples)],
+                                  "all": dict(bad_c)}
                 print(f"{cname:16s} yanlış oto. düzeltme {n_bad}/{len(inst)} = %{rate * 100:.2f}  "
                       + ", ".join(results[cname]["examples"][:8]))
+    failed = False
+    for spec in args.compare:
+        pair, _, limit = spec.partition("=")
+        new, _, base = pair.partition(":")
+        r_new, r_base = results[new], results[base]
+        added = {k: v - r_base["all"].get(k, 0) for k, v in r_new["all"].items() if v > r_base["all"].get(k, 0)}
+        removed = sum(v for k, v in r_base["all"].items() if k not in r_new["all"])
+        n_list = sum(v for k, v in added.items() if listed(k))
+        delta = r_new["rate"] - r_base["rate"]
+        delta_unlisted = (sum(added.values()) - n_list - removed) / r_new["tokens"] if r_new["tokens"] else 0.0
+        print(f"\n{new} - {base}: ham %{delta * 100:+.3f} puan ({sum(added.values())} yeni, {removed} giden; "
+              f"yeni olanlardan {n_list} sözcükte korpusun kendisi listede yanlış yazım); "
+              f"onlar hariç %{delta_unlisted * 100:+.3f} puan")
+        for k, v in sorted(added.items(), key=lambda kv: (-kv[1], kv[0])):
+            print(f"  + {k} ({v}){'  [korpusta yanlış yazım: listede]' if listed(k) else ''}")
+        r_new.setdefault("compare", {})[base] = {"delta": delta, "delta_unlisted": delta_unlisted, "added": added,
+                                                 "removed": removed, "listed": n_list}
+        if limit:
+            ok = delta_unlisted <= float(limit)
+            print(f"{'OK ' if ok else 'HATA'} korpus yanlış oto. düzeltme farkı ({new} - {base}, listedeki korpus "
+                  f"yanlışları hariç): %{delta_unlisted * 100:+.3f} puan (eşik <= %{float(limit) * 100:.3f} puan)")
+            failed |= not ok
+    for r in results.values():
+        r.pop("all", None)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
         args.json.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-    failed = False
     for g in args.gate:
         name, _, limit = g.partition("=")
         ok = results[name]["rate"] <= float(limit)

@@ -17,6 +17,8 @@ import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.personal.PersonalModel
 import io.github.kboard.engine.personal.PersonalSource
+import io.github.kboard.engine.rules.MisspellingList
+import io.github.kboard.engine.rules.SpellingRuleSource
 import io.github.kboard.engine.typo.TypoSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -95,6 +97,34 @@ object KBoardSuggestions {
      */
     internal fun isLmKnown(word: String): Boolean = ngram?.isKnown(word) == true || personal?.isKnown(word) == true
 
+    /**
+     * Yazım kuralları (yanlış yazım listesi, bitişik soru eki; docs/reports/faz-kural.md). Aksan
+     * düzelticiyle birlikte açılır (onun sözlüğünü kullanır). Kişisel sözlük, kişisel modelde 2+
+     * kullanım ve geri alınmış düzeltme istisnalarını kendisi uygular. Düzeltme iki kelime olabilir
+     * ("herşey" → "her şey"): HeliBoard boşluklu düzeltmeyi tek metin olarak yazar, kullanıcı
+     * geçmişine kelime kelime ekler ve geri almada tamamını siler.
+     */
+    private val rules: SpellingRuleSource by lazy {
+        SpellingRuleSource(
+            MisspellingList.default(),
+            dictKnown = { deasciifier?.isKnown(it) == true },
+            dictFold = { deasciifier?.hasFoldForm(it) == true || ngram?.containsFold(it) == true },
+            lmKnown = { ngram?.contains(it) == true },
+            personalKnown = { personal?.isKnown(it) == true },
+            userWord = { deasciifier?.isUserWord(it) == true },
+            deasciify = { deasciifier?.autocorrection(it) },
+        )
+    }
+
+    /**
+     * `InputLogic.revertCommit` içindeki `// KBOARD:` satırı: kullanıcı bir otomatik düzeltmeyi geri
+     * aldı. Yazım kuralının düzeltmesiyse aynı kelime bu oturumda bir daha düzeltilmez.
+     */
+    @JvmStatic
+    fun noteRevert(typedWord: String, committedWord: String) {
+        if (deasciifier != null) rules.noteRevert(typedWord, committedWord)
+    }
+
     /** Kişisel öğrenmeyi açar/kapatır (kişiselleştirme ayarı); [model] yalnız testler için. */
     @Synchronized
     fun setPersonalEnabled(enabled: Boolean, model: PersonalModel = KBoardPersonal.model) {
@@ -151,7 +181,7 @@ object KBoardSuggestions {
         // Ek zinciri: kök kütlesi ve bilinen biçim için ham dil modeli (kişisel kaynaktan bağımsız)
         val sfx = suffix
         sfx?.lm = lm
-        engine = SuggestionEngine(listOfNotNull(deasc, p ?: lm, typo, sfx, userMorph), denylist = denylist)
+        engine = SuggestionEngine(listOfNotNull(deasc?.let { rules }, deasc, p ?: lm, typo, sfx, userMorph), denylist = denylist)
             .also { it.setUserWords(userWords) }
     }
 

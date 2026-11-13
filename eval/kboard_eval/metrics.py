@@ -40,6 +40,10 @@ class Bucket:
     false_autocorrect: Ratio = field(default_factory=Ratio)
     typo_correction: Ratio = field(default_factory=Ratio)
     typo_suggest_top3: Ratio = field(default_factory=Ratio)
+    # Boşlukta yazılanı değiştiren her otomatik düzeltme: hedefe mi götürdü (kesinlik)
+    autocorrect_precision: Ratio = field(default_factory=Ratio)
+    # Yazılanın hedeften farklı olduğu her kelime (aksan ya da yazım): commit hedefe eşit mi (duyarlılık)
+    fix_recall: Ratio = field(default_factory=Ratio)
     words: int = 0
     missing_events: int = 0
 
@@ -59,6 +63,8 @@ class Bucket:
             "false_autocorrect_rate": self.false_autocorrect.as_dict(),
             "typo_correction_accuracy": self.typo_correction.as_dict(),
             "typo_suggest_top3": self.typo_suggest_top3.as_dict(),
+            "autocorrect_precision": self.autocorrect_precision.as_dict(),
+            "fix_recall": self.fix_recall.as_dict(),
             "missing_events": self.missing_events,
         }
 
@@ -131,7 +137,7 @@ def score(cases: list[Case], events: list[Event],
 
     for case in cases:
         case_buckets = [overall, by_category[case.category]] + [by_tag[t] for t in case.tags]
-        for i, (typed, target) in enumerate(zip(case.typed_words, case.target_words)):
+        for i, (typed, target) in enumerate(zip(case.typed_words, case.aligned_targets)):
             label = labels.get((case.id, i))
             buckets = case_buckets
             if label is not None:
@@ -179,6 +185,10 @@ def score(cases: list[Case], events: list[Event],
                 b.keystrokes_used += used
                 b.keystrokes_full += full
                 if commit is not None:
+                    if not same_word(committed, typed):
+                        b.autocorrect_precision.add(same_word(committed, target))
+                    if normalize(typed) != normalize(target):
+                        b.fix_recall.add(same_word(committed, target))
                     if is_deasciify_pair(typed, target):
                         b.deasciify.add(same_word(committed, target))
                     elif normalize(typed) == normalize(target):
