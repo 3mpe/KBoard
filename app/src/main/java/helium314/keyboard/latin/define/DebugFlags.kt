@@ -58,7 +58,9 @@ $stackTrace
 Last log:
 ${Log.getLog(100).joinToString("\n")}
 """)
-        defaultUncaughtExceptionHandler!!.uncaughtException(t, e)
+        // KBOARD: Android'de varsayılan işleyici hep vardır; JVM testlerinde (Robolectric) yoktur ve `!!` burada
+        // ikinci bir NPE atıp coroutine iş parçacığını öldürüyordu, sonraki test sonsuza kadar bekliyordu (#30)
+        defaultUncaughtExceptionHandler?.uncaughtException(t, e) ?: e.printStackTrace()
     }
 
     private fun writeCrashReportToFile(text: String) {
