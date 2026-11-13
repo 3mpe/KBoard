@@ -21,6 +21,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.Locale
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 // Düz Application: HeliBoard'un App.onCreate'i her testte arka plan coroutine'leri başlatıyor; testler
@@ -88,6 +89,17 @@ class KBoardSuggestionsTest {
             NgramContext.WordInfo.BEGINNING_OF_SENTENCE_WORD_INFO, NgramContext.WordInfo("dün")
         )
         assertEquals(listOf("eve", "gidelim"), KBoardSuggestions.contextWords(ctx))
+        assertTrue(KBoardSuggestions.startsSentence(ctx, 2))
+    }
+
+    @Test
+    fun unknownContextIsNotSentenceStart() {
+        // virgülden sonra HeliBoard bağlamı boş verir: cümle başı sayılmamalı
+        assertEquals(emptyList(), KBoardSuggestions.contextWords(NgramContext.EMPTY_PREV_WORDS_INFO))
+        assertFalse(KBoardSuggestions.startsSentence(NgramContext.EMPTY_PREV_WORDS_INFO, 0))
+        assertTrue(KBoardSuggestions.startsSentence(NgramContext.BEGINNING_OF_SENTENCE, 0))
+        val noStart = NgramContext(NgramContext.WordInfo("gidelim"), NgramContext.WordInfo("eve"))
+        assertFalse(KBoardSuggestions.startsSentence(noStart, 2))
     }
 
     @Test

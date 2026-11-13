@@ -5,8 +5,8 @@ import java.io.DataInputStream
 import java.io.InputStream
 
 /**
- * Kelime bigram + trigram dil modeli (araya katmalı Kneser-Ney). Dosya biçimi ve üretimi:
- * `data/tools/build_ngram.py`. Olasılıklar log10 olarak tutulur.
+ * Kelime bigram + trigram dil modeli (araya katmalı Kneser-Ney). Dosya biçimi (sürüm 1 ve 2) ve
+ * üretimi: `data/tools/build_ngram.py`. Olasılıklar log10 olarak tutulur.
  *
  * Bağlamın son iki kelimesi (yoksa cümle başı `<s>`) kullanılır. Görülmemiş ardıl için
  * geri çekilme: P(w | u v) = gamma(u v) · P(w | v), P(w | v) = gamma(v) · P_uni(w).
@@ -17,6 +17,8 @@ class NgramModel private constructor(
     /** Gösterim biçimi ("Ankara"). */
     val display: Array<String>,
     private val logUni: FloatArray,
+    /** Öneri olarak hiç çıkmayacak kelimeler (küfür, OCR hatası); bağlam olarak kullanılır. */
+    private val blocked: BooleanArray,
     val bosId: Int,
     /** P_uni'ye göre azalan ilk kelimeler. */
     val topUnigrams: IntArray,
@@ -48,15 +50,22 @@ class NgramModel private constructor(
 
     fun id(word: String): Int = idOf[TurkishText.lower(word)] ?: -1
 
-    /** Bağlam kelimelerinden (eskiden yeniye) model bağlamı: son iki kelimenin id'leri, bilinmeyen = -1. */
-    fun context(previous: List<String>): Pair<Int, Int> {
-        if (previous.isEmpty()) return -1 to bosId
+    /**
+     * Bağlam kelimelerinden (eskiden yeniye) model bağlamı: son iki kelimenin id'leri, bilinmeyen = -1.
+     * [sentenceStart] false ise bağlamın öncesi bilinmez; `<s>` yerine -1 kullanılır.
+     */
+    fun context(previous: List<String>, sentenceStart: Boolean = true): Pair<Int, Int> {
+        val bos = if (sentenceStart) bosId else -1
+        if (previous.isEmpty()) return -1 to bos
         val v = id(previous.last())
-        val u = if (previous.size >= 2) id(previous[previous.size - 2]) else bosId
+        val u = if (previous.size >= 2) id(previous[previous.size - 2]) else bos
         return u to v
     }
 
     fun logUnigram(id: Int): Float = logUni[id]
+
+    /** Kelime öneri olarak gösterilebilir mi (cümle başı belirteci ve yasaklı kelimeler hariç). */
+    fun suggestable(id: Int): Boolean = id != bosId && !blocked[id]
 
     /** log10 P(w | u v); v = -1 (bilinmeyen önceki kelime) ise tek kelime olasılığı. */
     fun logProb(id: Int, u: Int, v: Int): Float {
@@ -105,17 +114,20 @@ class NgramModel private constructor(
             val d = DataInputStream(input)
             val magic = ByteArray(4).also { d.readFully(it) }
             require(String(magic, Charsets.US_ASCII) == "KBNG") { "KBNG dosyası değil" }
-            require(d.readInt() == 1) { "desteklenmeyen KBNG sürümü" }
+            val version = d.readInt()
+            require(version == 1 || version == 2) { "desteklenmeyen KBNG sürümü $version" }
             val n = d.readInt()
             val words = arrayOfNulls<String>(n)
             val display = arrayOfNulls<String>(n)
             val uni = FloatArray(n)
+            val blocked = BooleanArray(n)
             for (i in 0 until n) {
                 val w = d.readUTF()
                 val shown = d.readUTF()
                 words[i] = w
                 display[i] = if (shown == w) w else shown // aynı metin için tek nesne
                 uni[i] = d.readFloat()
+                if (version >= 2) blocked[i] = d.readUnsignedByte() and 1 != 0
             }
             val bos = d.readInt()
             val top = IntArray(d.readInt()) { d.readInt() }
@@ -131,7 +143,7 @@ class NgramModel private constructor(
                 trigrams[key(u, v)] = readRow(d)
             }
             @Suppress("UNCHECKED_CAST")
-            return NgramModel(words as Array<String>, display as Array<String>, uni, bos, top, bigrams, trigrams)
+            return NgramModel(words as Array<String>, display as Array<String>, uni, blocked, bos, top, bigrams, trigrams)
         }
 
         private fun readRow(d: DataInputStream): Row {

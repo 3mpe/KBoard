@@ -15,12 +15,15 @@ class NgramSourceTest {
     private val display = listOf("<s>", "çok", "güzel", "gün", "günaydın", "iyi", "Ankara")
     private val uni = listOf(1e-9, 0.3, 0.2, 0.15, 0.05, 0.2, 0.1)
 
-    private fun model(): NgramModel {
+    private fun model(blockGunaydin: Boolean = false): NgramModel {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).apply {
-            write("KBNG".toByteArray()); writeInt(1)
+            write("KBNG".toByteArray()); writeInt(2)
             writeInt(words.size)
-            words.indices.forEach { writeUTF(words[it]); writeUTF(display[it]); writeFloat(log10(uni[it]).toFloat()) }
+            words.indices.forEach {
+                writeUTF(words[it]); writeUTF(display[it]); writeFloat(log10(uni[it]).toFloat())
+                writeByte(if (words[it] == "günaydın" && blockGunaydin) 1 else 0)
+            }
             writeInt(0)
             writeInt(2); writeInt(1); writeInt(2)
             // bigram: <s> → günaydın, iyi; çok → güzel; iyi → gün
@@ -57,6 +60,23 @@ class NgramSourceTest {
         assertEquals("güzel", src.candidates(Query(listOf("Çok"), ""), 3).first().word)
         // cümle başı: büyük harfle
         assertEquals("Günaydın", src.candidates(Query(emptyList(), ""), 3).first().word)
+    }
+
+    @Test
+    fun blockedWordsAreNeverSuggested() {
+        val src = NgramSource(model(blockGunaydin = true))
+        assertTrue(src.candidates(Query(emptyList(), ""), 5).none { it.word == "Günaydın" })
+        assertEquals(listOf("gün"), src.candidates(Query(emptyList(), "gun"), 5).map { it.word })
+    }
+
+    @Test
+    fun unknownContextIsNotSentenceStart() {
+        val m = model()
+        assertEquals(-1 to -1, m.context(emptyList(), sentenceStart = false))
+        assertEquals(-1 to 5, m.context(listOf("iyi"), sentenceStart = false))
+        // virgülden sonra: <s> ardılları değil genel en sıklar, küçük harfle
+        val words = NgramSource(m).candidates(Query(emptyList(), "", sentenceStart = false), 3).map { it.word }
+        assertEquals(listOf("çok", "güzel"), words.take(2))
     }
 
     @Test

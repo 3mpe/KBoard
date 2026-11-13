@@ -36,8 +36,9 @@ object KBoardEngineLoader {
     fun init(context: Context) {
         val app = context.applicationContext
         val prefs = app.prefs()
-        loadNgram(app)
         apply(app, prefs)
+        // Dil modeli (~0,5 s) aksan düzelticiyi ve uygulama açılışını bekletmesin.
+        thread(name = "kboard-ngram") { loadNgram(app) }
         val l = SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
             if (key == Settings.PREF_KBOARD_DEASCIIFY) thread(name = "kboard-engine") { apply(app, p) }
         }

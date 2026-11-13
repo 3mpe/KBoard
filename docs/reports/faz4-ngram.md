@@ -6,14 +6,18 @@ kelime) yalnız ayar için, **test** (170 vaka, 654 kelime) yalnız rapor için.
 
 ## Model
 
-- Korpus: Common Voice tr `sentence-collector.txt` (47 780 cümle, CC0). Test setindeki herhangi bir
+- Korpus: Common Voice tr `sentence-collector.txt` (47 781 satır, CC0). Test setindeki herhangi bir
   vakayla normalize 4 kelimelik ortak dizisi olan 82 cümle atıldı (kısa vakalarda tam alt dize).
 - Araya katmalı Kneser-Ney (D = 0,75): bigram (sayı ≥ 1) + trigram (sayı ≥ 2), bağlam başına en
   çok 60 ardıl, cümle başı `<s>`. Sözlük 34 211 kelime; her kelime en sık yazılışıyla gösterilir
   ("ankara" → "Ankara").
-- Dosya `kboard-tr.kbn`: 1,99 MB (APK içinde sıkıştırılmış ~0,83 MB). Derleme her koşuda aynı baytı
-  üretir. JVM'de yükleme ~0,5 s, bellek ~12 MB (arka planda yüklenir; yüklenene kadar klavye eski
-  davranışında).
+- Öneri yasağı (`data/ngram-denylist.txt`): küfürler, OCR hataları ("Haşan", "bazan"), eski yazımlar
+  ("candarma") ve romanlardaki karakter adları modelde bağlam olarak kalır ama hiç önerilmez (64 kelime).
+- Dosya `kboard-tr.kbn` (biçim 2): 2,03 MB (APK içinde sıkıştırılmış ~0,83 MB). Derleme her koşuda
+  aynı baytı üretir. JVM'de yükleme ~0,5 s, bellek ~12 MB; kendi iş parçacığında yüklenir, aksan
+  düzelticiyi bekletmez. CI bütçesi şimdilik ≤ 2,1 MB.
+- Bağlam bir virgül ya da başka bir ayraçta kesildiyse cümle başı sayılmaz: `<s>` yerine bilinmeyen
+  bağlam (tek kelime olasılığı) kullanılır, öneri büyük harfle başlamaz.
 - `NgramSource`: önek boşsa bağlamın en olası ardılları; önek varsa önekle başlayan ve yazılan
   aksanlarla uyumlu model kelimeleri, `0,95 + 0,05 · log10 P(w | son iki kelime)` skoruyla. Hiçbir
   aday otomatik düzeltme yapmaz; boşluk davranışı değişmez.
@@ -37,7 +41,7 @@ kelime) yalnız ayar için, **test** (170 vaka, 654 kelime) yalnız rapor için.
 | KSR (tuş tasarrufu) | %17,9 | **%31,5** | %29,4 – %33,3 | ≥ %23 |
 | Aksan düzeltme | %78,8 | %78,8 | %72,7 – %84,6 | değişmemeli |
 | Yanlış oto. düzeltme | %0,0 | %0,0 | | ≤ %0,3 |
-| Gecikme p95 (tüm tuşlar) | 0,52 ms | 0,66 ms | | ≤ 1,5 ms |
+| Gecikme p95 (tüm tuşlar) | 0,52 ms | 0,75 ms | | ≤ 1,5 ms |
 
 Kategoriye göre (test, İlk-3 @0 / @3 / KSR, önce → sonra):
 
@@ -49,12 +53,16 @@ Kategoriye göre (test, İlk-3 @0 / @3 / KSR, önce → sonra):
 | ozel_isim | 15 | %0 → %25,0 | %41,7 → %58,3 | %14,1 → %38,4 |
 
 Tüm set (1 250 kelime): @0 %11,5, @3 %42,5, KSR %31,5, aksan %78,2, yanlış düzeltme %0,1. CI eşiğine
-eklenenler: @0 ≥ %8, genel @3 ≥ %31, KSR ≥ %23.
+eklenenler (ulaşılanın ~2 puan altı): @0 ≥ %9,5, @1 ≥ %19, @3 ≥ %40, KSR ≥ %29,5.
 
 ## Sınırlar ve sıradakiler
 
 - Korpus okunmak üzere yazılmış cümleler; mesajlaşma dili (kısaltma, argo) zayıf. Elle yazılan
   sohbet korpusu ayrı modelle araya katılacak.
-- Bellek (~12 MB) satır başına nesne tutan yapıdan geliyor; düz dizilere geçilerek küçültülebilir.
+- Biçim 3 (sohbet modeli araya katılmadan önce zorunlu): kelime/gösterim tekrarını kaldırma, varint
+  id, 8 bit log-olasılık, `HashMap` yerine düz sıralı diziler. Hedef ≤ 1 MB dosya, ≤ 4 MB bellek.
+- Ölçüm masaüstünde; telefonda tek harfli önek gecikmesi (12 000 adaya kadar tarama) ölçülecek.
+- Uygulamada motor yüklüyken HeliBoard'un kendi yazım hatası düzeltmesinin hâlâ çalıştığını sınayan
+  test eklenecek (motor tamamlamaları ilk sıraya çıkıp onu bastırabilir).
 - Aksan düzeltme henüz bağlamı kullanmıyor ("sık/şık" belirsizliği); sıradaki adım dil modeliyle
   bağlama göre aksan seçimi.

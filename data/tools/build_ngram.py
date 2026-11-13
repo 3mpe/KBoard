@@ -13,9 +13,12 @@ Test sızıntısı: `--exclude-jsonl` ile verilen test setindeki herhangi bir va
 edilmiş 4 kelimelik ortak dizisi olan eğitim cümlesi atılır; 4 kelimeden kısa vakalar için
 vakanın tamamını içeren cümleler atılır.
 
+Öneri yasağı: `--denylist` dosyasındaki kelimeler (küfür, OCR hatası; `önek*` biçimi desteklenir)
+modelde bağlam olarak kalır ama hiçbir zaman aday olarak önerilmez (bayrak 1).
+
 Biçim (büyük endian, java.io.DataInputStream):
-  "KBNG" u32 sürüm(1)
-  u32 V; V kez: utf(kelime küçük) utf(gösterim) f32 log10 P_uni
+  "KBNG" u32 sürüm(2)
+  u32 V; V kez: utf(kelime küçük) utf(gösterim) f32 log10 P_uni u8 bayrak (1 = önerme)
   u32 bos_id                      (cümle başı belirteci "<s>")
   u32 topUniN; topUniN kez u32 id (P_uni'ye göre azalan; bağlam bilinmezken öneri)
   u32 B; B kez: u32 bağlam_id f32 log10 gamma u16 n; n kez: u32 id f32 log10 P   (P'ye göre azalan)
@@ -88,6 +91,7 @@ def main() -> int:
     ap.add_argument("--min-tri", type=int, default=3)
     ap.add_argument("--max-succ", type=int, default=40, help="bağlam başına en çok ardıl")
     ap.add_argument("--top-uni", type=int, default=50)
+    ap.add_argument("--denylist", type=Path, help="önerilmeyecek kelimeler (satır başına; önek* desteklenir)")
     ap.add_argument("--holdout", type=Path, help="her 20. cümleyi bu dosyaya ayır (ayar için)")
     ap.add_argument("-o", "--output", type=Path, required=True)
     args = ap.parse_args()
@@ -189,6 +193,24 @@ def main() -> int:
         ents.sort(key=lambda e: (-e[1], e[0]))
         trigram_rows.append((u, v, gamma, ents[: args.max_succ]))
 
+    deny_exact: set[str] = set()
+    deny_prefix: list[str] = []
+    if args.denylist:
+        for line in args.denylist.read_text(encoding="utf-8").splitlines():
+            line = line.split("#", 1)[0].strip()
+            if not line:
+                continue
+            w = tr_lower(line)
+            if w.endswith("*"):
+                deny_prefix.append(w[:-1])
+            else:
+                deny_exact.add(w)
+
+    def denied(w):
+        base = w.split("'", 1)[0]
+        return w in deny_exact or base in deny_exact or any(w.startswith(p) for p in deny_prefix)
+
+    blocked = {w for w in vocab if denied(w)}
     words = sorted(vocab)
     words.insert(0, BOS)
     p_uni[BOS] = 1e-9
@@ -201,7 +223,7 @@ def main() -> int:
         return sc.most_common(1)[0][0] if sc else w
 
     lg = lambda p: math.log10(max(p, 1e-12))
-    out = bytearray(b"KBNG") + struct.pack(">I", 1)
+    out = bytearray(b"KBNG") + struct.pack(">I", 2)
 
     def utf(s):
         b = s.encode("utf-8")
@@ -209,9 +231,9 @@ def main() -> int:
 
     out += struct.pack(">I", len(words))
     for w in words:
-        out += utf(w) + utf(disp(w)) + struct.pack(">f", lg(p_uni[w]))
+        out += utf(w) + utf(disp(w)) + struct.pack(">fB", lg(p_uni[w]), 1 if w in blocked else 0)
     out += struct.pack(">I", ids[BOS])
-    top = sorted(vocab, key=lambda w: (-p_uni[w], w))[: args.top_uni]
+    top = sorted(vocab - blocked, key=lambda w: (-p_uni[w], w))[: args.top_uni]
     out += struct.pack(">I", len(top)) + b"".join(struct.pack(">I", ids[w]) for w in top)
     out += struct.pack(">I", len(bigram_rows))
     for v, gamma, ents in bigram_rows:
@@ -227,7 +249,7 @@ def main() -> int:
     args.output.write_bytes(bytes(out))
     print(f"cümle: {dict(kept)} (sızıntı nedeniyle atılan: {dict(dropped)}); kelime türü {V}, "
           f"bigram bağlamı {len(bigram_rows)} ({sum(len(r[2]) for r in bigram_rows)} kayıt), "
-          f"trigram bağlamı {len(trigram_rows)}; {len(out)} bayt → {args.output}", file=sys.stderr)
+          f"trigram bağlamı {len(trigram_rows)}; önerisi engellenen {len(blocked)}; {len(out)} bayt → {args.output}", file=sys.stderr)
     return 0
 
 

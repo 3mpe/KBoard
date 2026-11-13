@@ -4,7 +4,8 @@
 Kullanım: eval-gate.py <score.json>
 Eşikler (Fable kararı, Faz 1.8): aksan düzeltme >= %75, yanlış otomatik düzeltme <= %0,3,
 kişisel sözlük kategorisinde İlk-3 @3 >= %25 (çekim üreticisi).
-Faz 4 (n-gram dil modeli): sonraki kelime İlk-3 @0 >= %8, genel İlk-3 @3 >= %31, KSR >= %23.
+Faz 4 (n-gram dil modeli; tüm sette ulaşılanın ~2 puan altı, model derlemesi belirlenimci):
+sonraki kelime İlk-3 @0 >= %9,5, İlk-3 @1 >= %19, İlk-3 @3 >= %40, KSR >= %29,5.
 """
 import json
 import sys
@@ -14,9 +15,10 @@ o = d["overall"]
 checks = [
     ("aksan düzeltme", o["deasciify_accuracy"]["value"], ">=", 0.75),
     ("yanlış otomatik düzeltme", o["false_autocorrect_rate"]["value"], "<=", 0.003),
-    ("sonraki kelime İlk-3 @0", o["top3_at_k"]["0"]["value"], ">=", 0.08),
-    ("genel İlk-3 @3", o["top3_at_k"]["3"]["value"], ">=", 0.31),
-    ("KSR", o["ksr"]["value"], ">=", 0.23),
+    ("sonraki kelime İlk-3 @0", o["top3_at_k"]["0"]["value"], ">=", 0.095),
+    ("genel İlk-3 @1", o["top3_at_k"]["1"]["value"], ">=", 0.19),
+    ("genel İlk-3 @3", o["top3_at_k"]["3"]["value"], ">=", 0.40),
+    ("KSR", o["ksr"]["value"], ">=", 0.295),
     ("kişisel sözlük İlk-3 @3", d["by_category"]["kullanici_sozlugu"]["top3_at_k"]["3"]["value"], ">=", 0.25),
 ]
 failed = False

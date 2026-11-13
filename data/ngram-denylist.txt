@@ -1,0 +1,47 @@
+# Dil modelinin hiçbir zaman ÖNERMEYECEĞİ kelimeler (bağlam olarak kullanılmaya devam eder).
+# Satır başına bir kelime, Türkçe küçük harf. Sonu `*` ile biten satır o önekle başlayan her kelimeyi kapsar.
+# Lisans: CC0-1.0. Gözden geçirme: build_ngram.py çıktısındaki "engellenen" sayısı.
+
+# Küfür ve hakaret (korpustaki edebi metinlerden)
+orospu*
+siktir*
+sikey*
+sikim*
+sikiş*
+sik
+amına*
+amcık*
+piç*
+pezevenk*
+kahpe*
+kaltak*
+kancık*
+yavşak*
+puşt*
+ibne*
+taşak*
+yarak
+yarrak*
+şerefsiz*
+göt
+göte
+götü
+götün
+götüne
+götünü
+götte
+götten
+
+# OCR hataları ve eskimiş yazımlar (öneri olarak çıkmasın)
+haşan
+bazan
+candarma*
+nasıı
+
+# Korpustaki romanların karakter adları (genel öneri değeri yok, çok sık geçiyorlar)
+macide
+raif
+avni
+mihriye
+güzin
+viktor

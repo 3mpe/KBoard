@@ -30,7 +30,7 @@ class NgramSource(
         val nextOffset: Double = 0.95,
         val nextSlope: Double = 0.1,
         /** Bir önek için taranan en çok model kelimesi. */
-        val prefixCap: Int = 4000,
+        val prefixCap: Int = 12000,
         val maxScore: Double = 0.98,
     )
 
@@ -38,7 +38,7 @@ class NgramSource(
 
     override fun candidates(query: Query, limit: Int): List<Candidate> {
         if (limit <= 0) return emptyList()
-        val (u, v) = model.context(query.context)
+        val (u, v) = model.context(query.context, query.sentenceStart)
         val typed = query.prefix
         if (typed.isEmpty()) {
             val succ = model.successors(u, v)
@@ -67,7 +67,7 @@ class NgramSource(
     private fun top(ids: Sequence<Int>, limit: Int, u: Int, v: Int): List<Pair<Int, Float>> {
         val heap = PriorityQueue<Pair<Int, Float>>(limit + 1, compareBy { it.second })
         for (id in ids) {
-            if (id == model.bosId) continue
+            if (!model.suggestable(id)) continue
             val lp = model.logProb(id, u, v)
             if (heap.size >= limit && lp <= heap.peek().second) continue
             heap.add(id to lp)
@@ -78,9 +78,9 @@ class NgramSource(
 
     private fun clamp(s: Double) = s.coerceIn(0.0, config.maxScore)
 
-    /** Cümle başında (bağlam boş) öneri büyük harfle başlar. */
+    /** Cümle başında (bağlam boş ve gerçekten cümle başı) öneri büyük harfle başlar. */
     private fun sentenceCase(query: Query, word: String): String =
-        if (query.context.isEmpty() && word.isNotEmpty() && word[0].isLowerCase()) {
+        if (query.context.isEmpty() && query.sentenceStart && word.isNotEmpty() && word[0].isLowerCase()) {
             word.substring(0, 1).uppercase(TurkishText.TR) + word.substring(1)
         } else {
             word

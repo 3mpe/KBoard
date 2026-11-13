@@ -91,11 +91,15 @@ jobs:
         # Upstream paketin tamamı #30 yüzünden askıda kalıyor; KBoard'un kendi testleri burada zorunlu.
         timeout-minutes: 15
         run: ./gradlew --init-script .github/ci/test-logging.init.gradle testRunTestsUnitTest --tests 'helium314.keyboard.kboard.*'
-      - name: Aksan dizini APK'da mı
+      - name: Aksan dizini ve dil modeli APK'da mı
         run: |
           apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
           unzip -l "$apk" | grep -E 'assets/kboard/deasciify-tr\.kbd' || { echo "::error::assets/kboard/deasciify-tr.kbd APK'da yok"; exit 1; }
           unzip -l "$apk" | grep -E 'assets/kboard/kboard-tr\.kbn' || { echo "::error::assets/kboard/kboard-tr.kbn APK'da yok"; exit 1; }
+          # Dil modeli boyut bütçesi (Fable): sıkıştırma (biçim v3) gelene kadar <= 2,1 MB, sonra düşürülecek
+          size=$(stat -c %s engine/build/kboard/kboard-tr.kbn)
+          echo "kboard-tr.kbn: $size bayt"
+          [ "$size" -le 2100000 ] || { echo "::error::kboard-tr.kbn $size bayt, bütçe 2 100 000"; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
