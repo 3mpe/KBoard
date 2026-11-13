@@ -512,6 +512,8 @@ class PersonalModel(val config: Config = Config()) {
         private const val FORMAT_VERSION = 1
         private val MAGIC = "KBPM".toByteArray(Charsets.US_ASCII)
         private const val MIN_COUNT = 0.05
+        /** Okumada kabul edilen en büyük sayı (gerçek modeller bunun çok altında; toplam taşmasın). */
+        private const val MAX_COUNT = 1.0e7f
         private val EMPTY_SUCC = arrayOfNulls<Uni>(0)
 
         /** Öğrenilebilir kelime mi: harf (+ kesme işareti, tire), rakamsız, en çok [maxLength] karakter. */
@@ -529,6 +531,7 @@ class PersonalModel(val config: Config = Config()) {
             require(version == FORMAT_VERSION) { "desteklenmeyen KBPM sürümü $version" }
             val m = PersonalModel(config)
             val tick = d.vint()
+            require(tick >= 0) { "bozuk KBPM tiki" }
             m.tick = tick
             // Dosya içe aktarmadan da gelebilir: her alan sınırlarla denetlenir, bozuk ya da
             // aşırı büyük bir dosya istisna verir (bellek ayırmadan önce).
@@ -541,7 +544,7 @@ class PersonalModel(val config: Config = Config()) {
                 require(learnable(display, config.maxWordLength)) { "KBPM'de geçersiz kelime" }
                 val flags = d.readByte().toInt()
                 val count = d.readFloat()
-                require(count.isFinite() && count >= 0f) { "bozuk KBPM sayısı" }
+                require(count.isFinite() && count in 0f..MAX_COUNT) { "bozuk KBPM sayısı" }
                 val uses = d.vint()
                 val age = d.vint()
                 require(uses >= 0) { "bozuk KBPM kullanımı" }
@@ -573,7 +576,7 @@ class PersonalModel(val config: Config = Config()) {
                     require(si in 0 until n && seenSucc.add(si)) { "bozuk KBPM ardılı" }
                     p.succ[i] = list[si]
                     val count = d.readFloat()
-                    require(count.isFinite() && count >= 0f) { "bozuk KBPM sayısı" }
+                    require(count.isFinite() && count in 0f..MAX_COUNT) { "bozuk KBPM sayısı" }
                     val age = d.vint()
                     require(age in 0..tick) { "bozuk KBPM yaşı" }
                     p.set(i, count, tick - age)
@@ -583,6 +586,7 @@ class PersonalModel(val config: Config = Config()) {
                 p.rowSum = sum.toFloat(); p.rowTick = tick
                 m.bigrams += k
             }
+            require(d.read() == -1) { "KBPM sonunda fazla veri" }
             return m
         }
 

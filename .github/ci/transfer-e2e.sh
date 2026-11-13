@@ -13,6 +13,12 @@ tr_out="$out/aktarim-e2e.txt"; : > "$tr_out"
 tresult() { echo "$1 $2" | tee -a "$tr_out"; }
 MARK="kboard_e2e_isaret"
 
+# Sistemin kullanıcı sözlüğü (kabuk kullanıcısı erişemez; adb root ile).
+DICT_URI="content://user_dictionary/words"
+dict_words() { adb shell content query --uri "$DICT_URI" --projection word 2>/dev/null | tr -d '\r' | sed -nE 's/.*word=([^,]*).*/\1/p'; }
+dict_add() { adb shell content insert --uri "$DICT_URI" --bind "word:s:$1" --bind frequency:i:250 --bind locale:s:tr_TR --bind appid:i:0; }
+dict_del() { adb shell content delete --uri "$DICT_URI" --where "\"word='$1'\""; }
+
 prefs_xml() { # cihaz korumalı depodaki tercih dosyaları (debug APK: run-as)
   adb shell run-as "$pkg" sh -c "'cat /data/user_de/0/$pkg/shared_prefs/*.xml'" 2>/dev/null | tr -d '\r'
 }
@@ -72,6 +78,14 @@ adb shell "run-as $pkg sed -i 's|</map>|<boolean name=\"$MARK\" value=\"true\" /
 if prefs_xml | grep -q "name=\"$MARK\""; then tresult BILGI "ayar işareti eklendi ($pf)"
 else tresult KALDI "ayar işareti eklenemedi ($pf)"; fi
 [ -n "$(personal_file)" ] && tresult BILGI "öğrenilenler dosyada" || tresult KALDI "öğrenme dosyası yok"
+have_root=0
+if adb root >/dev/null 2>&1; then sleep 3; adb wait-for-device; have_root=1; fi
+if [ "$have_root" = 1 ]; then
+  dict_del kboardaktarim >/dev/null 2>&1; dict_del yenicihazkelime >/dev/null 2>&1
+  dict_add kboardaktarim
+  dict_words | grep -qx kboardaktarim && tresult BILGI "sözlüğe 'kboardaktarim' eklendi" \
+    || tresult KALDI "sözlüğe deneme kelimesi eklenemedi"
+else tresult BILGI "adb root yok, sözlük denenemedi"; fi
 
 # 2) Dışa aktar (öğrenilenler dahil) → Dosyaya kaydet → belge seçicide Kaydet.
 if open_transfer "Dışa aktar|Export" "disa"; then
@@ -101,6 +115,9 @@ fi
 adb shell pm clear "$pkg" >/dev/null
 sleep 3
 adb shell cmd locale set-app-locales "$pkg" --locales tr-TR 2>/dev/null || true
+if [ "$have_root" = 1 ]; then # yeni telefon: eski kelime yok, yalnız bu cihaza ait bir kelime var
+  dict_del kboardaktarim >/dev/null; dict_add yenicihazkelime
+fi
 [ -z "$(personal_file)" ] && tresult GECTI "pm clear sonrası öğrenilenler yok" || tresult KALDI "pm clear sonrası öğrenme dosyası duruyor"
 s=$(which_slot kboard-aktarim-4-temiz)
 [ "$s" = "-1" ] && tresult GECTI "temiz kurulumda 'mavi' sonrası '$WORD' önerilmiyor" \
@@ -110,6 +127,13 @@ s=$(which_slot kboard-aktarim-4-temiz)
 if [ -n "$f" ] && import_file ogrenilensiz; then
   prefs_xml | grep -q "name=\"$MARK\"" && tresult GECTI "ayarlar içe aktarıldı (işaret geldi)" \
     || tresult KALDI "ayarlar içe aktarılmadı (işaret yok)"
+  if [ "$have_root" = 1 ]; then
+    w=$(dict_words)
+    echo "$w" | grep -qx kboardaktarim && tresult GECTI "sözlük kelimesi içe aktarıldı (kboardaktarim)" \
+      || tresult KALDI "sözlük kelimesi içe aktarılmadı"
+    echo "$w" | grep -qx yenicihazkelime && tresult GECTI "bu cihazdaki sözlük kelimesi silinmedi (eklendi, yerine geçmedi)" \
+      || tresult KALDI "bu cihazdaki sözlük kelimesi silindi"
+  fi
   [ -z "$(personal_file)" ] && tresult GECTI "öğrenilenler seçilmeyince dosya gelmedi" \
     || tresult KALDI "öğrenilenler seçilmediği halde dosya geldi"
   s=$(which_slot kboard-aktarim-5-ogrenilensiz)
@@ -148,6 +172,10 @@ fi
   || tresult KALDI "bozuk dosyadan sonra öğrenilenler değişti"
 adb shell rm -f /sdcard/Download/KBoard_aktarim_*.zip
 
+if [ "$have_root" = 1 ]; then
+  dict_del kboardaktarim >/dev/null 2>&1; dict_del yenicihazkelime >/dev/null 2>&1
+  adb unroot >/dev/null 2>&1; sleep 3; adb wait-for-device
+fi
 # Sonraki adımlar için öğrenilenler temizlenir.
 adb shell run-as "$pkg" rm -f "/data/user_de/0/$pkg/files/kboard/personal-tr.bin" 2>/dev/null
 log "aktarım e2e sonuç:"; cat "$tr_out"

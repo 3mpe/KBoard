@@ -42,7 +42,11 @@ class KBoardTransferTest {
     class FakeWords : KBoardTransfer.WordStore {
         var list: List<UserWord> = emptyList()
         override fun readAll() = list
-        override fun replaceAll(words: List<UserWord>) { list = words }
+        override fun merge(words: List<UserWord>) {
+            val byKey = LinkedHashMap(list.associateBy { KBoardTransfer.wordKey(it) })
+            words.forEach { byKey[KBoardTransfer.wordKey(it)] = it }
+            list = byKey.values.toList()
+        }
     }
 
     @Before
@@ -86,7 +90,7 @@ class KBoardTransferTest {
 
     private fun importFile(bytes: ByteArray, sections: Set<Section>) {
         val payload = KBoardTransfer.read(ByteArrayInputStream(bytes))
-        KBoardTransfer.apply(ctx, payload, sections, words)
+        assertEquals(emptySet(), KBoardTransfer.apply(ctx, payload, sections, words))
     }
 
     private fun assertDevice(tag: String, settings: Boolean = true, dictionary: Boolean = true, learned: Boolean = true) {
@@ -97,7 +101,7 @@ class KBoardTransferTest {
             assertEquals("engel$tag", File(ctx.filesDir, "blacklists/tr.txt").readText())
             assertEquals(tag[0].code.toByte(), File(DeviceProtectedUtils.getFilesDir(ctx), "custom_font").readBytes()[2])
         }
-        if (dictionary) assertEquals("Ecoş$tag", words.list.first().word)
+        if (dictionary) assertTrue(words.list.any { it.word == "Ecoş$tag" })
         if (learned) {
             assertEquals(2, KBoardPersonal.model.word("kadıköy${tag.lowercase()}")?.uses)
             assertEquals("her şey", KBoardSuggestions.reverts()["herşey${tag.lowercase()}"])
@@ -126,7 +130,8 @@ class KBoardTransferTest {
             assertDevice("A", settings = section == Section.SETTINGS,
                 dictionary = section == Section.DICTIONARY, learned = section == Section.LEARNED)
             assertDevice("B", settings = section != Section.SETTINGS,
-                dictionary = section != Section.DICTIONARY, learned = section != Section.LEARNED)
+                dictionary = true, learned = section != Section.LEARNED) // sözlük eklenir, silinmez
+            if (section != Section.DICTIONARY) assertFalse(words.list.any { it.word == "EcoşA" })
         }
     }
 
@@ -168,6 +173,70 @@ class KBoardTransferTest {
         assertFalse(personalFile.exists())
     }
 
+    @Test
+    fun customLayoutsRoundTrip() {
+        fillDevice("A")
+        val f = File(ctx.filesDir, "layouts/main/custom.deneme.txt")
+        f.parentFile!!.mkdirs()
+        f.writeText("q w e")
+        val file = export(setOf(Section.SETTINGS))
+        f.delete()
+        importFile(file, all)
+        assertEquals("q w e", f.readText())
+    }
+
+    @Test
+    fun dictionaryImportAddsWordsAndKeepsExisting() {
+        words.list = listOf(UserWord("eski", 100, "tr", null), UserWord("ortak", 10, "tr", null))
+        val p = KBoardTransfer.Payload(setOf(Section.DICTIONARY),
+            words = listOf(UserWord("yeni", 200, "tr", null), UserWord("ortak", 250, "tr", null)))
+        val bytes = ByteArrayOutputStream().also { KBoardTransfer.write(it, p, setOf(Section.DICTIONARY)) }.toByteArray()
+        importFile(bytes, all)
+        assertEquals(setOf("eski", "ortak", "yeni"), words.list.map { it.word }.toSet())
+        assertEquals(250, words.list.first { it.word == "ortak" }.frequency)
+    }
+
+    @Test
+    fun failingSectionIsReportedAndOthersApplied() {
+        fillDevice("A")
+        val file = export(all)
+        fillDevice("B")
+        val failing = object : KBoardTransfer.WordStore {
+            override fun readAll(): List<UserWord> = emptyList()
+            override fun merge(words: List<UserWord>) { throw IllegalStateException("sağlayıcı yok") }
+        }
+        val failed = KBoardTransfer.apply(ctx, KBoardTransfer.read(ByteArrayInputStream(file)), all, failing)
+        assertEquals(setOf(Section.DICTIONARY), failed)
+        assertDevice("A", dictionary = false)
+    }
+
+    @Test
+    fun truncatedAtAnyEntryBoundaryIsRejected() {
+        fillDevice("A")
+        File(ctx.filesDir, "layouts/main").mkdirs()
+        File(ctx.filesDir, "layouts/main/custom.deneme.txt").writeText("q w e")
+        val good = export(all)
+        KBoardTransfer.read(ByteArrayInputStream(good)) // tam dosya geçerli
+        val sig = byteArrayOf(0x50, 0x4b, 0x03, 0x04) // yerel girdi başlığı
+        val offsets = (1 until good.size - 3).filter { i -> (0..3).all { good[i + it] == sig[it] } }
+        assertTrue(offsets.size >= 5, "girdi sayısı ${offsets.size}")
+        for (o in offsets) for (cut in listOf(o, o + 2, o + 5)) {
+            assertFailsWith<TransferException>("kesim $cut") { KBoardTransfer.read(ByteArrayInputStream(good.copyOf(cut))) }
+        }
+    }
+
+    @Test
+    fun manifestMustListEveryEntry() {
+        val m = KBoardTransfer.MANIFEST to "{\"format\":1,\"sections\":[\"ayarlar\"]}".toByteArray()
+        assertEquals(Reason.CORRUPT, reason(zip(m, prefsEntry))) // girdi listesi yok
+        val wrongSize = KBoardTransfer.MANIFEST to
+            "{\"format\":1,\"sections\":[\"ayarlar\"],\"entries\":{\"ayarlar/preferences.json\":3}}".toByteArray()
+        assertEquals(Reason.CORRUPT, reason(zip(wrongSize, prefsEntry)))
+        // Sözlük bildirilip dosyası yoksa (kesik dosya) sözlük boş sayılmaz.
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar", "sozluk"), prefsEntry)))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ogrenilen"))))
+    }
+
     // ---- Kötü niyetli / bozuk dosyalar ----
 
     private fun zip(vararg entries: Pair<String, ByteArray>): ByteArray {
@@ -178,32 +247,38 @@ class KBoardTransferTest {
         return out.toByteArray()
     }
 
-    private fun manifest(format: Int = 1, sections: List<String> = listOf("ayarlar")) =
-        KBoardTransfer.MANIFEST to ("{\"format\":$format,\"sections\":[" + sections.joinToString(",") { "\"$it\"" } + "]}").toByteArray()
+    /** Girdi listesi doğru bildirimli zip. */
+    private fun kzip(format: Int, sections: List<String>, vararg entries: Pair<String, ByteArray>): ByteArray {
+        val listed = entries.joinToString(",") { "\"${it.first}\":${it.second.size}" }
+        val m = KBoardTransfer.MANIFEST to ("{\"format\":$format,\"sections\":[" +
+            sections.joinToString(",") { "\"$it\"" } + "],\"entries\":{$listed}}").toByteArray()
+        return zip(m, *entries)
+    }
 
     private fun reason(bytes: ByteArray): Reason =
         assertFailsWith<TransferException> { KBoardTransfer.read(ByteArrayInputStream(bytes)) }.reason
 
+    private val revertsEntry = "ogrenilen/kural-geri-alinan.tsv" to ByteArray(0)
     private val prefsEntry = "ayarlar/preferences.json" to "{\"strings\":{\"a\":\"b\"}}".toByteArray()
 
     @Test
     fun rejectsPathTraversalAndUnknownEntries() {
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "ayarlar/dosyalar/../../evil" to byteArrayOf(1))))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "ayarlar/dosyalar/blacklists/../../x.txt" to byteArrayOf(1))))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "/etc/passwd" to byteArrayOf(1))))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "ayarlar/dosyalar/shared_prefs/x.xml" to byteArrayOf(1))))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "ayarlar/dosyalar/clipboard/1" to byteArrayOf(1))))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "baska.txt" to byteArrayOf(1))))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "ayarlar/dosyalar/../../evil" to byteArrayOf(1))))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "ayarlar/dosyalar/blacklists/../../x.txt" to byteArrayOf(1))))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "/etc/passwd" to byteArrayOf(1))))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "ayarlar/dosyalar/shared_prefs/x.xml" to byteArrayOf(1))))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "ayarlar/dosyalar/clipboard/1" to byteArrayOf(1))))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "baska.txt" to byteArrayOf(1))))
         // Bildirilmeyen bölümün girdisi.
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), prefsEntry, "sozluk/kelimeler.tsv" to "a\t1\t\t\n".toByteArray())))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), prefsEntry, "sozluk/kelimeler.tsv" to "a\t1\t\t\n".toByteArray())))
     }
 
     @Test
     fun rejectsOversizedEntries() {
         val big = ByteArray(KBoardTransfer.MAX_PERSONAL_BYTES + 1)
-        assertEquals(Reason.TOO_LARGE, reason(zip(manifest(1, listOf("ogrenilen")), "ogrenilen/personal-tr.bin" to big)))
+        assertEquals(Reason.TOO_LARGE, reason(kzip(1, listOf("ogrenilen"), "ogrenilen/personal-tr.bin" to big)))
         val manyWords = (0..KBoardTransfer.MAX_WORDS).joinToString("") { "k\t1\t\t\n" }.toByteArray()
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(1, listOf("sozluk")), "sozluk/kelimeler.tsv" to manyWords)))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("sozluk"), "sozluk/kelimeler.tsv" to manyWords)))
     }
 
     @Test
@@ -218,30 +293,30 @@ class KBoardTransferTest {
 
     @Test
     fun rejectsNewerOrInvalidFormat() {
-        assertEquals(Reason.NEWER_FORMAT, reason(zip(manifest(2), prefsEntry)))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(0), prefsEntry)))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(1, listOf("bilinmeyen")), prefsEntry)))
+        assertEquals(Reason.NEWER_FORMAT, reason(kzip(2, listOf("ayarlar"), prefsEntry)))
+        assertEquals(Reason.CORRUPT, reason(kzip(0, listOf("ayarlar"), prefsEntry)))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("bilinmeyen"), prefsEntry)))
     }
 
     @Test
     fun rejectsCorruptSectionContent() {
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(), "ayarlar/preferences.json" to "{bozuk".toByteArray())))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(1, listOf("sozluk")), "sozluk/kelimeler.tsv" to "a\tçok\t\t\n".toByteArray())))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(1, listOf("sozluk")), "sozluk/kelimeler.tsv" to "a\t999\t\t\n".toByteArray())))
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(1, listOf("ogrenilen")), "ogrenilen/personal-tr.bin" to "KBPMbozuk".toByteArray())))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ayarlar"), "ayarlar/preferences.json" to "{bozuk".toByteArray())))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("sozluk"), "sozluk/kelimeler.tsv" to "a\tçok\t\t\n".toByteArray())))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("sozluk"), "sozluk/kelimeler.tsv" to "a\t999\t\t\n".toByteArray())))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ogrenilen"), "ogrenilen/personal-tr.bin" to "KBPMbozuk".toByteArray(), revertsEntry)))
         // Canlı öğrenmenin kabul etmeyeceği kelime (rakamlı) içeren model.
         val m = PersonalModel()
         m.learn(PersonalModel.BOS, "merhaba")
         val bytes = m.toBytes()
         val i = String(bytes, Charsets.ISO_8859_1).indexOf("merhaba")
         bytes[i] = '1'.code.toByte()
-        assertEquals(Reason.CORRUPT, reason(zip(manifest(1, listOf("ogrenilen")), "ogrenilen/personal-tr.bin" to bytes)))
+        assertEquals(Reason.CORRUPT, reason(kzip(1, listOf("ogrenilen"), "ogrenilen/personal-tr.bin" to bytes, revertsEntry)))
     }
 
     @Test
     fun rejectedFileLeavesDeviceUntouched() {
         fillDevice("B")
-        val bad = zip(manifest(1, listOf("ayarlar", "sozluk", "ogrenilen")), prefsEntry,
+        val bad = kzip(1, listOf("ayarlar", "sozluk", "ogrenilen"), prefsEntry,
             "sozluk/kelimeler.tsv" to "a\t1\t\t\n".toByteArray(),
             "ogrenilen/personal-tr.bin" to "KBPMbozuk".toByteArray())
         assertFailsWith<TransferException> { importFile(bad, all) }

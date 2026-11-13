@@ -13,6 +13,9 @@ import helium314.keyboard.latin.utils.protectedPrefs
 import io.github.kboard.engine.personal.PersonalModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -30,20 +33,23 @@ import java.util.zip.ZipOutputStream
 /**
  * Yeni telefona taşımak için dışa / içe aktarma: seçilen bölümler tek bir zip dosyasında.
  *
- * Bölümler birbirinden bağımsızdır; içe aktarmada yalnız seçilenler, onaydan sonra bu cihazdakilerin
- * yerine geçer. Dosya internet izni olmadan taşınır: SAF ile kaydedilir ya da paylaş menüsüyle
+ * Bölümler birbirinden bağımsızdır; içe aktarmada yalnız seçilenler onaydan sonra uygulanır:
+ * ayarlar ve öğrenilenler bu cihazdakilerin yerine geçer, sözlük kelimeleri mevcut sözlüğe eklenir
+ * (sistemin kullanıcı sözlüğü başka klavyelerle ortak; hiçbir kelime silinmez). Dosya internet izni olmadan taşınır: SAF ile kaydedilir ya da paylaş menüsüyle
  * (FileProvider, salt okunur geçici izin) e-postaya eklenir.
  *
  * İçe aktarılan dosya güvenilmez kabul edilir: sabit bir izin listesindeki adlar dışındaki her
  * girdi, dizin dışına çıkan yol, sınırı aşan boyut, daha yeni biçim ya da bozuk içerik dosyanın
- * tamamını reddeder. Her şey yazmadan önce bellekte ayrıştırılır ve denetlenir; bozuk bir dosya
- * mevcut veriye dokunmaz. İçerik hiçbir zaman günlüğe yazılmaz.
+ * tamamını reddeder. Bildirim (manifest) her girdinin adını ve boyutunu listeler; eksik, fazla ya da
+ * boyutu tutmayan girdi (ör. yarıda kesilmiş dosya) reddedilir. Her şey yazmadan önce bellekte
+ * ayrıştırılır ve denetlenir; bozuk bir dosya mevcut veriye dokunmaz. İçerik hiçbir zaman günlüğe yazılmaz.
  */
 object KBoardTransfer {
     private const val TAG = "KBoardTransfer"
     const val FORMAT = 1
     const val MANIFEST = "kboard-aktarim.json"
     const val SHARE_DIR = "aktarim" // cacheDir altında; res/xml/kboard_transfer_path.xml
+    private const val STAGING_SUFFIX = ".aktarim"
 
     enum class Section(val id: String) {
         /** Ayarlar ve görünüm: tercih dosyaları, özel düzenler, arka plan, yazı tipi, engel listeleri. */
@@ -65,7 +71,7 @@ object KBoardTransfer {
     // ---- Sınırlar ----
     const val MAX_ENTRIES = 200
     const val MAX_TOTAL_BYTES = 40L * 1024 * 1024
-    const val MAX_MANIFEST_BYTES = 4 * 1024
+    const val MAX_MANIFEST_BYTES = 64 * 1024
     const val MAX_PREFS_BYTES = 1024 * 1024
     const val MAX_SETTINGS_FILE_BYTES = 16 * 1024 * 1024 // arka plan resmi
     const val MAX_DICTIONARY_BYTES = 4 * 1024 * 1024
@@ -88,7 +94,8 @@ object KBoardTransfer {
     /** Ayarlar bölümüne giren dosyalar (HeliBoard yedeğinden; pano, yazma geçmişi ve sözlük dosyaları hariç). */
     private val settingsFilePatterns = listOf(
         Regex("blacklists/[^/]+\\.txt"),
-        Regex("layouts/" + Regex.escape(LayoutUtilsCustom.CUSTOM_LAYOUT_PREFIX) + "[^/]+"),
+        // layouts/<tür>/custom.… (LayoutType), eski sürümlerde doğrudan layouts/custom.…
+        Regex("layouts/([a-z_]+/)?" + Regex.escape(LayoutUtilsCustom.CUSTOM_LAYOUT_PREFIX) + "[^/]+"),
         Regex("custom_background_image[a-z_]*"),
         Regex("custom_font"),
         Regex("custom_emoji_font"),
@@ -128,42 +135,62 @@ object KBoardTransfer {
 
     interface WordStore {
         fun readAll(): List<UserWord>
-        fun replaceAll(words: List<UserWord>)
+        /** [words]'ü ekler: olmayanlar eklenir, olanların sıklığı güncellenir, hiçbiri silinmez. */
+        fun merge(words: List<UserWord>)
     }
 
+    internal fun wordKey(w: UserWord) = Triple(w.word, w.locale, w.shortcut)
+
     class SystemWordStore(private val context: Context) : WordStore {
-        override fun readAll(): List<UserWord> {
-            val result = ArrayList<UserWord>()
-            val projection = arrayOf(UserDictionary.Words.WORD, UserDictionary.Words.FREQUENCY,
-                UserDictionary.Words.LOCALE, UserDictionary.Words.SHORTCUT)
-            context.contentResolver.query(UserDictionary.Words.CONTENT_URI, projection, null, null, null)?.use { c ->
+        private val projection = arrayOf(UserDictionary.Words._ID, UserDictionary.Words.WORD,
+            UserDictionary.Words.FREQUENCY, UserDictionary.Words.LOCALE, UserDictionary.Words.SHORTCUT)
+
+        /** Kimlik → kelime; sağlayıcı yanıt vermezse istisna (boş sözlük sanılmasın). */
+        private fun query(): List<Pair<Long, UserWord>> {
+            val result = ArrayList<Pair<Long, UserWord>>()
+            val c = context.contentResolver.query(UserDictionary.Words.CONTENT_URI, projection, null, null, null)
+                ?: throw IllegalStateException("kullanıcı sözlüğü okunamadı")
+            c.use {
+                val ii = c.getColumnIndexOrThrow(UserDictionary.Words._ID)
                 val wi = c.getColumnIndexOrThrow(UserDictionary.Words.WORD)
                 val fi = c.getColumnIndexOrThrow(UserDictionary.Words.FREQUENCY)
                 val li = c.getColumnIndexOrThrow(UserDictionary.Words.LOCALE)
                 val si = c.getColumnIndexOrThrow(UserDictionary.Words.SHORTCUT)
-                while (c.moveToNext() && result.size < MAX_WORDS) {
+                while (c.moveToNext()) {
                     val w = UserWord(c.getString(wi) ?: continue, c.getInt(fi),
                         c.getString(li)?.takeIf { it.isNotEmpty() }, c.getString(si)?.takeIf { it.isNotEmpty() })
-                    if (validWord(w)) result += w
+                    result += c.getLong(ii) to w
                 }
             }
             return result
         }
 
-        override fun replaceAll(words: List<UserWord>) {
+        override fun readAll(): List<UserWord> = query().map { it.second }.filter { validWord(it) }.take(MAX_WORDS)
+
+        override fun merge(words: List<UserWord>) {
             val resolver = context.contentResolver
-            resolver.delete(UserDictionary.Words.CONTENT_URI, null, null)
-            if (words.isEmpty()) return
-            val values = words.map { w ->
-                ContentValues().apply {
+            val existing = query().associate { wordKey(it.second) to it }
+            var failed = 0
+            for (w in words) {
+                val old = existing[wordKey(w)]
+                if (old != null) {
+                    if (old.second.frequency != w.frequency) {
+                        val v = ContentValues().apply { put(UserDictionary.Words.FREQUENCY, w.frequency) }
+                        val uri = android.content.ContentUris.withAppendedId(UserDictionary.Words.CONTENT_URI, old.first)
+                        if (resolver.update(uri, v, null, null) < 1) failed++
+                    }
+                    continue
+                }
+                val v = ContentValues().apply {
                     put(UserDictionary.Words.WORD, w.word)
                     put(UserDictionary.Words.FREQUENCY, w.frequency)
                     put(UserDictionary.Words.LOCALE, w.locale)
                     put(UserDictionary.Words.APP_ID, 0)
                     put(UserDictionary.Words.SHORTCUT, w.shortcut)
                 }
+                if (resolver.insert(UserDictionary.Words.CONTENT_URI, v) == null) failed++
             }
-            resolver.bulkInsert(UserDictionary.Words.CONTENT_URI, values.toTypedArray())
+            if (failed > 0) throw IllegalStateException("$failed sözlük kelimesi eklenemedi")
         }
     }
 
@@ -173,27 +200,31 @@ object KBoardTransfer {
 
     /** [payload]'daki [sections] bölümlerini [out]'a zip olarak yazar. */
     fun write(out: OutputStream, payload: Payload, sections: Set<Section>) {
+        val entries = LinkedHashMap<String, ByteArray>()
+        if (Section.SETTINGS in sections) {
+            payload.prefs?.let { entries[PREFS] = json.encodeToString(Prefs.serializer(), it).toByteArray(Charsets.UTF_8) }
+            payload.protectedPrefs?.let { entries[PROTECTED_PREFS] = json.encodeToString(Prefs.serializer(), it).toByteArray(Charsets.UTF_8) }
+            payload.settingsFiles.forEach { (key, bytes) -> entries["ayarlar/$key"] = bytes }
+        }
+        if (Section.DICTIONARY in sections) entries[WORDS] = encodeWords(payload.words.orEmpty()).toByteArray(Charsets.UTF_8)
+        if (Section.LEARNED in sections) {
+            payload.personal?.let { entries[PERSONAL] = it }
+            entries[REVERTS] = encodeReverts(payload.reverts).toByteArray(Charsets.UTF_8)
+        }
+        val manifest = JsonObject(mapOf(
+            "format" to JsonPrimitive(FORMAT),
+            "app" to JsonPrimitive("KBoard"),
+            "sections" to JsonArray(Section.entries.filter { it in sections }.map { JsonPrimitive(it.id) }),
+            "entries" to JsonObject(entries.mapValues { JsonPrimitive(it.value.size) }),
+        ))
         val zip = ZipOutputStream(out)
         fun put(name: String, bytes: ByteArray) {
             zip.putNextEntry(ZipEntry(name))
             zip.write(bytes)
             zip.closeEntry()
         }
-        val manifest = "{\"format\":$FORMAT,\"app\":\"KBoard\",\"sections\":[" +
-            Section.entries.filter { it in sections }.joinToString(",") { "\"${it.id}\"" } + "]}"
-        put(MANIFEST, manifest.toByteArray(Charsets.UTF_8))
-        if (Section.SETTINGS in sections) {
-            payload.prefs?.let { put(PREFS, json.encodeToString(Prefs.serializer(), it).toByteArray(Charsets.UTF_8)) }
-            payload.protectedPrefs?.let { put(PROTECTED_PREFS, json.encodeToString(Prefs.serializer(), it).toByteArray(Charsets.UTF_8)) }
-            payload.settingsFiles.forEach { (key, bytes) -> put("ayarlar/$key", bytes) }
-        }
-        if (Section.DICTIONARY in sections) {
-            put(WORDS, encodeWords(payload.words.orEmpty()).toByteArray(Charsets.UTF_8))
-        }
-        if (Section.LEARNED in sections) {
-            payload.personal?.let { put(PERSONAL, it) }
-            put(REVERTS, encodeReverts(payload.reverts).toByteArray(Charsets.UTF_8))
-        }
+        put(MANIFEST, manifest.toString().toByteArray(Charsets.UTF_8))
+        entries.forEach { (name, bytes) -> put(name, bytes) }
         zip.finish()
         zip.flush()
     }
@@ -226,25 +257,31 @@ object KBoardTransfer {
             throw TransferException(Reason.CORRUPT, "zip okunamadı")
         }
         val manifestBytes = entries[MANIFEST] ?: throw TransferException(Reason.NOT_KBOARD, "KBoard aktarım dosyası değil")
-        val sections = parseManifest(manifestBytes)
+        val (sections, listed) = parseManifest(manifestBytes)
+        // Girdiler bildirimdekilerle birebir aynı olmalı (yarıda kesilmiş dosya burada yakalanır).
+        val actual = entries.filterKeys { it != MANIFEST }
+        if (actual.keys != listed.keys || actual.any { (name, bytes) -> listed[name] != bytes.size })
+            throw TransferException(Reason.CORRUPT, "girdiler bildirimle uyuşmuyor")
         // Bildirilmeyen bölümün girdisi olmamalı.
-        for (name in entries.keys) {
-            if (name == MANIFEST) continue
+        for (name in actual.keys) {
             val section = Section.byId(name.substringBefore('/'))
             if (section == null || section !in sections) throw TransferException(Reason.CORRUPT, "bildirilmeyen bölüm")
         }
+        // Her bölümün zorunlu girdisi.
+        if (Section.SETTINGS in sections && PREFS !in actual && PROTECTED_PREFS !in actual)
+            throw TransferException(Reason.CORRUPT, "ayarlar eksik")
+        if (Section.DICTIONARY in sections && WORDS !in actual) throw TransferException(Reason.CORRUPT, "sözlük eksik")
+        if (Section.LEARNED in sections && REVERTS !in actual) throw TransferException(Reason.CORRUPT, "öğrenilenler eksik")
         try {
             val prefs = entries[PREFS]?.let { parsePrefs(it) }
             val protectedPrefs = entries[PROTECTED_PREFS]?.let { parsePrefs(it) }
             val files = entries.filterKeys { it.startsWith(FILES_PREFIX) || it.startsWith(DEVICE_FILES_PREFIX) }
                 .mapKeys { it.key.removePrefix("ayarlar/") }
-            val words = if (Section.DICTIONARY in sections) parseWords(entries[WORDS] ?: ByteArray(0)) else null
+            val words = if (Section.DICTIONARY in sections) parseWords(entries.getValue(WORDS)) else null
             val personal = entries[PERSONAL]
             // Kişisel model, canlı öğrenmenin sınırlarıyla (kelime biçimi, 5 000 / 20 000) okunarak denetlenir.
             personal?.let { PersonalModel.read(ByteArrayInputStream(it)) }
             val reverts = entries[REVERTS]?.let { parseReverts(it) } ?: emptyMap()
-            if (Section.SETTINGS in sections && prefs == null && protectedPrefs == null && files.isEmpty())
-                throw TransferException(Reason.CORRUPT, "ayarlar bölümü boş")
             return Payload(sections, prefs, protectedPrefs, files, words, personal, reverts)
         } catch (e: TransferException) {
             throw e
@@ -258,6 +295,7 @@ object KBoardTransfer {
         if (name.isEmpty() || name.length > 200 || name.startsWith("/") || name.contains('\\') || name.contains('\u0000'))
             return null
         if (name.split('/').any { it.isEmpty() || it == "." || it == ".." }) return null
+        if (name.endsWith(STAGING_SUFFIX) || name.endsWith(".tmp")) return null
         return when (name) {
             MANIFEST -> MAX_MANIFEST_BYTES
             PREFS, PROTECTED_PREFS -> MAX_PREFS_BYTES
@@ -289,7 +327,7 @@ object KBoardTransfer {
         return out.toByteArray()
     }
 
-    private fun parseManifest(bytes: ByteArray): Set<Section> {
+    private fun parseManifest(bytes: ByteArray): Pair<Set<Section>, Map<String, Int>> {
         val obj = try {
             json.parseToJsonElement(String(bytes, Charsets.UTF_8)).jsonObject
         } catch (e: Exception) {
@@ -304,7 +342,10 @@ object KBoardTransfer {
         } catch (e: Exception) { null } ?: throw TransferException(Reason.CORRUPT, "bölüm listesi yok")
         val sections = ids.map { Section.byId(it) ?: throw TransferException(Reason.CORRUPT, "bilinmeyen bölüm") }.toSet()
         if (sections.isEmpty()) throw TransferException(Reason.CORRUPT, "bölüm yok")
-        return sections
+        val listed = try {
+            obj["entries"]?.jsonObject?.mapValues { it.value.jsonPrimitive.int }
+        } catch (e: Exception) { null } ?: throw TransferException(Reason.CORRUPT, "girdi listesi yok")
+        return sections to listed
     }
 
     private fun parsePrefs(bytes: ByteArray): Prefs {
@@ -382,7 +423,7 @@ object KBoardTransfer {
         val base = dir.path + File.separator
         dir.walk().filter { it.isFile }.forEach { f ->
             val rel = f.path.removePrefix(base).replace(File.separatorChar, '/')
-            if (settingsFilePatterns.any { rel.matches(it) } && f.length() <= MAX_SETTINGS_FILE_BYTES)
+            if (!rel.endsWith(STAGING_SUFFIX) && settingsFilePatterns.any { rel.matches(it) } && f.length() <= MAX_SETTINGS_FILE_BYTES)
                 into[keyPrefix + rel] = f.readBytes()
         }
     }
@@ -408,19 +449,31 @@ object KBoardTransfer {
         p.floats.forEach { (k, v) -> if (k !in excludedPrefs) e.putFloat(k, v) }
         p.strings.forEach { (k, v) -> if (k !in excludedPrefs) e.putString(k, v) }
         p.stringSets.forEach { (k, v) -> if (k !in excludedPrefs) e.putStringSet(k, v) }
-        e.commit()
+        if (!e.commit()) throw java.io.IOException("ayarlar yazılamadı")
     }
 
     /**
-     * Denetlenmiş [payload]'dan [sections] bölümlerini bu cihaza uygular; her bölüm bu cihazdakinin
-     * yerine geçer. Ayarlardan sonra uygulamanın yeniden yüklemesi (dinleyiciler, düzenler, tema)
+     * Denetlenmiş [payload]'dan [sections] bölümlerini bu cihaza uygular (ayarlar ve öğrenilenler
+     * yerine geçer, sözlük eklenir) ve uygulanamayan bölümleri döndürür; biri kalsa da diğerleri
+     * denenir. Ayarlardan sonra uygulamanın yeniden yüklemesi (dinleyiciler, düzenler, tema)
      * çağırana aittir.
      */
-    fun apply(context: Context, payload: Payload, sections: Set<Section>, words: WordStore = SystemWordStore(context)) {
-        val selected = sections intersect payload.sections
-        if (Section.SETTINGS in selected) applySettings(context, payload)
-        if (Section.DICTIONARY in selected) words.replaceAll(payload.words.orEmpty())
-        if (Section.LEARNED in selected) KBoardPersonal.importLearned(payload.personal, payload.reverts)
+    fun apply(context: Context, payload: Payload, sections: Set<Section>, words: WordStore = SystemWordStore(context)): Set<Section> {
+        val failed = LinkedHashSet<Section>()
+        for (section in Section.entries) {
+            if (section !in sections || section !in payload.sections) continue
+            try {
+                when (section) {
+                    Section.SETTINGS -> applySettings(context, payload)
+                    Section.DICTIONARY -> words.merge(payload.words.orEmpty())
+                    Section.LEARNED -> KBoardPersonal.importLearned(payload.personal, payload.reverts)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "${section.id} içe aktarılamadı: ${e.javaClass.simpleName}")
+                failed += section
+            }
+        }
+        return failed
     }
 
     private fun applySettings(context: Context, payload: Payload) {
@@ -435,7 +488,7 @@ object KBoardTransfer {
                 val canonicalBase = base.canonicalFile.path + File.separator
                 require(target.canonicalFile.path.startsWith(canonicalBase)) { "dizin dışı yol" }
                 target.parentFile?.mkdirs()
-                val tmp = File(target.path + ".aktarim")
+                val tmp = File(target.path + STAGING_SUFFIX)
                 FileOutputStream(tmp).use { it.write(bytes); it.fd.sync() }
                 staged += tmp to target
             }
@@ -447,18 +500,31 @@ object KBoardTransfer {
         for (base in dirs.values) {
             if (base == null || !base.isDirectory) continue
             val prefix = base.path + File.separator
-            base.walk().filter { it.isFile && !it.name.endsWith(".aktarim") }.forEach { f ->
+            base.walk().filter { it.isFile && !it.name.endsWith(STAGING_SUFFIX) }.forEach { f ->
                 val rel = f.path.removePrefix(prefix).replace(File.separatorChar, '/')
                 if (settingsFilePatterns.any { rel.matches(it) }) f.delete()
             }
         }
-        staged.forEach { (tmp, target) -> if (!tmp.renameTo(target)) { tmp.delete(); Log.w(TAG, "ayar dosyası taşınamadı") } }
+        var renameFailed = 0
+        staged.forEach { (tmp, target) -> if (!tmp.renameTo(target)) { tmp.delete(); renameFailed++ } }
         payload.prefs?.let { writePrefs(context.prefs(), it) }
         payload.protectedPrefs?.let { writePrefs(context.protectedPrefs(), it) }
+        if (renameFailed > 0) throw java.io.IOException("$renameFailed ayar dosyası taşınamadı")
     }
 
     /** Paylaşım için oluşturulan geçici dosyaların dizini; açılışta ve paylaşımdan sonra boşaltılır. */
     fun shareDir(context: Context) = File(context.cacheDir, SHARE_DIR)
+
+    /** Yarıda kalmış bir içe aktarmanın geçici ayar dosyalarını siler (açılışta). */
+    fun cleanupStaging(context: Context) {
+        for (dir in listOf(context.filesDir, DeviceProtectedUtils.getFilesDir(context))) {
+            try {
+                dir?.walk()?.filter { it.isFile && it.name.endsWith(STAGING_SUFFIX) }?.forEach { it.delete() }
+            } catch (e: Exception) {
+                Log.w(TAG, "geçici dosyalar silinemedi: ${e.javaClass.simpleName}")
+            }
+        }
+    }
 
     fun clearShareDir(context: Context) {
         try {

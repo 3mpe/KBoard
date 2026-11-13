@@ -53,6 +53,7 @@ object KBoardEngineLoader {
         loadDenylist(app)
         KBoardPersonal.init(app)
         KBoardTransfer.clearShareDir(app) // önceki paylaşımdan kalan geçici aktarım dosyası
+        KBoardTransfer.cleanupStaging(app)
         KBoardSuggestions.setPersonalEnabled(personalization(prefs))
         apply(app, prefs)
         // Dil modeli (~0,5 s) aksan düzelticiyi ve uygulama açılışını bekletmesin.

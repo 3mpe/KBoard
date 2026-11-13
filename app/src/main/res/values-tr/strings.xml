@@ -576,8 +576,11 @@
     <string name="kboard_transfer_section_settings">Ayarlar ve görünüm</string>
     <string name="kboard_transfer_section_dictionary">Kişisel sözlük</string>
     <string name="kboard_transfer_section_learned">Öğrenilen kelimeler</string>
-    <string name="kboard_transfer_learned_warning">Dosyada yazdığınız kelimeler de olacak. Dosya şifreli değil; yalnız kendinize gönderin.</string>
-    <string name="kboard_transfer_import_warning">Seçilen bölümler bu telefondakilerin yerine geçer. İşaretlemediğiniz bölümler değişmez.</string>
+    <string name="kboard_transfer_file_warning">Dosya şifreli değil; yalnız kendinize gönderin.</string>
+    <string name="kboard_transfer_nothing_selected">En az bir bölüm seçin.</string>
+    <string name="kboard_transfer_import_partial">Şu bölümler içe aktarılamadı: %s. Diğerleri aktarıldı.</string>
+    <string name="kboard_transfer_learned_warning">Dosyada yazdığınız kelimeler de olacak.</string>
+    <string name="kboard_transfer_import_warning">Ayarlar ve öğrenilen kelimeler bu telefondakilerin yerine geçer. Sözlükteki kelimeler mevcut sözlüğünüze eklenir. İşaretlemediğiniz bölümler değişmez.</string>
     <string name="kboard_transfer_share">Paylaş (e-posta…)</string>
     <string name="kboard_transfer_save">Dosyaya kaydet</string>
     <string name="kboard_transfer_mail_subject">KBoard ayarları</string>

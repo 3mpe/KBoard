@@ -153,8 +153,11 @@
     <string name="kboard_transfer_section_settings">Settings and appearance</string>
     <string name="kboard_transfer_section_dictionary">Personal dictionary</string>
     <string name="kboard_transfer_section_learned">Learned words</string>
-    <string name="kboard_transfer_learned_warning">The file will contain words you typed. It is not encrypted, so only send it to yourself.</string>
-    <string name="kboard_transfer_import_warning">The selected parts replace what is on this phone. Parts you leave unchecked are not changed.</string>
+    <string name="kboard_transfer_file_warning">The file is not encrypted; only send it to yourself.</string>
+    <string name="kboard_transfer_nothing_selected">Select at least one part.</string>
+    <string name="kboard_transfer_import_partial">These parts could not be imported: %s. The others were imported.</string>
+    <string name="kboard_transfer_learned_warning">The file will also contain words you typed.</string>
+    <string name="kboard_transfer_import_warning">Settings and learned words replace what is on this phone. Dictionary words are added to your existing dictionary. Parts you leave unchecked are not changed.</string>
     <string name="kboard_transfer_share">Share (e-mail…)</string>
     <string name="kboard_transfer_save">Save to file</string>
     <string name="kboard_transfer_mail_subject">KBoard settings</string>

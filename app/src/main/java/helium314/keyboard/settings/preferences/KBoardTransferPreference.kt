@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +24,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import helium314.keyboard.dictionarypack.DictionaryPackConstants
 import helium314.keyboard.keyboard.KeyboardSwitcher
+import helium314.keyboard.keyboard.emoji.SupportedEmojis
 import helium314.keyboard.kboard.KBoardTransfer
 import helium314.keyboard.kboard.KBoardTransfer.Section
 import helium314.keyboard.latin.R
@@ -66,13 +69,13 @@ fun KBoardTransferPreference(icon: Int? = null) {
     var pendingImport by remember { mutableStateOf<KBoardTransfer.Payload?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
-    val exportSelection = remember { mutableStateListOf(Section.SETTINGS, Section.DICTIONARY) }
-    val importSelection = remember { mutableStateListOf<Section>() }
-
-    val shareLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        // Paylaşım ekranından dönüldü: geçici dosya silinir (kalırsa açılışta silinir).
-        KBoardTransfer.clearShareDir(ctx)
+    // Etkinlik yeniden kurulsa da (ör. dosya seçici açıkken) seçim kaybolmasın.
+    var exportIds by rememberSaveable { mutableStateOf(Section.SETTINGS.id + "," + Section.DICTIONARY.id) }
+    val exportSelection = remember {
+        mutableStateListOf<Section>().apply { addAll(exportIds.split(',').mapNotNull { Section.byId(it) }) }
     }
+    val importSelection = remember { mutableStateListOf<Section>() }
+    fun rememberExport() { exportIds = exportSelection.joinToString(",") { it.id } }
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val uri = result.data?.data
         if (result.resultCode != Activity.RESULT_OK || uri == null) return@rememberLauncherForActivityResult
@@ -134,12 +137,13 @@ fun KBoardTransferPreference(icon: Int? = null) {
             title = { Text(stringResource(R.string.kboard_transfer_export_title)) },
             content = {
                 Column {
-                    SectionCheckboxes(exportSelection)
-                    if (Section.LEARNED in exportSelection) {
+                    SectionCheckboxes(exportSelection, onChange = { rememberExport() })
+                    if (exportSelection.isNotEmpty()) {
                         Text(
-                            stringResource(R.string.kboard_transfer_learned_warning),
+                            stringResource(R.string.kboard_transfer_file_warning) +
+                                if (Section.LEARNED in exportSelection) " " + stringResource(R.string.kboard_transfer_learned_warning) else "",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
+                            color = if (Section.LEARNED in exportSelection) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
@@ -147,7 +151,10 @@ fun KBoardTransferPreference(icon: Int? = null) {
             },
             confirmButtonText = stringResource(R.string.kboard_transfer_share),
             onConfirmed = {
-                if (exportSelection.isEmpty()) return@ConfirmationDialog
+                if (exportSelection.isEmpty()) {
+                    error = ctx.getString(R.string.kboard_transfer_nothing_selected)
+                    return@ConfirmationDialog
+                }
                 val sections = exportSelection.toSet()
                 busy = true
                 scope.launch {
@@ -166,13 +173,18 @@ fun KBoardTransferPreference(icon: Int? = null) {
                     send.clipData = ClipData.newRawUri(file.name, uri)
                     val chooser = Intent.createChooser(send, ctx.getString(R.string.kboard_transfer_share))
                         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    shareLauncher.launch(chooser)
+                    // Dosya hemen silinmez: e-posta uygulaması eki gönderirken okuyabilir. Uygulamaya
+                    // özel önbellekte kalır; bir sonraki dışa aktarmada ve açılışta silinir.
+                    ctx.startActivity(chooser)
                 }
             },
             neutralButtonText = stringResource(R.string.kboard_transfer_save),
             onNeutral = {
                 showExport = false
-                if (exportSelection.isEmpty()) return@ConfirmationDialog
+                if (exportSelection.isEmpty()) {
+                    error = ctx.getString(R.string.kboard_transfer_nothing_selected)
+                    return@ConfirmationDialog
+                }
                 val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
                     .addCategory(Intent.CATEGORY_OPENABLE)
                     .setType("application/zip")
@@ -200,15 +212,23 @@ fun KBoardTransferPreference(icon: Int? = null) {
             onConfirmed = {
                 val sections = importSelection.toSet()
                 pendingImport = null
-                if (sections.isEmpty()) return@ConfirmationDialog
+                if (sections.isEmpty()) {
+                    error = ctx.getString(R.string.kboard_transfer_nothing_selected)
+                    return@ConfirmationDialog
+                }
                 busy = true
                 scope.launch {
-                    val ok = withContext(Dispatchers.IO) { importNow(ctx, payload, sections) }
+                    val failed = withContext(Dispatchers.IO) { importNow(ctx, payload, sections) }
                     busy = false
-                    if (ok) {
-                        if (Section.SETTINGS in sections) reloadAfterSettings(ctx)
-                        Toast.makeText(ctx, ctx.getString(R.string.kboard_transfer_imported), Toast.LENGTH_LONG).show()
-                    } else error = ctx.getString(R.string.kboard_transfer_import_error)
+                    // Ayarlar seçildiyse (kısmen yazılmış olsa da) çalışan klavye diskle eşitlenir.
+                    if (Section.SETTINGS in sections) reloadAfterSettings(ctx)
+                    when {
+                        failed.isEmpty() ->
+                            Toast.makeText(ctx, ctx.getString(R.string.kboard_transfer_imported), Toast.LENGTH_LONG).show()
+                        failed.size == sections.size -> error = ctx.getString(R.string.kboard_transfer_import_error)
+                        else -> error = ctx.getString(R.string.kboard_transfer_import_partial,
+                            failed.joinToString(", ") { ctx.getString(sectionTitle(it)) })
+                    }
                 }
             },
         )
@@ -218,7 +238,11 @@ fun KBoardTransferPreference(icon: Int? = null) {
 }
 
 @Composable
-private fun SectionCheckboxes(selection: MutableList<Section>, available: Set<Section> = Section.entries.toSet()) {
+private fun SectionCheckboxes(
+    selection: MutableList<Section>,
+    available: Set<Section> = Section.entries.toSet(),
+    onChange: () -> Unit = {},
+) {
     for (section in Section.entries) {
         if (section !in available) continue
         val checked = section in selection
@@ -226,9 +250,9 @@ private fun SectionCheckboxes(selection: MutableList<Section>, available: Set<Se
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { if (checked) selection.remove(section) else selection.add(section) }
+                .clickable { if (checked) selection.remove(section) else selection.add(section); onChange() }
         ) {
-            Checkbox(checked = checked, onCheckedChange = { if (it) selection.add(section) else selection.remove(section) })
+            Checkbox(checked = checked, onCheckedChange = { if (it) selection.add(section) else selection.remove(section); onChange() })
             Text(stringResource(sectionTitle(section)))
         }
     }
@@ -254,9 +278,13 @@ private const val TAG = "KBoardTransfer"
 
 private fun exportTo(ctx: Context, uri: Uri, sections: Set<Section>): Boolean = try {
     val payload = KBoardTransfer.collect(ctx, sections)
-    ctx.contentResolver.openOutputStream(uri, "wt")?.use { KBoardTransfer.write(it, payload, sections) } != null
+    ctx.contentResolver.openOutputStream(uri, "wt")?.use { KBoardTransfer.write(it, payload, sections) }
+        ?: throw java.io.IOException("hedef açılamadı")
+    true
 } catch (e: Exception) {
     Log.w(TAG, "dışa aktarılamadı: ${e.javaClass.simpleName}") // içerik günlüğe yazılmaz
+    // Yarım dosya bırakılmaz (yarım dosya içe aktarmada zaten reddedilir).
+    try { DocumentsContract.deleteDocument(ctx.contentResolver, uri) } catch (e2: Exception) { }
     false
 }
 
@@ -282,7 +310,8 @@ private fun readFrom(ctx: Context, uri: Uri): Result<KBoardTransfer.Payload> = t
     Result.failure(e)
 }
 
-private fun importNow(ctx: Context, payload: KBoardTransfer.Payload, sections: Set<Section>): Boolean = try {
+/** Uygulanamayan bölümleri döndürür. */
+private fun importNow(ctx: Context, payload: KBoardTransfer.Payload, sections: Set<Section>): Set<Section> = try {
     if (Section.SETTINGS in sections) {
         LayoutUtilsCustom.onLayoutFileChanged()
         Settings.getInstance().stopListener()
@@ -292,10 +321,9 @@ private fun importNow(ctx: Context, payload: KBoardTransfer.Payload, sections: S
     } finally {
         if (Section.SETTINGS in sections) Settings.getInstance().startListener()
     }
-    true
 } catch (e: Exception) {
     Log.w(TAG, "içe aktarılamadı: ${e.javaClass.simpleName}")
-    false
+    sections
 }
 
 /** HeliBoard'un geri yüklemesinden sonra yaptığı yeniden yüklemeler (ana iş parçacığında). */
@@ -306,5 +334,6 @@ private fun reloadAfterSettings(ctx: Context) {
     LayoutUtilsCustom.onLayoutFileChanged()
     LayoutUtilsCustom.removeMissingLayouts(ctx)
     (ctx.getActivity() as? SettingsActivity)?.prefChanged()
+    SupportedEmojis.load(ctx)
     KeyboardSwitcher.getInstance().setThemeNeedsReload()
 }
