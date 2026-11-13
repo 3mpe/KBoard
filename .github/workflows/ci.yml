@@ -52,11 +52,19 @@ jobs:
           cat out/engine.md >> "$GITHUB_STEP_SUMMARY"
       - name: Eşikler
         run: python .github/ci/eval-gate.py eval/out/engine.json
+      - name: Korpusta yanlış oto. düzeltme (her 10. satır ayrılır, dil modeli onsuz derlenir)
+        run: |
+          python data/tools/corpus_false_ac.py --engine engine/build/install/engine/bin/engine \
+            --deasciify engine/build/kboard/deasciify-tr.kbd \
+            --run varsayilan= --run typo-otomatik=--typo-autocorrect \
+            --gate varsayilan=0.003 --json eval/out/corpus-false-ac.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: engine-eval
-          path: eval/out/engine.*
+          path: |
+            eval/out/engine.*
+            eval/out/corpus-false-ac.json
 
   android:
     name: Debug APK + izin kontrolü

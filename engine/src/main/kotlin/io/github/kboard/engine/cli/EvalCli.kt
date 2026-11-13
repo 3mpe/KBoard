@@ -9,6 +9,7 @@ import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramModel
 import io.github.kboard.engine.ngram.NgramSource
+import io.github.kboard.engine.typo.TypoSource
 import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -74,29 +75,39 @@ class EvalServer(private val engine: SuggestionEngine) {
  *   --ngram-params a,b,na,nb  skor eşlemesi: offset, slope, sonraki-kelime offset, slope
  *   --denylist <dosya>        önerilmeyecek kelimeler (data/ngram-denylist.txt)
  *   --no-user-morph           kişisel sözlük çekimlerini (UserWordSuffixSource) kapatır
+ *   --no-typo                 yazım hatası önerilerini (TypoSource, --deasciify dizinini kullanır) kapatır
+ *   --typo-autocorrect        TypoSource oto. düzeltmesini açar (varsayılan kapalı; yalnızca ölçüm için)
  * UserWordSuffixSource varsayılan olarak hep açıktır; kişisel sözlük boşken aday döndürmez. Bu
  * yüzden seçeneksiz ve kullanıcı kelimesiz çalıştırma Faz 1.7 davranışıdır: öneri yok.
  */
 fun main(args: Array<String>) {
     val sources = mutableListOf<CandidateSource>()
     var deasciify: DeasciifySource? = null
+    var index: DeasciifyIndex? = null
     val indexPath = argValue(args, "--deasciify") ?: System.getenv("KBOARD_DEASCIIFY_INDEX")
     if (indexPath != null) {
-        val index = File(indexPath).inputStream().buffered().use { DeasciifyIndex.read(it) }
+        index = File(indexPath).inputStream().buffered().use { DeasciifyIndex.read(it) }
         var config = DeasciifySource.Config()
         argValue(args, "--deasciify-valid-margin")?.let {
             config = config.copy(validWordMargin = if (it == "off") Int.MAX_VALUE else it.toInt())
         }
         deasciify = DeasciifySource(index, config).also { sources += it }
     }
+    var model: NgramModel? = null
     val ngramPath = argValue(args, "--ngram") ?: System.getenv("KBOARD_NGRAM")
     if (ngramPath != null) {
-        val model = File(ngramPath).inputStream().buffered().use { NgramModel.read(it) }
+        model = File(ngramPath).inputStream().buffered().use { NgramModel.read(it) }
         var config = NgramSource.Config()
         argValue(args, "--ngram-params")?.split(',')?.map { it.toDouble() }?.let { p ->
             config = config.copy(offset = p[0], slope = p[1], nextOffset = p[2], nextSlope = p[3])
         }
         sources += NgramSource(model, config)
+    }
+    if (index != null && "--no-typo" !in args) {
+        val lm = model
+        // Dil modelinin önerilebilir sözcükleri bilinen kelimedir: hiç yazım hatası sayılmaz
+        val lmKnown: (String) -> Boolean = { w -> lm != null && lm.id(w).let { it >= 0 && lm.suggestable(it) } }
+        sources += TypoSource(index, TypoSource.Config(autocorrect = "--typo-autocorrect" in args), lmKnown)
     }
     if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
     val denylist = argValue(args, "--denylist")?.let { p -> File(p).useLines { Denylist.parse(it.toList().asSequence()) } }
