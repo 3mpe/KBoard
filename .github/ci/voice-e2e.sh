@@ -40,9 +40,16 @@ else vo_result KALDI "parola alanında mikrofon yerine dokununca klavye değişt
 open_kboard_field
 type_word "dedimki"; sleep 3
 shot "kboard-e2e-ses-2-serit" 1 >&2   # üç öneri + sabit mikrofon; "dedim ki" kesilmemeli
-adb shell input tap $MIC; sleep 1
-shot "kboard-e2e-ses-3-bildirim" 1 >&2
+adb logcat -c 2>/dev/null || true
+adb shell input tap $MIC; sleep 0.5
+toastwin=$(adb shell dumpsys window windows 2>/dev/null | grep -icE "Toast" || true)
+adb exec-out screencap -p > "$out/kboard-e2e-ses-3-bildirim.png"; echo "görüntü: kboard-e2e-ses-3-bildirim (hemen)" >&2
+sleep 1; adb exec-out screencap -p > "$out/kboard-e2e-ses-3b-bildirim.png"
 sleep 2
+# Toast gerçekten gösterildi mi? (Android engellerse NotificationService "Suppressing toast" yazar.)
+toastlog=$(adb logcat -d 2>/dev/null | grep -iE "toast" | grep -iE "$pkg|suppress|block" | head -5)
+vo_result BILGI "toast günlüğü: ${toastlog:-kayıt yok}"
+vo_result BILGI "dokunuştan 0,5 sn sonra Toast penceresi satırı: ${toastwin:-0}"
 c=$(cur_ime)
 if [ "$c" != "$kboard" ]; then vo_result KALDI "ilk dokunuş bildirim yerine başka yönteme geçti: $c"
 elif [ "$(notice_flag)" = "0" ]; then
