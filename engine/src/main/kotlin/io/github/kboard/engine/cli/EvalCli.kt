@@ -5,6 +5,7 @@ import io.github.kboard.engine.CandidateSource
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.morph.UserWordSuffixSource
 import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -66,10 +67,13 @@ class EvalServer(private val engine: SuggestionEngine) {
  * Seçenekler:
  *   --deasciify <dizin.kbd>   DeasciifySource'u etkinleştirir (ortam değişkeni: KBOARD_DEASCIIFY_INDEX)
  *   --deasciify-valid-margin <n|off>  sözlükte olan biçimi düzeltme eşiği (varsayılan 30)
- * Seçeneksiz çalıştırma Faz 1.7 davranışıdır: kaynak yok, öneri yok.
+ *   --no-user-morph           kişisel sözlük çekimlerini (UserWordSuffixSource) kapatır
+ * UserWordSuffixSource varsayılan olarak hep açıktır; kişisel sözlük boşken aday döndürmez. Bu
+ * yüzden seçeneksiz ve kullanıcı kelimesiz çalıştırma Faz 1.7 davranışıdır: öneri yok.
  */
 fun main(args: Array<String>) {
     val sources = mutableListOf<CandidateSource>()
+    var deasciify: DeasciifySource? = null
     val indexPath = argValue(args, "--deasciify") ?: System.getenv("KBOARD_DEASCIIFY_INDEX")
     if (indexPath != null) {
         val index = File(indexPath).inputStream().buffered().use { DeasciifyIndex.read(it) }
@@ -77,8 +81,9 @@ fun main(args: Array<String>) {
         argValue(args, "--deasciify-valid-margin")?.let {
             config = config.copy(validWordMargin = if (it == "off") Int.MAX_VALUE else it.toInt())
         }
-        sources += DeasciifySource(index, config)
+        deasciify = DeasciifySource(index, config).also { sources += it }
     }
+    if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
     val server = EvalServer(SuggestionEngine(sources))
     val out = System.out.bufferedWriter(Charsets.UTF_8)
     System.`in`.bufferedReader(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.forEach {

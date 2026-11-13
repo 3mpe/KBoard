@@ -50,6 +50,31 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
         mAlsoUseMoreRestrictiveLocales = alsoUseMoreRestrictiveLocales;
 
         reloadDictionaryIfRequired();
+        // KBOARD: kayıtlı .dict yeniden kurulmadan yüklendiğinde addWordsLocked çalışmaz; motorun
+        // çekim üreticisini süreç başında da besle (yeniden başlatma/telefon açılışı sonrası).
+        if ("tr".equals(locale.getLanguage())) {
+            new Thread(this::feedKBoardEngine, "kboard-userwords").start();
+        }
+    }
+
+    // KBOARD: kişisel sözlük kelimelerini (yalnız kelime sütunu) motora verir.
+    private void feedKBoardEngine() {
+        try {
+            var requestAndArgs = createPersonalDictionaryRequest(mLocale, mAlsoUseMoreRestrictiveLocales);
+            try (Cursor cursor = mContext.getContentResolver().query(Words.CONTENT_URI,
+                    new String[] { Words.WORD }, requestAndArgs.component1(), requestAndArgs.component2(), null)) {
+                if (cursor == null) return;
+                final java.util.ArrayList<String> words = new java.util.ArrayList<>();
+                final int indexWord = cursor.getColumnIndex(Words.WORD);
+                while (cursor.moveToNext()) {
+                    final String word = cursor.getString(indexWord);
+                    if (word != null && word.length() <= MAX_WORD_LENGTH) words.add(word);
+                }
+                helium314.keyboard.kboard.KBoardSuggestions.INSTANCE.setUserWords(mLocale, words);
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "KBoard: kişisel sözlük okunamadı", e);
+        }
     }
 
     public static UserBinaryDictionary getDictionary(Context context, Locale locale, File dictFile, String dictNamePrefix) {
@@ -100,6 +125,7 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
 
     private void addWordsLocked(Cursor cursor) {
         if (cursor == null) return;
+        final java.util.ArrayList<String> kboardWords = new java.util.ArrayList<>(); // KBOARD
         if (cursor.moveToFirst()) {
             int indexWord = cursor.getColumnIndex(Words.WORD);
             int indexShortcut = cursor.getColumnIndex(Words.SHORTCUT);
@@ -111,6 +137,7 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
                 int adjustedFrequency = scaleFrequencyFromDefaultToLatinIme(frequency);
                 // Safeguard against adding really long words.
                 if (word.length() <= MAX_WORD_LENGTH) {
+                    kboardWords.add(word); // KBOARD
                     runGCIfRequiredLocked(true);
                     addUnigramLocked(word, adjustedFrequency, null, 0,
                         false, false, BinaryDictionary.NOT_A_VALID_TIMESTAMP);
@@ -123,5 +150,7 @@ public class UserBinaryDictionary extends ExpandableBinaryDictionary {
                 cursor.moveToNext();
             }
         }
+        // KBOARD: kişisel sözlük kelimeleri motorun çekim üreticisine (Kadıköy → Kadıköy'de)
+        helium314.keyboard.kboard.KBoardSuggestions.INSTANCE.setUserWords(mLocale, kboardWords);
     }
 }

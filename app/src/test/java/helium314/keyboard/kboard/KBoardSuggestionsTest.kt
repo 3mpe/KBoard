@@ -42,7 +42,7 @@ class KBoardSuggestionsTest {
 
     @After
     fun reset() {
-        KBoardSuggestions.engine = SuggestionEngine()
+        KBoardSuggestions.setUserWords(tr, emptyList())
         KBoardSuggestions.setDeasciifier(null)
     }
 
@@ -148,5 +148,28 @@ class KBoardSuggestionsTest {
         assertTrue("şimdi" in words, words.toString())
         KBoardSuggestions.setDeasciifier(null)
         assertTrue(KBoardSuggestions.getSuggestions(composed("sim"), NgramContext.BEGINNING_OF_SENTENCE, tr).isEmpty())
+    }
+
+    @Test
+    fun userWordsGetSuffixes() {
+        KBoardSuggestions.setUserWords(tr, listOf("Kadıköy"))
+        // aksan düzeltici kapalıyken de kişisel sözlük çekimleri gelir
+        val words = KBoardSuggestions.getSuggestions(composed("Kadikoy'd"), NgramContext.BEGINNING_OF_SENTENCE, tr).map { it.word }
+        assertTrue("Kadıköy'de" in words.take(3), words.toString())
+        KBoardSuggestions.setDeasciifier(deasciifier())
+        val words2 = KBoardSuggestions.getSuggestions(composed("Kadikoy'd"), NgramContext.BEGINNING_OF_SENTENCE, tr).map { it.word }
+        assertTrue("Kadıköy'de" in words2.take(3), words2.toString())
+        // İngilizce kişisel sözlük motoru etkilemez
+        KBoardSuggestions.setUserWords(Locale.ENGLISH, emptyList())
+        assertTrue(KBoardSuggestions.getSuggestions(composed("Kadikoy'd"), NgramContext.BEGINNING_OF_SENTENCE, tr).isNotEmpty())
+    }
+
+    @Test
+    fun morphAutoCorrectWithoutDeasciifier() {
+        KBoardSuggestions.setUserWords(tr, listOf("kış", "Kadıköy"))
+        // Aksan düzeltici yokken "kısa" geçerli mi bilinmez: "kışa"ya düzeltilmez
+        assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("kısa", tr))
+        // Kesmeli çekim yine düzeltilir
+        assertEquals(KBoardSuggestions.AutoCorrection.Replace("Kadıköy'de"), KBoardSuggestions.autoCorrection("Kadikoy'de", tr))
     }
 }

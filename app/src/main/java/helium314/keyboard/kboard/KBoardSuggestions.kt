@@ -10,6 +10,7 @@ import io.github.kboard.engine.Query
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.morph.UserWordSuffixSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -32,17 +33,37 @@ object KBoardSuggestions {
     /** Bu sözlüklerden gelen yazılan kelime kullanıcınındır; motor düzeltmez. */
     private val USER_SOURCES = setOf(Dictionary.TYPE_USER, Dictionary.TYPE_CONTACTS, Dictionary.TYPE_USER_HISTORY)
 
+    /** Kişisel sözlük kelimelerinin çekimleri (her zaman açık; sözlük boşken aday üretmez). */
+    // Aksan düzeltici yokken (kapalı ya da dizin henüz yüklenmedi) hangi kelimenin geçerli olduğu
+    // bilinmez: kesmesiz yazım ("kısa") düzeltilmez, kesmeli çekim ("Kadikoy'de") düzeltilir.
+    private val userMorph = UserWordSuffixSource { typed ->
+        deasciifier?.isKnown(typed) ?: typed.none { it == '\'' || it == '’' }
+    }
+
     @Volatile
-    var engine: SuggestionEngine = SuggestionEngine()
+    var engine: SuggestionEngine = SuggestionEngine(listOf(userMorph))
 
     /** Etkin aksan düzeltici; otomatik düzeltme kararı ([autoCorrection]) bundan alınır. */
     @Volatile
     private var deasciifier: DeasciifySource? = null
 
+    @Volatile
+    private var userWords: List<String> = emptyList()
+
     /** Aksan düzelticiyi bağlar ya da (null) kaldırır. */
+    @Synchronized
     fun setDeasciifier(source: DeasciifySource?) {
         deasciifier = source
-        engine = SuggestionEngine(listOfNotNull(source))
+        engine = SuggestionEngine(listOfNotNull(source, userMorph)).also { it.setUserWords(userWords) }
+    }
+
+    /** Kişisel sözlük (yalnız Türkçe) değiştiğinde `UserBinaryDictionary` çağırır. */
+    @JvmStatic
+    @Synchronized
+    fun setUserWords(locale: Locale, words: Collection<String>) {
+        if (locale.language != "tr") return
+        userWords = words.toList()
+        engine.setUserWords(userWords) // motor her zaman userMorph'u içerir
     }
 
     /** Motorun bir yazılan kelime için otomatik düzeltme görüşü. */
@@ -56,10 +77,11 @@ object KBoardSuggestions {
     }
 
     fun autoCorrection(typedWord: String, locale: Locale): AutoCorrection {
-        val d = deasciifier ?: return AutoCorrection.NoOpinion
         if (locale.language != "tr" || typedWord.isEmpty()) return AutoCorrection.NoOpinion
-        d.autocorrection(typedWord)?.let { return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it)) }
-        return if (d.isProtected(typedWord)) AutoCorrection.Keep else AutoCorrection.NoOpinion
+        engine.suggest(Query(emptyList(), typedWord)).autocorrect?.let {
+            return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it))
+        }
+        return if (deasciifier?.isProtected(typedWord) == true) AutoCorrection.Keep else AutoCorrection.NoOpinion
     }
 
     /**
@@ -82,6 +104,11 @@ object KBoardSuggestions {
         correctionAllowed: Boolean, base: Pair<Boolean, Boolean>,
         typedWordSourceType: String? = null, trailingQuotes: Int = 0,
     ): Pair<Boolean, Boolean> {
+        if (helium314.keyboard.latin.BuildConfig.DEBUG) android.util.Log.d(
+            "KBoardSuggestions", "merge typed=$typedWord allowed=$correctionAllowed base=$base " +
+                "src=$typedWordSourceType locale=$locale deasc=${deasciifier != null} " +
+                "ac=${if (locale.language == "tr") autoCorrection(typedWord, locale) else "-"}"
+        )
         if (!correctionAllowed) return base
         return when (val ac = autoCorrection(typedWord, locale)) {
             AutoCorrection.NoOpinion -> base

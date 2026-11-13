@@ -26,6 +26,38 @@ jobs:
         working-directory: eval
         run: python -m kboard_eval validate testset/*.jsonl
 
+  engine-eval:
+    name: Motor ölçüm eşiği
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Motor + aksan dizini
+        run: ./gradlew :engine:installDist :engine:buildDeasciifyIndex
+      - name: 327 vakalık sette ölçüm
+        working-directory: eval
+        run: |
+          mkdir -p out
+          python -m kboard_eval simulate testset/seed-v0.jsonl -o out/engine.jsonl --predictor subprocess \
+            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd"
+          python -m kboard_eval score testset/seed-v0.jsonl -t out/engine.jsonl --json out/engine.json --markdown out/engine.md
+          cat out/engine.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Eşikler
+        run: python .github/ci/eval-gate.py eval/out/engine.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-eval
+          path: eval/out/engine.*
+
   android:
     name: Debug APK + izin kontrolü
     runs-on: ubuntu-latest
