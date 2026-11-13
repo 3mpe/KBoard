@@ -16,6 +16,7 @@ import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
 import android.app.Application
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -40,6 +41,18 @@ class KBoardSuggestionsTest {
             return if (query.isNextWord) listOf(Candidate("akşam", 0.6, Source.NGRAM))
             else listOf(Candidate("çok", 0.9, Source.DEASCIIFY, autocorrectable = true))
         }
+    }
+
+    // Tüm paket tek JVM'de koşunca (upstream işi) önceki testlerin App.onCreate'i KBoardEngineLoader ile
+    // gerçek kaynakları (n-gram, yazım hatası, ek zinciri) bu tekil nesneye yükleyebiliyor; her test boş başlar (#30).
+    @Before
+    fun clean() {
+        KBoardSuggestions.setNgram(null)
+        KBoardSuggestions.setTypo(null)
+        KBoardSuggestions.setSuffix(null)
+        KBoardSuggestions.setDenylist(io.github.kboard.engine.Denylist.EMPTY)
+        KBoardSuggestions.setPersonalEnabled(false)
+        reset()
     }
 
     @After

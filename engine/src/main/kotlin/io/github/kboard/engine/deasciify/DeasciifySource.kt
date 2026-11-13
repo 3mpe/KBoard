@@ -53,7 +53,7 @@ class DeasciifySource(
      * ekinin uyumu düzeltilmiş kelimeye göre bulunur: "orjinal mi" ("orijinal" ince ek alır) mı olmaz,
      * "sezeryanla mi" ("sezaryenle") mı olmaz.
      */
-    var previousWordFix: ((String) -> String?)? = null
+    @Volatile var previousWordFix: ((String) -> String?)? = null
 
     override val name = "deasciify"
 

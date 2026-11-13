@@ -385,6 +385,8 @@ Fark ölçüm gürültüsü içinde. 1,5 ms eşiği seed-v0 için.
   "mütevazi" → "mütevazı" kayıtlarında ek yeni köke göre yeniden uydurulur ("sezeryanla" → "sezaryenle",
   "mütevazisin" → "mütevazısın", "vejeteryanım" → "vejetaryenim"). Kök kayıtlarındaki kural geçerli:
   çekim bilinen bir kelime olmalı, değilse yalnız yanlış kök aynen yazıldıysa ve yazılan hiçbir yerde yoksa.
+  Bu kurala giren kayıtların tamamı altı tane: yukarıdaki üçü ve "çünki" → "çünkü", "tamamiyle" →
+  "tamamıyla", "itibariyle" → "itibarıyla". Son üçünün gerçekçi bir çekimi yok, eşleşme onlarda zararsız.
 - **Geri alınan iki kelimelik düzeltme kelime kelime unutulur.** "her şey" ya da "dedim ki" geri alınınca
   `unlearnFromUserHistory` iki kelimeyi ayrı ayrı geri alır (öğrenme de kelime kelimeydi).
 - **Yalnız öneri olan motor adayları.** HeliBoard ilk öneriyi yalnız düzeltmeye uygun işaretliyse düzeltir
