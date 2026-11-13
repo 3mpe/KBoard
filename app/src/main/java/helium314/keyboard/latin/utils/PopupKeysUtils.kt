@@ -17,6 +17,10 @@ private const val POPUP_KEYS_LANGUAGE = "language"
 const val POPUP_KEYS_LABEL_DEFAULT = POPUP_KEYS_NUMBER + Separators.KV + true + Separators.ENTRY + POPUP_KEYS_LANGUAGE_PRIORITY +
         Separators.KV + false + Separators.ENTRY + POPUP_KEYS_LAYOUT + Separators.KV + true + Separators.ENTRY +
         POPUP_KEYS_SYMBOLS + Separators.KV + true + Separators.ENTRY + POPUP_KEYS_LANGUAGE + Separators.KV + false
+/** KBOARD: tuş üstünde yalnızca rakam ipucu gösterilir (sembol ipuçları kalabalık görünüyordu); basılı tutunca açılan tuşlar değişmez. */
+const val KBOARD_POPUP_KEYS_HINT_ORDER = POPUP_KEYS_NUMBER + Separators.KV + true + Separators.ENTRY + POPUP_KEYS_LANGUAGE_PRIORITY +
+        Separators.KV + false + Separators.ENTRY + POPUP_KEYS_LAYOUT + Separators.KV + false + Separators.ENTRY +
+        POPUP_KEYS_SYMBOLS + Separators.KV + false + Separators.ENTRY + POPUP_KEYS_LANGUAGE + Separators.KV + false
 const val POPUP_KEYS_ORDER_DEFAULT = POPUP_KEYS_LANGUAGE_PRIORITY + Separators.KV + true + Separators.ENTRY + POPUP_KEYS_NUMBER +
         Separators.KV + true + Separators.ENTRY + POPUP_KEYS_SYMBOLS + Separators.KV + true + Separators.ENTRY +
         POPUP_KEYS_LAYOUT + Separators.KV + true + Separators.ENTRY + POPUP_KEYS_LANGUAGE + Separators.KV + true

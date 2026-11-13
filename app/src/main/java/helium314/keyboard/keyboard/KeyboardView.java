@@ -60,6 +60,9 @@ public class KeyboardView extends View {
     private final Drawable mKeyBackground;
     private final Drawable mFunctionalKeyBackground;
     private final Drawable mActionKeyBackground;
+    /** KBOARD: hap biçimli ?123 tuşu arka planı; biçim tanımlamıyorsa null */
+    @Nullable
+    private final Drawable mPillFunctionalKeyBackground;
     private final Drawable mSpacebarBackground;
     private final float mSpacebarIconWidthRatio;
     private final Rect mKeyBackgroundPadding = new Rect();
@@ -122,6 +125,14 @@ public class KeyboardView extends View {
             mActionKeyBackground = mColors.selectAndColorDrawable(keyboardViewAttr, ColorType.ACTION_KEY_POPUP_KEYS_BACKGROUND);
         else
             mActionKeyBackground = mColors.selectAndColorDrawable(keyboardViewAttr, ColorType.ACTION_KEY_BACKGROUND);
+        final Drawable pill = (this instanceof PopupKeysKeyboardView || this instanceof MoreSuggestionsView)
+                ? null : keyboardViewAttr.getDrawable(R.styleable.KeyboardView_pillKeyBackground);
+        if (pill != null) {
+            mPillFunctionalKeyBackground = pill.mutate();
+            mColors.setColor(mPillFunctionalKeyBackground, ColorType.FUNCTIONAL_KEY_BACKGROUND);
+        } else {
+            mPillFunctionalKeyBackground = null;
+        }
 
         mSpacebarIconWidthRatio = keyboardViewAttr.getFloat(
                 R.styleable.KeyboardView_spacebarIconWidthRatio, 1.0f);
@@ -340,12 +351,30 @@ public class KeyboardView extends View {
 
         if (!key.isSpacer()) {
             final Drawable background = key.selectBackgroundDrawable(
-                    mKeyBackground, mFunctionalKeyBackground, mSpacebarBackground, mActionKeyBackground);
+                    mKeyBackground, functionalBackgroundFor(key), mSpacebarBackground, mActionKeyBackground);
             onDrawKeyBackground(key, canvas, background);
         }
         onDrawKeyTopVisuals(key, canvas, paint, params);
 
         canvas.translate(-keyDrawX, -keyDrawY);
+    }
+
+    /** KBOARD: alfabe/sembol geçiş tuşu (?123, ABC) eylem tuşu gibi hap biçiminde çizilir. */
+    @NonNull
+    private Drawable functionalBackgroundFor(@NonNull final Key key) {
+        if (mPillFunctionalKeyBackground == null) return mFunctionalKeyBackground;
+        final int code = key.getCode();
+        if (code == KeyCode.SYMBOL_ALPHA || code == KeyCode.ALPHA || code == KeyCode.SYMBOL)
+            return mPillFunctionalKeyBackground;
+        return mFunctionalKeyBackground;
+    }
+
+    /** KBOARD: Rounded biçimde ipucu yerleşimi hap biçimli tuşlara göre yapılır. Hap arka plan varsa
+     *  yalnızca ?123/ABC ve eylem tuşu haptır; virgül, nokta, shift, sil köşeli dikdörtgendir. */
+    private boolean hasPillLikeBackground(@NonNull final Key key, final boolean includeAction) {
+        if (includeAction && key.hasActionKeyBackground()) return true;
+        if (!key.hasFunctionalBackground()) return false;
+        return mPillFunctionalKeyBackground == null || functionalBackgroundFor(key) == mPillFunctionalKeyBackground;
     }
 
     // Draw key background.
@@ -413,7 +442,7 @@ public class KeyboardView extends View {
                 final int width;
                 if (key.needsToKeepBackgroundAspectRatio(mDefaultKeyLabelFlags)) {
                     // make sure the text stays inside bounds of background drawable
-                    Drawable bg = key.selectBackgroundDrawable(mKeyBackground, mFunctionalKeyBackground, mSpacebarBackground, mActionKeyBackground);
+                    Drawable bg = key.selectBackgroundDrawable(mKeyBackground, functionalBackgroundFor(key), mSpacebarBackground, mActionKeyBackground);
                     width = Math.min(bg.getBounds().bottom, bg.getBounds().right);
                 } else width = keyWidth;
                 final float ratio = Math.min(1.0f, (width * MAX_LABEL_RATIO) / TypefaceUtils.getStringWidth(label, paint));
@@ -465,7 +494,7 @@ public class KeyboardView extends View {
             blendAlpha(paint, params.mAnimAlpha);
             final float labelCharHeight = TypefaceUtils.getReferenceCharHeight(paint);
             final float labelCharWidth = TypefaceUtils.getReferenceCharWidth(paint);
-            final boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && key.hasFunctionalBackground();
+            final boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && hasPillLikeBackground(key, false);
             final float hintX, hintBaseline;
             if (key.hasHintLabel()) {
                 // The hint label is placed just right of the key label. Used mainly on
@@ -504,7 +533,7 @@ public class KeyboardView extends View {
             canvas.drawText(hintLabel, 0, hintLabel.length(), hintX, hintBaseline + adjustmentY, paint);
         } else if (hintIcon != null) {
             int iconSize = (int) (key.selectHintTextSize(params) * mHintFontSizeMultiplier);
-            boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && (key.hasFunctionalBackground() || key.hasActionKeyBackground());
+            boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && hasPillLikeBackground(key, true);
             float hintX, hintBaseline;
             if (key.hasHintLabel()) {
                 // The hint icon is placed just right of the key label. Used mainly on "phone number" layout.
@@ -566,7 +595,7 @@ public class KeyboardView extends View {
             if (key.getBackgroundType() == Key.BACKGROUND_TYPE_SPACEBAR)
                 hintX = keyWidth + hintBaseline + labelCharWidth * 0.1f;
             else
-                hintX = key.hasFunctionalBackground() || key.hasActionKeyBackground() ? keyWidth / 2.0f : keyWidth - mKeyHintLetterPadding - labelCharWidth / 2.0f;
+                hintX = hasPillLikeBackground(key, true) ? keyWidth / 2.0f : keyWidth - mKeyHintLetterPadding - labelCharWidth / 2.0f;
         } else {
             hintX = keyWidth - mKeyHintLetterPadding - TypefaceUtils.getReferenceCharWidth(paint) / 2.0f;
         }

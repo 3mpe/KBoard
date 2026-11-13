@@ -39,6 +39,8 @@
              {@link android.graphics.drawable.StateListDrawable}, with the following possible
              states: normal, pressed. -->
         <attr name="functionalKeyBackground" format="reference" />
+        <!-- KBOARD: hap biçimli arka plan (?123 ve eylem tuşu); yoksa normal arka planlar kullanılır -->
+        <attr name="pillKeyBackground" format="reference" />
         <!-- Background image for the spacebar.  This image needs to be a
              {@link android.graphics.drawable.StateListDrawable}, with the following possible
              states: normal, pressed. -->
