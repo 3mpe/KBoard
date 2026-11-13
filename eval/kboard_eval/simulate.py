@@ -27,6 +27,21 @@ def simulate_case(case: Case, predictor: Predictor) -> Iterator[Event]:
         yield Event(case.id, i, typed_word, pred.suggestions, pred.autocorrect, True, None)
 
 
-def simulate(cases: list[Case], predictor: Predictor) -> Iterator[Event]:
-    for case in cases:
+def learn_case(case: Case, predictor: Predictor) -> None:
+    """Vakanın hedef kelimelerini sırayla öğretir (her kelime, önündeki hedef kelimelerin bağlamında)."""
+    targets = case.target_words
+    for i, word in enumerate(targets):
+        predictor.learn(targets[:i], word)
+
+
+def simulate(cases: list[Case], predictor: Predictor, online: bool = False) -> Iterator[Event]:
+    """[online]: her vaka puanlandıktan sonra hedef kelimeleri öğretilir (dosya sırasıyla). Kişisel
+    model başta ve kullanıcı (`user`) değiştikçe sıfırlanır; kullanıcısız vakalar tek akıştır."""
+    if online:
+        predictor.reset_personal()
+    for n, case in enumerate(cases):
+        if online and n > 0 and case.user != cases[n - 1].user:
+            predictor.reset_personal()
         yield from simulate_case(case, predictor)
+        if online:
+            learn_case(case, predictor)

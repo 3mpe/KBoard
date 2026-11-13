@@ -75,7 +75,41 @@ def _percentile(sorted_vals: list[float], p: float) -> float | None:
     return sorted_vals[idx]
 
 
-def score(cases: list[Case], events: list[Event]) -> dict:
+REPEATED = "tekrar"
+FIRST_TIME = "ilk_kez"
+
+
+@dataclass
+class WordLabel:
+    """Kişisel öğrenme kırılımı için bir hedef kelimenin etiketi (yalnız `user` alanlı vakalar)."""
+    repeated: bool  # (önceki kelime → kelime) ikilisi bu kullanıcının önceki mesajlarında geçti
+    new_after_two: bool  # new_words'ten ve kullanıcı bu kelimeyi önceki mesajlarında en az 2 kez yazdı
+
+
+def personal_labels(cases: list[Case]) -> dict[tuple[str, int], WordLabel]:
+    """Kullanıcı akışlarını dosya sırasıyla yürür. Öğrenme vaka bitince yapıldığından (simulate
+    --online) yalnızca önceki mesajlar sayılır; aynı mesaj içindeki tekrar "tekrar" değildir.
+    Mesajın ilk kelimesinin önceki kelimesi cümle başıdır (<s>)."""
+    pairs: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    labels: dict[tuple[str, int], WordLabel] = {}
+    for case in cases:
+        if not case.user:
+            continue
+        seen, cnt = pairs[case.user], counts[case.user]
+        new = {normalize(w) for w in case.new_words}
+        targets = [normalize(w) for w in case.target_words]
+        for i, w in enumerate(targets):
+            prev = targets[i - 1] if i else "<s>"
+            labels[(case.id, i)] = WordLabel((prev, w) in seen, w in new and cnt[w] >= 2)
+        for i, w in enumerate(targets):
+            seen.add((targets[i - 1] if i else "<s>", w))
+            cnt[w] += 1
+    return labels
+
+
+def score(cases: list[Case], events: list[Event],
+          labels: dict[tuple[str, int], WordLabel] | None = None) -> dict:
     by_word: dict[tuple[str, int], dict] = defaultdict(lambda: {"prefix": {}, "commit": None})
     latencies: list[float] = []
     for ev in events:
@@ -90,10 +124,19 @@ def score(cases: list[Case], events: list[Event]) -> dict:
     overall = Bucket()
     by_category: dict[str, Bucket] = defaultdict(Bucket)
     by_tag: dict[str, Bucket] = defaultdict(Bucket)
+    by_personal: dict[str, Bucket] = {}
+    new_after_two = Ratio()
+    if labels is None:
+        labels = personal_labels(cases)
 
     for case in cases:
-        buckets = [overall, by_category[case.category]] + [by_tag[t] for t in case.tags]
+        case_buckets = [overall, by_category[case.category]] + [by_tag[t] for t in case.tags]
         for i, (typed, target) in enumerate(zip(case.typed_words, case.target_words)):
+            label = labels.get((case.id, i))
+            buckets = case_buckets
+            if label is not None:
+                key = REPEATED if label.repeated else FIRST_TIME
+                buckets = case_buckets + [by_personal.setdefault(key, Bucket())]
             slot = by_word.get((case.id, i))
             if slot is None:
                 for b in buckets:
@@ -103,6 +146,9 @@ def score(cases: list[Case], events: list[Event]) -> dict:
             commit: Event | None = slot["commit"]
 
             first_hit = next((k for k in sorted(prefixes) if _in_top(target, prefixes[k].suggestions)), None)
+            if label is not None and label.new_after_two:
+                # İki kullanımdan sonra yeni kelime: en geç ikinci harfte ilk 3'te mi?
+                new_after_two.add(first_hit is not None and first_hit <= 2)
             full = len(target) + 1  # kelimeyi doğru yazmak + boşluk
             if first_hit is not None:
                 used = min(first_hit + 1, full)  # k tuş + öneriye dokunma (boşluk otomatik)
@@ -146,7 +192,7 @@ def score(cases: list[Case], events: list[Event]) -> dict:
                     b.missing_events += 1
 
     latencies.sort()
-    return {
+    out = {
         "overall": overall.as_dict(),
         "by_category": {k: v.as_dict() for k, v in sorted(by_category.items())},
         "by_tag": {k: v.as_dict() for k, v in sorted(by_tag.items())},
@@ -157,6 +203,10 @@ def score(cases: list[Case], events: list[Event]) -> dict:
             "max": latencies[-1] if latencies else None,
         },
     }
+    if labels:
+        out["personal"] = {k: by_personal[k].as_dict() for k in (REPEATED, FIRST_TIME) if k in by_personal}
+        out["personal"]["new_word_after_two_top3_by_2"] = new_after_two.as_dict()
+    return out
 
 
 BOOTSTRAP_KEYS = {
@@ -170,26 +220,46 @@ BOOTSTRAP_KEYS = {
 }
 
 
+PERSONAL_BOOTSTRAP_KEYS = {
+    "Tekrar İlk-3 @0": lambda p: p.get(REPEATED, {}).get("top3_at_k", {}).get("0", {}).get("value"),
+    "Tekrar İlk-3 @1": lambda p: p.get(REPEATED, {}).get("top3_at_k", {}).get("1", {}).get("value"),
+    "Tekrar KSR": lambda p: p.get(REPEATED, {}).get("ksr", {}).get("value"),
+    "İlk kez İlk-3 @0": lambda p: p.get(FIRST_TIME, {}).get("top3_at_k", {}).get("0", {}).get("value"),
+    "İlk kez İlk-3 @3": lambda p: p.get(FIRST_TIME, {}).get("top3_at_k", {}).get("3", {}).get("value"),
+    "İlk kez KSR": lambda p: p.get(FIRST_TIME, {}).get("ksr", {}).get("value"),
+}
+
+
 def bootstrap(cases: list[Case], events: list[Event], n: int = 200, seed: int = 1) -> dict:
-    """Vakaları yerine koyarak yeniden örnekler; genel metrikler için %95 güven aralığı."""
+    """Vakaları yerine koyarak yeniden örnekler; genel metrikler için %95 güven aralığı.
+
+    Kişisel kırılım etiketleri (tekrar / ilk kez) özgün akış sırasından bir kez hesaplanır ve
+    yeniden örneklenen vakalara taşınır."""
     import random
 
     rng = random.Random(seed)
+    labels = personal_labels(cases)
+    keys = dict(BOOTSTRAP_KEYS, **(PERSONAL_BOOTSTRAP_KEYS if labels else {}))
     by_case: dict[str, list[Event]] = defaultdict(list)
     for ev in events:
         by_case[ev.case_id].append(ev)
-    samples: dict[str, list[float]] = {k: [] for k in BOOTSTRAP_KEYS}
+    samples: dict[str, list[float]] = {k: [] for k in keys}
     for _ in range(n):
         picked = [rng.choice(cases) for _ in cases]
         # Aynı vaka birden çok seçilirse kimliklerini ayır.
         cs, evs = [], []
+        lab: dict[tuple[str, int], WordLabel] = {}
         for j, c in enumerate(picked):
             cid = f"{c.id}#{j}"
             cs.append(Case(**{**c.__dict__, "id": cid}))
             evs.extend(Event(**{**e.__dict__, "case_id": cid}) for e in by_case.get(c.id, []))
-        o = score(cs, evs)["overall"]
-        for k, f in BOOTSTRAP_KEYS.items():
-            v = f(o)
+            for i in range(len(c.target_words)):
+                if (c.id, i) in labels:
+                    lab[(cid, i)] = labels[(c.id, i)]
+        r = score(cs, evs, lab)
+        o, p = r["overall"], r.get("personal", {})
+        for k, f in keys.items():
+            v = f(p) if k in PERSONAL_BOOTSTRAP_KEYS else f(o)
             if v is not None:
                 samples[k].append(v)
     out = {}
@@ -222,6 +292,15 @@ def to_markdown(result: dict, title: str = "Ölçüm raporu") -> str:
         lines.append(_row(f"kategori: {k}", b))
     for k, b in result["by_tag"].items():
         lines.append(_row(f"etiket: {k}", b))
+    personal = result.get("personal")
+    if personal:
+        for k, name in ((REPEATED, "kişisel: tekrar (ikili önceki mesajlarda geçti)"),
+                        (FIRST_TIME, "kişisel: ilk kez")):
+            if k in personal:
+                lines.append(_row(name, personal[k]))
+        r = personal["new_word_after_two_top3_by_2"]
+        lines += ["", f"İki kullanımdan sonra yeni kelime, en geç 2. harfte ilk 3'te: {_pct(r['value'])} "
+                      f"({r['hit']}/{r['total']})"]
     lat = result["latency_ms"]
     fmt = lambda v: "–" if v is None else f"{v:.2f} ms"
     lines += ["", f"Gecikme: p50 {fmt(lat['p50'])} · p95 {fmt(lat['p95'])} · max {fmt(lat['max'])} "
