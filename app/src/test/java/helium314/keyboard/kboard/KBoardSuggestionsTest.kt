@@ -150,6 +150,8 @@ class KBoardSuggestionsTest {
         KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
             DeasciifyIndex.Companion.Entry("dedim", 150), DeasciifyIndex.Companion.Entry("çok", 200),
             DeasciifyIndex.Companion.Entry("çokda", 120),
+            // çekimli fiil sayılması için gövdenin mastarı sözlükte olmalı
+            DeasciifyIndex.Companion.Entry("demek", 150),
         ))))
         val ctx = NgramContext(NgramContext.WordInfo("yarın"), NgramContext.WordInfo.BEGINNING_OF_SENTENCE_WORD_INFO)
         // "dedimki": ayrık biçim ilk öneri, ama otomatik düzeltme değil
