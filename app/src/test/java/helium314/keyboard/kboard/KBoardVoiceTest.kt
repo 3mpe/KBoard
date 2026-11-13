@@ -7,6 +7,7 @@ import android.view.inputmethod.EditorInfo
 import androidx.core.content.edit
 import helium314.keyboard.latin.InputAttributes
 import helium314.keyboard.latin.R
+import helium314.keyboard.latin.common.Constants.Separators
 import helium314.keyboard.latin.utils.ToolbarKey
 import helium314.keyboard.latin.utils.defaultPinnedToolbarPref
 import helium314.keyboard.latin.utils.prefs
@@ -66,8 +67,8 @@ class KBoardVoiceTest {
 
     @Test
     fun micIsTheOnlyKeyPinnedByDefault() {
-        val pinned = defaultPinnedToolbarPref.split(";").filter { it.endsWith(",true") }
-        assertEquals(listOf("${ToolbarKey.VOICE.name},true"), pinned)
+        val pinned = defaultPinnedToolbarPref.split(Separators.ENTRY).filter { it.endsWith(Separators.KV + "true") }
+        assertEquals(listOf(ToolbarKey.VOICE.name + Separators.KV + "true"), pinned)
     }
 
     @Test
