@@ -566,4 +566,27 @@
     <string name="kboard_clear_personal_summary">Yazdıklarınızdan öğrenilen kelimeleri ve kelime çiftlerini unut. Bunlar yalnız bu cihazda tutulur.</string>
     <string name="kboard_clear_personal_message">Klavyenin yazdıklarınızdan öğrendiği her şey silinsin mi? Bu geri alınamaz.</string>
     <string name="kboard_clear_personal_button">Sil</string>
+    <string name="kboard_transfer">Dışa / içe aktar</string>
+    <string name="kboard_transfer_summary">Ayarlarınızı, sözlüğünüzü ve öğrenilen kelimeleri yeni telefona taşıyın</string>
+    <string name="kboard_transfer_message">Dışa aktar tek bir dosya oluşturur; dosyayı kaydedebilir ya da e-postayla kendinize gönderebilirsiniz. Yeni telefonda İçe aktar\'ı seçip bu dosyayı açın. Hangi bölümlerin aktarılacağını her seferinde siz seçersiniz.</string>
+    <string name="kboard_transfer_export">Dışa aktar</string>
+    <string name="kboard_transfer_import">İçe aktar</string>
+    <string name="kboard_transfer_export_title">Ne aktarılsın?</string>
+    <string name="kboard_transfer_import_title">Ne içe aktarılsın?</string>
+    <string name="kboard_transfer_section_settings">Ayarlar ve görünüm</string>
+    <string name="kboard_transfer_section_dictionary">Kişisel sözlük</string>
+    <string name="kboard_transfer_section_learned">Öğrenilen kelimeler</string>
+    <string name="kboard_transfer_learned_warning">Dosyada yazdığınız kelimeler de olacak. Dosya şifreli değil; yalnız kendinize gönderin.</string>
+    <string name="kboard_transfer_import_warning">Seçilen bölümler bu telefondakilerin yerine geçer. İşaretlemediğiniz bölümler değişmez.</string>
+    <string name="kboard_transfer_share">Paylaş (e-posta…)</string>
+    <string name="kboard_transfer_save">Dosyaya kaydet</string>
+    <string name="kboard_transfer_mail_subject">KBoard ayarları</string>
+    <string name="kboard_transfer_exported">Dışa aktarıldı</string>
+    <string name="kboard_transfer_imported">İçe aktarıldı</string>
+    <string name="kboard_transfer_export_error">Dışa aktarılamadı.</string>
+    <string name="kboard_transfer_import_error">İçe aktarılamadı. Hiçbir şey değişmedi.</string>
+    <string name="kboard_transfer_error_not_kboard">Bu bir KBoard aktarım dosyası değil.</string>
+    <string name="kboard_transfer_error_newer">Bu dosya KBoard\'un daha yeni bir sürümüyle oluşturulmuş. KBoard\'u güncelleyip yeniden deneyin.</string>
+    <string name="kboard_transfer_error_too_large">Bu dosya bir KBoard aktarım dosyası olamayacak kadar büyük.</string>
+    <string name="kboard_transfer_error_corrupt">Dosya bozuk ya da eksik. Hiçbir şey değişmedi.</string>
 </resources>

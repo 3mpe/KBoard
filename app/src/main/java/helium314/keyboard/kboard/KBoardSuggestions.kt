@@ -132,6 +132,9 @@ object KBoardSuggestions {
     /** [KBoardPersonal] açılışta kayıtlı geri almaları yükler. */
     internal fun loadReverts(map: Map<String, String>) = rules.loadReverts(map)
 
+    /** Dışa aktarma için geri alınan düzeltmelerin kopyası. */
+    internal fun reverts(): Map<String, String> = rules.reverts()
+
     /** "Öğrenilenleri sil": geri alınan düzeltmeler unutulur. */
     internal fun clearReverts() = rules.clearReverts()
 
