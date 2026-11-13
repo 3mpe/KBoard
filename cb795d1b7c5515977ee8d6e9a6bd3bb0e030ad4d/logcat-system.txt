@@ -1,0 +1,277 @@
+--------- beginning of system
+11-13 14:41:30.549   544   727 E ActivityManager: Attempt to launch receivers of broadcast intent Intent { act=android.app.action.STATSD_STARTED flg=0x1000000 } before boot completion
+11-13 14:41:30.855   544   544 W ActivityManager: Too early to start/bind service in system_server: Phase=550 ComponentInfo{com.android.server.telecom/com.android.server.telecom.components.TelecomService}
+11-13 14:41:30.855   544   544 W ActivityManager: Too early to start/bind service in system_server: Phase=550 ComponentInfo{com.android.server.telecom/com.android.server.telecom.components.TelecomService}
+11-13 14:41:31.401   544   741 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:31.402   544   741 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:31.404   544   741 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:31.405   544   741 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:31.679   544   574 W ActivityManager: Slow operation: 202ms so far, now at startProcess: done updating battery stats
+11-13 14:41:31.679   544   574 W ActivityManager: Slow operation: 202ms so far, now at startProcess: building log message
+11-13 14:41:31.679   544   574 W ActivityManager: Slow operation: 202ms so far, now at startProcess: starting to update pids map
+11-13 14:41:31.680   544   574 W ActivityManager: Slow operation: 203ms so far, now at startProcess: done updating pids map
+11-13 14:41:31.680   544   574 W ActivityManager: Slow operation: 202ms so far, now at startProcess: asking zygote to start proc
+11-13 14:41:31.686   544   574 W ActivityManager: Slow operation: 208ms so far, now at startProcess: returned from zygote!
+11-13 14:41:31.689   544   574 W ActivityManager: Slow operation: 211ms so far, now at startProcess: done updating battery stats
+11-13 14:41:31.689   544   574 W ActivityManager: Slow operation: 211ms so far, now at startProcess: building log message
+11-13 14:41:31.689   544   574 W ActivityManager: Slow operation: 211ms so far, now at startProcess: starting to update pids map
+11-13 14:41:31.689   544   574 W ActivityManager: Slow operation: 211ms so far, now at startProcess: done updating pids map
+11-13 14:41:31.883   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@7b69adb
+11-13 14:41:31.883   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@c50d978
+11-13 14:41:31.883   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@b7f5851
+11-13 14:41:31.884   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@1c778b6
+11-13 14:41:32.000   544   544 W ActivityManager: Unable to start service Intent { act=android.service.notification.NotificationListenerService cmp=com.google.android.apps.nexuslauncher/com.android.launcher3.notification.NotificationListener } U=0: not found
+11-13 14:41:32.000   544   544 W ActivityManager: Unable to start service Intent { act=android.service.notification.NotificationListenerService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.common.notification.service.AiAiNotificationListenerService } U=0: not found
+11-13 14:41:32.000   544   544 W ActivityManager: Unable to start service Intent { act=android.service.notification.NotificationAssistantService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.common.notification.service.AiAiNotificationAssistantService } U=0: not found
+11-13 14:41:33.448   544   727 W ActivityManager: Unable to start service Intent { act=com.google.android.chimera.BoundService.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentApiService } U=0: not found
+11-13 14:41:33.448   544   727 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@62f62b4
+11-13 14:41:34.216   544   574 W ActivityManager: Slow operation: 62ms so far, now at startProcess: returned from zygote!
+11-13 14:41:34.216   544   574 W ActivityManager: Slow operation: 63ms so far, now at startProcess: done updating battery stats
+11-13 14:41:34.217   544   574 W ActivityManager: Slow operation: 63ms so far, now at startProcess: building log message
+11-13 14:41:34.217   544   574 W ActivityManager: Slow operation: 63ms so far, now at startProcess: starting to update pids map
+11-13 14:41:34.219   544   574 W ActivityManager: Slow operation: 65ms so far, now at startProcess: done updating pids map
+11-13 14:41:36.032   544   558 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:36.032   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@f9cc493
+11-13 14:41:36.032   544   558 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:36.032   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@cfe17ce
+11-13 14:41:36.032   544   558 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:36.032   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@ec1c5fc
+11-13 14:41:36.032   544   819 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:36.033   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@f76330b
+11-13 14:41:36.515   544   938 W ActivityManager: Unable to start service Intent { act=android.service.smartspace.SmartspaceService cmp=com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSmartspaceService } U=0: not found
+11-13 14:41:36.516   544   544 W ActivityManager: Unbind failed: could not find connection for android.app.LoadedApk$ServiceDispatcher$InnerConnection@2ae94bb
+11-13 14:41:36.834   544   574 W ActivityManager: Slow operation: 278ms so far, now at startProcess: done updating battery stats
+11-13 14:41:36.834   544   574 W ActivityManager: Slow operation: 279ms so far, now at startProcess: building log message
+11-13 14:41:36.834   544   574 W ActivityManager: Slow operation: 279ms so far, now at startProcess: starting to update pids map
+11-13 14:41:36.835   544   574 W ActivityManager: Slow operation: 279ms so far, now at startProcess: done updating pids map
+11-13 14:41:36.835   544   574 W ActivityManager: Slow operation: 271ms so far, now at startProcess: asking zygote to start proc
+11-13 14:41:36.845   544   574 W ActivityManager: Slow operation: 282ms so far, now at startProcess: returned from zygote!
+11-13 14:41:36.861   544   574 W ActivityManager: Slow operation: 298ms so far, now at startProcess: done updating battery stats
+11-13 14:41:36.862   544   574 W ActivityManager: Slow operation: 298ms so far, now at startProcess: building log message
+11-13 14:41:36.862   544   574 W ActivityManager: Slow operation: 298ms so far, now at startProcess: starting to update pids map
+11-13 14:41:36.862   544   574 W ActivityManager: Slow operation: 298ms so far, now at startProcess: done updating pids map
+11-13 14:41:37.133   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:41:37.885   544   741 W ActivityManager: Slow operation: 51ms so far, now at startProcess: done creating new process record
+11-13 14:41:37.885   544   741 W ActivityManager: Slow operation: 52ms so far, now at startProcess: stepping in to startProcess
+11-13 14:41:37.886   544   741 W ActivityManager: Slow operation: 53ms so far, now at startProcess: done starting proc!
+11-13 14:41:37.962   544   574 W ActivityManager: Slow operation: 61ms so far, now at startProcess: returned from zygote!
+11-13 14:41:37.991   544   574 W ActivityManager: Slow operation: 89ms so far, now at startProcess: done updating battery stats
+11-13 14:41:37.991   544   574 W ActivityManager: Slow operation: 89ms so far, now at startProcess: building log message
+11-13 14:41:37.991   544   574 W ActivityManager: Slow operation: 89ms so far, now at startProcess: starting to update pids map
+11-13 14:41:37.991   544   574 W ActivityManager: Slow operation: 89ms so far, now at startProcess: done updating pids map
+11-13 14:41:38.138   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: done updating battery stats
+11-13 14:41:38.138   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: building log message
+11-13 14:41:38.138   544   574 W ActivityManager: Slow operation: 65ms so far, now at startProcess: starting to update pids map
+11-13 14:41:38.139   544   574 W ActivityManager: Slow operation: 65ms so far, now at startProcess: done updating pids map
+11-13 14:41:38.636   544   735 W ActivityManager: Receiver with filter android.content.IntentFilter@d32c3c1 already registered for pid 1664, callerPackage is com.google.android.googlequicksearchbox
+11-13 14:41:39.103   544   574 W ActivityManager: Slow operation: 52ms so far, now at startProcess: done updating pids map
+11-13 14:41:39.247   544  1903 W ActivityManager: Unable to start service Intent { cmp=com.google.android.as/aig } U=0: not found
+11-13 14:41:40.825   544   574 W ActivityManager: Slow operation: 119ms so far, now at startProcess: done updating battery stats
+11-13 14:41:40.825   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: building log message
+11-13 14:41:40.825   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: starting to update pids map
+11-13 14:41:40.825   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: done updating pids map
+11-13 14:41:41.749   544   574 W ActivityManager: Slow operation: 291ms so far, now at startProcess: returned from zygote!
+11-13 14:41:41.749   544   574 W ActivityManager: Slow operation: 291ms so far, now at startProcess: done updating battery stats
+11-13 14:41:41.750   544   574 W ActivityManager: Slow operation: 292ms so far, now at startProcess: building log message
+11-13 14:41:41.750   544   574 W ActivityManager: Slow operation: 292ms so far, now at startProcess: starting to update pids map
+11-13 14:41:41.750   544   574 W ActivityManager: Slow operation: 292ms so far, now at startProcess: done updating pids map
+11-13 14:41:41.750   544   574 W ActivityManager: Slow operation: 271ms so far, now at startProcess: asking zygote to start proc
+11-13 14:41:41.858   544   574 W ActivityManager: Slow operation: 379ms so far, now at startProcess: returned from zygote!
+11-13 14:41:41.858   544   574 W ActivityManager: Slow operation: 379ms so far, now at startProcess: done updating battery stats
+11-13 14:41:41.858   544   574 W ActivityManager: Slow operation: 379ms so far, now at startProcess: building log message
+11-13 14:41:41.858   544   574 W ActivityManager: Slow operation: 379ms so far, now at startProcess: starting to update pids map
+11-13 14:41:41.858   544   574 W ActivityManager: Slow operation: 379ms so far, now at startProcess: done updating pids map
+11-13 14:41:42.869   544   574 W ActivityManager: Slow operation: 196ms so far, now at startProcess: returned from zygote!
+11-13 14:41:42.901   544   574 W ActivityManager: Slow operation: 239ms so far, now at startProcess: done updating battery stats
+11-13 14:41:42.901   544   574 W ActivityManager: Slow operation: 240ms so far, now at startProcess: building log message
+11-13 14:41:42.901   544   574 W ActivityManager: Slow operation: 240ms so far, now at startProcess: starting to update pids map
+11-13 14:41:42.902   544   574 W ActivityManager: Slow operation: 240ms so far, now at startProcess: done updating pids map
+11-13 14:41:43.170   544   574 W ActivityManager: Slow operation: 66ms so far, now at startProcess: asking zygote to start proc
+11-13 14:41:43.262   544   574 W ActivityManager: Slow operation: 158ms so far, now at startProcess: returned from zygote!
+11-13 14:41:43.288   544   574 W ActivityManager: Slow operation: 184ms so far, now at startProcess: done updating battery stats
+11-13 14:41:43.288   544   574 W ActivityManager: Slow operation: 184ms so far, now at startProcess: building log message
+11-13 14:41:43.288   544   574 W ActivityManager: Slow operation: 184ms so far, now at startProcess: starting to update pids map
+11-13 14:41:43.288   544   574 W ActivityManager: Slow operation: 184ms so far, now at startProcess: done updating pids map
+11-13 14:41:44.008   544   574 W ActivityManager: Slow operation: 166ms so far, now at startProcess: done updating pids map
+11-13 14:41:44.929   544   727 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:41:45.306   544   574 W ActivityManager: Slow operation: 78ms so far, now at startProcess: returned from zygote!
+11-13 14:41:45.306   544   574 W ActivityManager: Slow operation: 78ms so far, now at startProcess: done updating battery stats
+11-13 14:41:45.306   544   574 W ActivityManager: Slow operation: 78ms so far, now at startProcess: building log message
+11-13 14:41:45.306   544   574 W ActivityManager: Slow operation: 78ms so far, now at startProcess: starting to update pids map
+11-13 14:41:45.306   544   574 W ActivityManager: Slow operation: 78ms so far, now at startProcess: done updating pids map
+11-13 14:41:45.878   544  1448 W ActivityManager: Receiver with filter android.content.IntentFilter@955354e already registered for pid 1254, callerPackage is com.google.android.apps.nexuslauncher
+11-13 14:41:46.012   544   574 W ActivityManager: Slow operation: 85ms so far, now at startProcess: returned from zygote!
+11-13 14:41:46.012   544   574 W ActivityManager: Slow operation: 85ms so far, now at startProcess: done updating battery stats
+11-13 14:41:46.012   544   574 W ActivityManager: Slow operation: 85ms so far, now at startProcess: building log message
+11-13 14:41:46.012   544   574 W ActivityManager: Slow operation: 85ms so far, now at startProcess: starting to update pids map
+11-13 14:41:46.013   544   574 W ActivityManager: Slow operation: 86ms so far, now at startProcess: done updating pids map
+11-13 14:41:46.447   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: returned from zygote!
+11-13 14:41:46.447   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: done updating battery stats
+11-13 14:41:46.447   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: building log message
+11-13 14:41:46.447   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: starting to update pids map
+11-13 14:41:46.447   544   574 W ActivityManager: Slow operation: 64ms so far, now at startProcess: done updating pids map
+11-13 14:41:47.681   544   574 W ActivityManager: Slow operation: 59ms so far, now at startProcess: returned from zygote!
+11-13 14:41:47.742   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: done updating battery stats
+11-13 14:41:47.742   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: building log message
+11-13 14:41:47.742   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: starting to update pids map
+11-13 14:41:47.742   544   574 W ActivityManager: Slow operation: 120ms so far, now at startProcess: done updating pids map
+11-13 14:41:48.595   544   735 W ActivityManager: Receiver with filter android.content.IntentFilter@8654ba2 already registered for pid 3330, callerPackage is com.google.android.inputmethod.latin
+11-13 14:41:49.368   544  1448 W ActivityManager: Unable to start service Intent { act=com.google.android.play.core.splitinstall.BIND_SPLIT_INSTALL_SERVICE pkg=com.android.vending } U=0: not found
+11-13 14:41:49.815   544  1808 W ActivityManager: Unable to start service Intent { act=com.google.android.gms.home.service.START pkg=com.google.android.gms } U=0: not found
+11-13 14:41:49.816   544  1808 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@4bf0432
+--------- beginning of main
+11-13 14:41:51.536   544   558 E ActivityManager: Sending non-protected broadcast com.android.settings.battery.action.PERIODIC_JOB_RECHECK from system 958:com.android.settings/1000 pkg com.android.settings
+11-13 14:41:51.536   544   558 E ActivityManager: java.lang.Throwable
+11-13 14:41:51.536   544   558 E ActivityManager: 	at com.android.server.am.ActivityManagerService.checkBroadcastFromSystem(ActivityManagerService.java:14306)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentLockedTraced(ActivityManagerService.java:15131)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentLocked(ActivityManagerService.java:14370)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentWithFeature(ActivityManagerService.java:15336)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at android.app.IActivityManager$Stub.onTransact(IActivityManager.java:2653)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at com.android.server.am.ActivityManagerService.onTransact(ActivityManagerService.java:2720)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at android.os.Binder.execTransactInternal(Binder.java:1339)
+11-13 14:41:51.536   544   558 E ActivityManager: 	at android.os.Binder.execTransact(Binder.java:1275)
+11-13 14:41:51.564   544   574 W ActivityManager: Slow operation: 51ms so far, now at startProcess: starting to update pids map
+11-13 14:41:51.565   544   574 W ActivityManager: Slow operation: 51ms so far, now at startProcess: done updating pids map
+11-13 14:41:51.672   544   574 W ActivityManager: Slow operation: 98ms so far, now at startProcess: returned from zygote!
+11-13 14:41:51.672   544   574 W ActivityManager: Slow operation: 98ms so far, now at startProcess: done updating battery stats
+11-13 14:41:51.672   544   574 W ActivityManager: Slow operation: 98ms so far, now at startProcess: building log message
+11-13 14:41:51.672   544   574 W ActivityManager: Slow operation: 98ms so far, now at startProcess: starting to update pids map
+11-13 14:41:51.672   544   574 W ActivityManager: Slow operation: 98ms so far, now at startProcess: done updating pids map
+11-13 14:41:51.672   544   574 W ActivityManager: Slow operation: 57ms so far, now at startProcess: asking zygote to start proc
+11-13 14:41:51.753   544   574 W ActivityManager: Slow operation: 138ms so far, now at startProcess: returned from zygote!
+11-13 14:41:51.757   544   574 W ActivityManager: Slow operation: 142ms so far, now at startProcess: done updating battery stats
+11-13 14:41:51.757   544   574 W ActivityManager: Slow operation: 142ms so far, now at startProcess: building log message
+11-13 14:41:51.757   544   574 W ActivityManager: Slow operation: 142ms so far, now at startProcess: starting to update pids map
+11-13 14:41:51.757   544   574 W ActivityManager: Slow operation: 142ms so far, now at startProcess: done updating pids map
+11-13 14:41:51.757   544   574 W ActivityManager: Slow operation: 136ms so far, now at startProcess: asking zygote to start proc
+11-13 14:41:51.793   544   574 W ActivityManager: Slow operation: 172ms so far, now at startProcess: returned from zygote!
+11-13 14:41:51.793   544   574 W ActivityManager: Slow operation: 172ms so far, now at startProcess: done updating battery stats
+11-13 14:41:51.793   544   574 W ActivityManager: Slow operation: 172ms so far, now at startProcess: building log message
+11-13 14:41:51.793   544   574 W ActivityManager: Slow operation: 172ms so far, now at startProcess: starting to update pids map
+11-13 14:41:51.793   544   574 W ActivityManager: Slow operation: 172ms so far, now at startProcess: done updating pids map
+11-13 14:42:18.189   544  2860 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:42:21.172   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 1426
+11-13 14:42:21.251   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@70bfcd7e
+11-13 14:42:21.499   544   574 W ActivityManager: Slow operation: 101ms so far, now at startProcess: returned from zygote!
+11-13 14:42:21.499   544   574 W ActivityManager: Slow operation: 101ms so far, now at startProcess: done updating battery stats
+11-13 14:42:21.499   544   574 W ActivityManager: Slow operation: 101ms so far, now at startProcess: building log message
+11-13 14:42:21.499   544   574 W ActivityManager: Slow operation: 101ms so far, now at startProcess: starting to update pids map
+11-13 14:42:21.499   544   574 W ActivityManager: Slow operation: 101ms so far, now at startProcess: done updating pids map
+11-13 14:42:30.106   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:42:30.118   544  1825 E InputMethodManagerService: Ignoring com.android.server.inputmethod.InputMethodManagerService.updateStatusIcon:2992 due to an invalid token. uid:10142 token:android.os.Binder@9c681d2
+11-13 14:42:42.093   544  1808 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:42:46.508   544  3154 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:42:47.465   544   544 W InputMethodManagerService: Session failed to close due to remote exception
+11-13 14:42:47.465   544   544 W InputMethodManagerService: android.os.DeadObjectException
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transactNative(Native Method)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy.finishSession(IInputMethodSession.java:358)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.finishSessionLocked(InputMethodManagerService.java:2938)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionLocked(InputMethodManagerService.java:2910)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionsLocked(InputMethodManagerService.java:2971)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.clearCurMethodAndSessions(InputMethodBindingController.java:381)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.-$$Nest$mclearCurMethodAndSessions(InputMethodBindingController.java:0)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController$2.onServiceDisconnected(InputMethodBindingController.java:352)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2191)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at android.os.Looper.loop(Looper.java:294)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.run(SystemServer.java:970)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.main(SystemServer.java:664)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at java.lang.reflect.Method.invoke(Native Method)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-13 14:42:47.465   544   544 W InputMethodManagerService: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:949)
+11-13 14:42:47.677   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 4306
+11-13 14:42:47.708   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@70bfcd7e
+11-13 14:42:50.731   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:42:54.853   544  1448 W InputMethodManagerService: Ignoring hideSoftInput of uid 10169 : com.android.internal.inputmethod.IInputMethodClient$Stub$Proxy@e53ce58
+11-13 14:43:00.182   544  2501 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:03.245   544  2003 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:05.569   544  2003 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:10.720   544  4551 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:13.051   544  2860 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:16.663   544   735 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:20.262   544   735 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:23.861   544  4551 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:28.929   544  2860 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:31.228   544  3154 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:43:37.245   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@70bfcd7e
+11-13 14:43:37.451   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 4592
+11-13 14:43:38.098   544  1903 W ActivityManager: Slow operation: 69ms so far, now at attachApplicationLocked: immediately before bindApplication
+11-13 14:43:38.099   544  1903 W ActivityManager: Slow operation: 70ms so far, now at attachApplicationLocked: immediately after bindApplication
+11-13 14:43:38.099   544  1903 W ActivityManager: Slow operation: 70ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+11-13 14:43:46.125   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:43:46.136   544   557 E InputMethodManagerService: Ignoring com.android.server.inputmethod.InputMethodManagerService.updateStatusIcon:2992 due to an invalid token. uid:10142 token:android.os.Binder@f6c5826
+11-13 14:43:58.099   544   952 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:44:02.425   544   938 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:44:03.485   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:44:03.613   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 4971
+11-13 14:44:17.197   544   629 W ActivityManager: Unable to start service Intent { act=com.google.android.gms.drive.ApiService.RESET_AFTER_BOOT flg=0x4 cmp=com.google.android.gms/.drive.api.ApiService (has extras) } U=0: not found
+11-13 14:44:18.897   544   558 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:44:19.806   544   544 W InputMethodManagerService: Session failed to close due to remote exception
+11-13 14:44:19.806   544   544 W InputMethodManagerService: android.os.DeadObjectException
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transactNative(Native Method)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy.finishSession(IInputMethodSession.java:358)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.finishSessionLocked(InputMethodManagerService.java:2938)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionLocked(InputMethodManagerService.java:2910)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionsLocked(InputMethodManagerService.java:2971)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.clearCurMethodAndSessions(InputMethodBindingController.java:381)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.-$$Nest$mclearCurMethodAndSessions(InputMethodBindingController.java:0)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController$2.onServiceDisconnected(InputMethodBindingController.java:352)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2191)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at android.os.Looper.loop(Looper.java:294)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.run(SystemServer.java:970)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.main(SystemServer.java:664)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at java.lang.reflect.Method.invoke(Native Method)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-13 14:44:19.806   544   544 W InputMethodManagerService: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:949)
+11-13 14:44:19.919   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@70bfcd7e
+11-13 14:44:19.987   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 5181
+11-13 14:44:28.608   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:44:28.623   544   735 E InputMethodManagerService: Ignoring com.android.server.inputmethod.InputMethodManagerService.updateStatusIcon:2992 due to an invalid token. uid:10142 token:android.os.Binder@d39fbe1
+11-13 14:44:41.626   544   558 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:44:43.597   544   544 W InputMethodManagerService: Session failed to close due to remote exception
+11-13 14:44:43.597   544   544 W InputMethodManagerService: android.os.DeadObjectException
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transactNative(Native Method)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy.finishSession(IInputMethodSession.java:358)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.finishSessionLocked(InputMethodManagerService.java:2938)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionLocked(InputMethodManagerService.java:2910)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionsLocked(InputMethodManagerService.java:2971)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.clearCurMethodAndSessions(InputMethodBindingController.java:381)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.-$$Nest$mclearCurMethodAndSessions(InputMethodBindingController.java:0)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController$2.onServiceDisconnected(InputMethodBindingController.java:352)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2191)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at android.os.Looper.loop(Looper.java:294)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.run(SystemServer.java:970)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.main(SystemServer.java:664)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at java.lang.reflect.Method.invoke(Native Method)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-13 14:44:43.597   544   544 W InputMethodManagerService: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:949)
+11-13 14:44:43.754   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 5335
+11-13 14:44:43.773   544   645 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 14:44:44.266   544   938 W ActivityManager: Slow operation: 108ms so far, now at attachApplicationLocked: immediately before bindApplication
+11-13 14:44:44.266   544   938 W ActivityManager: Slow operation: 108ms so far, now at attachApplicationLocked: immediately after bindApplication
+11-13 14:44:44.266   544   938 W ActivityManager: Slow operation: 109ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+11-13 14:45:05.040   544  4548 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:08.031   544  1331 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:13.614   544  4548 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:16.633   544  1331 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:18.098   544   574 W ActivityManager: Slow operation: 63ms so far, now at startProcess: done updating pids map
+11-13 14:45:18.099   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 5515
+11-13 14:45:32.446   544   819 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:35.485   544  1808 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:40.827   544  1808 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:43.871   544  1808 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 14:45:46.157   544  2861 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
