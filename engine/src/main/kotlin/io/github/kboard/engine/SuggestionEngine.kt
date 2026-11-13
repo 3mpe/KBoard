@@ -23,7 +23,7 @@ class SuggestionEngine(
         if (sources.isEmpty()) return EMPTY
         val base = allowed(query, baseSources.flatMap { it.candidates(query, limit) })
         var ranked = ranker.rank(query, base, limit)
-        if (gapSources.isNotEmpty()) ranked = mergeGapFill(query, ranked, base, limit)
+        if (gapSources.isNotEmpty()) ranked = nonIncreasing(mergeGapFill(query, ranked, base, limit))
         val autocorrect = if (query.isNextWord) null else ranked.firstOrNull {
             it.autocorrectable && !TurkishText.sameWord(it.word, query.prefix)
         }?.word
@@ -77,6 +77,19 @@ class SuggestionEngine(
         return out
     }
 
+    /**
+     * Uygulama (HeliBoard) önerileri puana göre yeniden sıralar; liste sırası ancak puanlar sırayla
+     * azalmıyorsa korunur. Öne geçemeyen bir adayın puanı bir öncekinin hemen altına indirilir.
+     */
+    private fun nonIncreasing(list: List<Candidate>): List<Candidate> {
+        var prev = Double.POSITIVE_INFINITY
+        return list.map { c ->
+            val s = if (c.score < prev) c.score else prev - SCORE_STEP
+            prev = s
+            if (s == c.score) c else c.copy(score = s)
+        }
+    }
+
     fun setUserWords(words: Collection<String>) {
         sources.filterIsInstance<UserWordsAware>().forEach { it.setUserWords(words) }
     }
@@ -87,6 +100,8 @@ class SuggestionEngine(
         const val DEFAULT_LIMIT = 5
         /** Öneri çubuğunda görünen yuva sayısı (boşluk doldurma sınırı için). */
         const val TOP = 3
+        /** Sırayı korumak için indirilen puanlar arasındaki fark (uygulamada 1e6 ölçekte 10 birim). */
+        const val SCORE_STEP = 1e-5
         private val EMPTY = Suggestions(emptyList(), null)
     }
 }

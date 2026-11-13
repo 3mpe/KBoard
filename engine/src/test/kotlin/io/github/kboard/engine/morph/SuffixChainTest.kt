@@ -197,6 +197,12 @@ class SuffixChainTest {
         val base = Fixed("lm", listOf(c("yoğurt", 0.6), c("yoğurdu", 0.5), c("yoğun", 0.4)))
         val words = SuggestionEngine(listOf(base, gap)).suggest(Query(emptyList(), "yoğ")).candidates.map { it.word }
         assertEquals(listOf("yoğurt", "yoğurdu", "yoğa"), words.take(3))
+        // Uygulama puana göre sıralar: puanlar liste sırasıyla azalmalı
+        val scores = SuggestionEngine(listOf(base, gap)).suggest(Query(emptyList(), "yoğ")).candidates.map { it.score }
+        assertEquals(scores.sortedDescending(), scores)
+        // İki üretilmiş biçim, temel 1 aday: boş yuvalar dolar, puanlar yine azalır
+        val sparse = SuggestionEngine(listOf(Fixed("lm", listOf(c("yoğurt", 0.99))), gap)).suggest(Query(emptyList(), "yoğ")).candidates
+        assertEquals(sparse.map { it.score }.sortedDescending(), sparse.map { it.score })
     }
 
     @Test

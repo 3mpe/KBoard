@@ -8,6 +8,7 @@ import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.suggestions.SuggestedWordInfo
 import io.github.kboard.engine.Candidate
 import io.github.kboard.engine.CandidateSource
+import io.github.kboard.engine.GapFillSource
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
@@ -221,5 +222,42 @@ class KBoardSuggestionsTest {
             SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION, KBoardDictionary(tr),
             SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
         assertTrue(KBoardSuggestions.getSuggestions(composed("gelyorum"), ctx, tr, listOf(fix)).isEmpty())
+    }
+
+    @Test
+    fun appKeepsEngineOrderWhenGapFormScoresHigher() {
+        // HeliBoard puana göre sıralar: "yoğ" için üretilmiş "yoğa" (yüksek puan) yine de üçüncü kalmalı,
+        // otomatik düzeltme adayı en üstte kalmalı.
+        val base = object : CandidateSource {
+            override val name = "lm"
+            override fun candidates(query: Query, limit: Int) = listOf(
+                Candidate("yoğurt", 0.6, Source.NGRAM), Candidate("yoğurdu", 0.5, Source.NGRAM),
+                Candidate("yoğun", 0.4, Source.NGRAM),
+            )
+        }
+        val gap = object : GapFillSource {
+            override val name = "gap"
+            override fun candidates(query: Query, limit: Int) = listOf(
+                Candidate("yoğa", 0.95, Source.MORPHOLOGY), Candidate("yoğu", 0.9, Source.MORPHOLOGY),
+            )
+        }
+        KBoardSuggestions.engine = SuggestionEngine(listOf(base, gap))
+        val infos = KBoardSuggestions.getSuggestions(composed("yoğ"), NgramContext.BEGINNING_OF_SENTENCE, tr)
+        val byScore = infos.sortedByDescending { it.score }.map { it.word }
+        assertEquals(listOf("yoğurt", "yoğurdu", "yoğa"), byScore.take(3))
+        val scores = infos.map { it.score }
+        assertEquals(scores.sortedDescending(), scores)
+        assertEquals(scores.size, scores.toSet().size)
+
+        val withFix = object : CandidateSource {
+            override val name = "deasc"
+            override fun candidates(query: Query, limit: Int) = listOf(
+                Candidate("yoğ", 1.0, Source.DEASCIIFY, autocorrectable = true))
+        }
+        KBoardSuggestions.engine = SuggestionEngine(listOf(withFix, base, gap))
+        val top = KBoardSuggestions.getSuggestions(composed("yog"), NgramContext.BEGINNING_OF_SENTENCE, tr)
+            .maxBy { it.score }
+        assertEquals("yoğ", top.word)
+        assertTrue(top.isAppropriateForAutoCorrection)
     }
 }
