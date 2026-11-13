@@ -38,7 +38,8 @@ class SuggestionEngine(
      * Boşluk dolduran kaynakların ([GapFillSource]) adayları temel sıralamayla puana göre
      * birleşir. İlk [TOP] yuvada en çok max(`maxInTop`, boş yuva sayısı) boşluk adayı olur: temelde
      * (yazım hatası önerileri sayılmaz) en az [TOP] aday varsa bir, daha azsa boş kalan yuvalar
-     * kadar. Fazlası sonraki yuvalara kayar. Temel adayların kendi
+     * kadar. Temel doluyken o tek aday temelin ilk iki adayının önüne geçmez (üçüncü yuva).
+     * Fazlası sonraki yuvalara kayar. Temel adayların kendi
      * aralarındaki sırası değişmez; temelde olan kelime boşluk adayı olarak tekrar gelmez.
      */
     private fun mergeGapFill(query: Query, ranked: List<Candidate>, base: List<Candidate>, limit: Int): List<Candidate> {
@@ -51,6 +52,10 @@ class SuggestionEngine(
         val baseCount = base.filter { it.source != Source.TYPO }.distinctBy { TurkishText.lower(it.word) }.size
         // Boş yuva kadar (en az maxInTop): temel aday üretilmiş biçim yüzünden ilk 3'ten düşmez
         val cap = maxOf(maxInTop, TOP - baseCount)
+        // Temel doluysa üretilmiş biçim temelin en iyi adaylarını geçemez: ilk yuvaya değil, en
+        // erken (TOP - maxInTop). yuvaya girer (maxInTop = 1 için üçüncü). Boş yuva dolduruyorsa
+        // puanına göre yerleşir.
+        val firstGapSlot = if (baseCount >= TOP) TOP - maxInTop else 0
         val out = ArrayList<Candidate>(limit)
         var i = 0
         var j = 0
@@ -58,7 +63,7 @@ class SuggestionEngine(
         while (out.size < limit && (i < ranked.size || j < gap.size)) {
             val g = gap.getOrNull(j)
             val r = ranked.getOrNull(i)
-            val gapAllowed = out.size >= TOP || inTop < cap
+            val gapAllowed = out.size >= TOP || (inTop < cap && out.size >= firstGapSlot)
             if (g != null && gapAllowed && (r == null || g.score > r.score)) {
                 out += g; j++
                 if (out.size <= TOP) inTop++
