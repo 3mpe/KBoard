@@ -1,5 +1,6 @@
 # Hiçbir kaynağın (dil modeli, aksan düzeltici) ÖNERMEYECEĞİ kelimeler; dil modelinde bağlam olarak kalırlar.
 # Satır başına bir kelime, Türkçe küçük harf. Sonu `*` ile biten satır o önekle başlayan her kelimeyi kapsar.
+# Başında `@` olan satır yalnız dil modelinde geçerlidir.
 # Lisans: CC0-1.0. Gözden geçirme: build_ngram.py çıktısındaki "engellenen" sayısı.
 
 # Küfür ve hakaret (korpustaki edebi metinlerden)
@@ -38,13 +39,14 @@ bazan
 candarma*
 nasıı
 
-# Korpustaki romanların karakter adları (genel öneri değeri yok, çok sık geçiyorlar)
-macide
-raif
-avni
-mihriye
-güzin
-viktor
+# Korpustaki romanların karakter adları: yalnız dil modelinde önerilmez (romanlar yüzünden aşırı sık),
+# aksan düzeltici ve kişisel sözlük bunları önermeye devam eder. `@` = yalnız dil modeli.
+@macide
+@raif
+@avni
+@mihriye
+@güzin
+@viktor
 
 # Sohbet korpusundaki konuşma dili kısaltmaları: bağlam olarak kalır, standart yazan kullanıcıya
 # önerilmez. Bilerek yazılan kısaltmalar (tmm, slm, nbr, kanka, abi) önerilmeye devam eder.

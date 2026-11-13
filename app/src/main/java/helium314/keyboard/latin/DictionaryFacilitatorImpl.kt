@@ -574,7 +574,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             }
         }
         // KBOARD: Türkçe öneri motorundan (engine/) gelen adaylar
-        KBoardSuggestions.getSuggestions(composedData, ngramContext, dictGroup.locale)
+        KBoardSuggestions.getSuggestions(composedData, ngramContext, dictGroup.locale, suggestions.toList())
             .filterNotTo(suggestions) { isBlacklisted(it.word) }
         return suggestions
     }

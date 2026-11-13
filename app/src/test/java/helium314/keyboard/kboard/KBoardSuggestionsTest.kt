@@ -184,4 +184,28 @@ class KBoardSuggestionsTest {
         // Kesmeli çekim yine düzeltilir
         assertEquals(KBoardSuggestions.AutoCorrection.Replace("Kadıköy'de"), KBoardSuggestions.autoCorrection("Kadikoy'de", tr))
     }
+
+    @Test
+    fun typoCandidatesOnlyFillGaps() {
+        val typo = object : CandidateSource {
+            override val name = "typo"
+            override fun candidates(query: Query, limit: Int) = listOf(
+                Candidate("geliyorum", 0.8, Source.TYPO),
+                Candidate("gelmiyorum", 0.7, Source.TYPO),
+            )
+        }
+        KBoardSuggestions.engine = SuggestionEngine(listOf(typo))
+        val ctx = NgramContext.BEGINNING_OF_SENTENCE
+        // HeliBoard'un önerisi yok: motor boşluğu doldurur
+        assertEquals(listOf("geliyorum", "gelmiyorum"),
+            KBoardSuggestions.getSuggestions(composed("gelyorum"), ctx, tr).map { it.word })
+        // aynı kelime HeliBoard'da varsa tekrar eklenmez
+        assertEquals(listOf("gelmiyorum"),
+            KBoardSuggestions.getSuggestions(composed("gelyorum"), ctx, tr, listOf(info("geliyorum"))).map { it.word })
+        // HeliBoard otomatik düzeltmeye uygun bir öneri verdiyse motorun yazım hatası adayları eklenmez
+        val fix = SuggestedWordInfo("gelirim", "", 100, SuggestedWordInfo.KIND_CORRECTION or
+            SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION, KBoardDictionary(tr),
+            SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
+        assertTrue(KBoardSuggestions.getSuggestions(composed("gelyorum"), ctx, tr, listOf(fix)).isEmpty())
+    }
 }

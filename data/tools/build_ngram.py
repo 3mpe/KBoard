@@ -216,7 +216,7 @@ def main() -> int:
             line = line.split("#", 1)[0].strip()
             if not line:
                 continue
-            w = tr_lower(line)
+            w = tr_lower(line.lstrip("@"))  # @: yalnız dil modeli; burada hepsi geçerli
             if w.endswith("*"):
                 deny_prefix.append(w[:-1])
             else:

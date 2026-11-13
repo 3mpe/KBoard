@@ -3,7 +3,7 @@ package io.github.kboard.engine
 /**
  * Hiçbir kaynağın önermeyeceği kelimeler (küfür, OCR hatası, konuşma dili kısaltması).
  * Biçim `data/ngram-denylist.txt` ile aynı: satır başına bir kelime, `#` yorum, sonu `*` olan satır
- * önek. Kesme işaretli çekimler kökünden yakalanır ("orospu'ya"). Yazılanın kendisi ve kişisel
+ * önek, `@` ile başlayan satır yalnız dil modeli içindir ve burada yok sayılır. Kesme işaretli çekimler kökünden yakalanır ("orospu'ya"). Yazılanın kendisi ve kişisel
  * sözlük adayları engellenmez; bunu [SuggestionEngine] uygular.
  */
 class Denylist private constructor(private val exact: Set<String>, private val prefixes: List<String>) {
@@ -24,7 +24,8 @@ class Denylist private constructor(private val exact: Set<String>, private val p
             val prefixes = ArrayList<String>()
             for (raw in lines) {
                 val line = raw.substringBefore('#').trim()
-                if (line.isEmpty()) continue
+                // `@` ile başlayan satır yalnız dil modeli içindir (build_ngram.py); burada yok sayılır
+                if (line.isEmpty() || line.startsWith("@")) continue
                 val w = TurkishText.lower(line)
                 if (w.endsWith("*")) prefixes += w.dropLast(1) else exact += w
             }

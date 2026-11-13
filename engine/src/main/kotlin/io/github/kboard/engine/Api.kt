@@ -14,7 +14,7 @@ data class Query(
     val isNextWord: Boolean get() = prefix.isEmpty()
 }
 
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, OTHER }
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası

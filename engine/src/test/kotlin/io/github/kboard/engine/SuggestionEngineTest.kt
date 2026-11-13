@@ -73,7 +73,7 @@ class SuggestionEngineTest {
                 Candidate("ör", 0.5, Source.DEASCIIFY, autocorrectable = true),
             )
         }
-        val deny = Denylist.parse(sequenceOf("# yorum", "orospu*", "haşan", "ör  # satır sonu yorumu"))
+        val deny = Denylist.parse(sequenceOf("# yorum", "orospu*", "haşan", "ör  # satır sonu yorumu", "@orman"))
         val words = SuggestionEngine(listOf(src), denylist = deny).suggest(Query(emptyList(), "or"), 10)
         assertEquals(listOf("orman", "haşan"), words.candidates.map { it.word })
         assertNull(words.autocorrect)

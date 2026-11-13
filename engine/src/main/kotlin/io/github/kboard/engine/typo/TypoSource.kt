@@ -105,12 +105,12 @@ class TypoSource(
             // Tamamlaması olan önek: yalnızca tüm tamamlamalardan sık düzeltmeler; puanları sözlük
             // tamamlamalarının hepsinin altında (yalnızca boş kalan yerlere girer), oto. düzeltme yok.
             return corrections.take(minOf(limit, config.completionOverrideMax)).mapIndexed { n, c ->
-                Candidate(DeasciifySource.applyCase(typed, c.word), OVERRIDE_SCORE - n * 1e-5, Source.OTHER)
+                Candidate(DeasciifySource.applyCase(typed, c.word), OVERRIDE_SCORE - n * 1e-5, Source.TYPO)
             }
         }
         val auto = autocorrectIndex(typed, corrections)
         return corrections.take(limit).mapIndexed { n, c ->
-            Candidate(DeasciifySource.applyCase(typed, c.word), score(c.rank), Source.OTHER, autocorrectable = n == auto)
+            Candidate(DeasciifySource.applyCase(typed, c.word), score(c.rank), Source.TYPO, autocorrectable = n == auto)
         }
     }
 
