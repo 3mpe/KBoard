@@ -13,9 +13,10 @@ kelime) yalnız ayar için, **test** (170 vaka, 654 kelime) yalnız rapor için.
   ("ankara" → "Ankara").
 - Öneri yasağı (`data/ngram-denylist.txt`): küfürler, OCR hataları ("Haşan", "bazan"), eski yazımlar
   ("candarma") ve romanlardaki karakter adları modelde bağlam olarak kalır ama hiç önerilmez (64 kelime).
-- Dosya `kboard-tr.kbn` (biçim 2): 2,03 MB (APK içinde sıkıştırılmış ~0,83 MB). Derleme her koşuda
-  aynı baytı üretir. JVM'de yükleme ~0,5 s, bellek ~12 MB; kendi iş parçacığında yüklenir, aksan
-  düzelticiyi bekletmez. CI bütçesi şimdilik ≤ 2,1 MB.
+- Dosya `kboard-tr.kbn` (biçim 3: vint id'ler, 8 bit nicemlenmiş log10 olasılık [-8, 0], gösterim
+  yalnız farklıysa): 0,87 MB (APK içinde ~0,48 MB). Bellekte ~2,4 MB (kelimeler tek `CharArray`,
+  satırlar düz sıralı diziler). Derleme her koşuda aynı baytı üretir. Kendi iş parçacığında yüklenir,
+  aksan düzelticiyi bekletmez. CI bütçesi ≤ 1 MB.
 - Bağlam bir virgül ya da başka bir ayraçta kesildiyse cümle başı sayılmaz: `<s>` yerine bilinmeyen
   bağlam (tek kelime olasılığı) kullanılır, öneri büyük harfle başlamaz.
 - `NgramSource`: önek boşsa bağlamın en olası ardılları; önek varsa önekle başlayan ve yazılan
@@ -59,10 +60,37 @@ eklenenler (ulaşılanın ~2 puan altı): @0 ≥ %9,5, @1 ≥ %19, @3 ≥ %40, K
 
 - Korpus okunmak üzere yazılmış cümleler; mesajlaşma dili (kısaltma, argo) zayıf. Elle yazılan
   sohbet korpusu ayrı modelle araya katılacak.
-- Biçim 3 (sohbet modeli araya katılmadan önce zorunlu): kelime/gösterim tekrarını kaldırma, varint
-  id, 8 bit log-olasılık, `HashMap` yerine düz sıralı diziler. Hedef ≤ 1 MB dosya, ≤ 4 MB bellek.
+- Biçim 3'e geçiş (biçim 2: 2,03 MB dosya, ~12 MB bellek) ölçümü değiştirmedi: test @3 %42,3,
+  KSR %31,5; @0 %11,8 → %11,4 (güven aralığı içinde). 12 birimlik aralıkla nicemleme @3'ü 1,4 puan
+  düşürmüştü; 8 birim kayıpsız.
 - Ölçüm masaüstünde; telefonda tek harfli önek gecikmesi (12 000 adaya kadar tarama) ölçülecek.
 - Uygulamada motor yüklüyken HeliBoard'un kendi yazım hatası düzeltmesinin hâlâ çalıştığını sınayan
   test eklenecek (motor tamamlamaları ilk sıraya çıkıp onu bastırabilir).
 - Aksan düzeltme henüz bağlamı kullanmıyor ("sık/şık" belirsizliği); sıradaki adım dil modeliyle
   bağlama göre aksan seçimi.
+
+## Ek: sohbet korpusu (2026-11-13)
+
+`data/sohbet/sohbet-v1.txt`: proje için yapay zekâ ile üretilmiş, insan gözden geçirmiş 2 801 mesaj
+(CC0-1.0; üretilirken test seti okunmadı). Konuşma dili kısaltmaları (geliyom, napıyosun...) bağlam
+olarak kullanılır, önerilmez. Common Voice'a 3 kat ağırlıkla eklendi; test setiyle örtüşen 35 mesaj
+derlemede atılır. Ağırlık dev yarısında seçildi (1: @3 %52,8, 2: %53,0, 3: %53,0 ve en iyi @0/KSR,
+4: %53,0).
+
+| Test yarısı | Yalnız Common Voice | + sohbet | %95 GA (+ sohbet) |
+|---|---|---|---|
+| Sonraki kelime İlk-3 @0 | %11,4 | **%20,2** | %17,1 – %23,2 |
+| İlk-3 @1 | %21,9 | **%29,8** | %26,3 – %34,0 |
+| İlk-3 @3 | %42,3 | **%51,6** | %47,0 – %56,0 |
+| KSR | %31,5 | **%39,4** | %36,8 – %41,7 |
+| Aksan düzeltme / yanlış düzeltme | %78,8 / %0,0 | %78,8 / %0,0 | |
+
+Kategoriye göre (test, @0 / @3 / KSR): sohbet %23,0 / %54,0 / %42,7; dogru_yazim %17,3 / %51,6 /
+%35,0; kullanici_sozlugu %13,7 / %42,4 / %35,4; ozel_isim %41,7 / %66,7 / %50,5. Kazanç yalnız sohbet
+kategorisinde değil. Dosya 1,08 MB (bütçe 1,1 MB), p95 0,78 ms.
+
+**Kazanç üst sınırdır.** Test seti ve sohbet korpusu aynı yöntemle (yapay zekâ ile) yazıldı. Sızıntı
+süzgeci sohbet korpusunun %1,25'ini attı (Common Voice'ta %0,17); korpus Common Voice'un onda biri
+kadar kelimeyle test bigram'larının aynı oranını kapsıyor (%35,7 ve %34,3). Yön güvenilir, +9 puan
+ise bu test setine özgü bir üst sınır; CI eşikleri gerileme koruması olarak okunmalı, ürün kalitesi
+olarak değil. Gerçek kullanıcı metniyle ayrı doğrulama (`eval/private`, depoya girmez) yapılacak.

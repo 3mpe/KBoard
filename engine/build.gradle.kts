@@ -53,19 +53,22 @@ val buildDeasciifyIndex by tasks.registering(JavaExec::class) {
     args("build", tsv.get().asFile.path, protect.path, out.get().asFile.path)
 }
 
-// Sonraki kelime / bağlam dil modeli (kboard-tr.kbn): data/corpus/ altındaki CC0 korpustan, test
+// Sonraki kelime / bağlam dil modeli (kboard-tr.kbn): data/corpus/ ve data/sohbet/ altındaki CC0 korpustan, test
 // setiyle 4-gram örtüşen cümleler atılarak üretilir (data/tools/build_ngram.py). Python 3 gerekir.
 val buildNgramModel by tasks.registering(Exec::class) {
     description = "N-gram dil modelini (kboard-tr.kbn) derler"
     val script = file("../data/tools/build_ngram.py")
     val corpus = file("../data/corpus/commonvoice-tr.txt")
+    val sohbet = file("../data/sohbet/sohbet-v1.txt")
     val testset = file("../eval/testset/seed-v0.jsonl")
     val denylist = file("../data/ngram-denylist.txt")
     val out = kboardDir.map { it.file("kboard-tr.kbn") }
-    inputs.files(script, corpus, testset, denylist)
+    inputs.files(script, corpus, sohbet, testset, denylist)
     outputs.file(out)
     commandLine(
-        "python3", script.path, "--corpus", "cv=${corpus.path}", "--exclude-jsonl", testset.path, "--denylist", denylist.path,
+        "python3", script.path, "--corpus", "cv=${corpus.path}",
+        // Sohbet korpusu küçük (2 801 mesaj); dev yarısında 3 kat ağırlık en iyisi (2 ve 4 eşit/yakın)
+        "--corpus", "sohbet=${sohbet.path}:3", "--exclude-jsonl", testset.path, "--denylist", denylist.path,
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
     )
 }

@@ -6,6 +6,7 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 |---|---|---|---|
 | [aosp-dictionaries `main_tr.dict`](https://codeberg.org/Helium314/aosp-dictionaries) | Ana sözlük (HeliBoard'da gömülü) | depodaki lisansa bakılacak | doğrulanacak |
 | `data/deasciify-koruma.txt` | Aksansız yazımı da geçerli kelimeler (oto. düzeltme koruması) | CC0-1.0 | elle yazıldı |
+| `data/sohbet/sohbet-v1.txt` | Sohbet dili korpusu (sonraki kelime modeli, 2 801 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, insan gözden geçirdi (karar: aşağıda "Sentetik sohbet metni") |
 | [Zemberek-NLP](https://github.com/ahmetaa/zemberek-nlp) 0.17.1 | Ön hesaplama ve ölçüm (masaüstü, `tools/zemberek-spike`) | Apache-2.0 | doğrulandı (depodaki LICENSE) |
 | `eval/testset/seed-v0.jsonl` | Test seti | CC0-1.0 | elle yazıldı |
 | [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
@@ -102,5 +103,17 @@ türetildi" değişiklik notu yer alır.
 - Ek adaylar (ilk sürüm sonrası): Vikipedi tartışma sayfaları (konuşma diline yakın, CC BY-SA),
   Vikisöz ve Vikikaynak (CC BY-SA), telifi sona ermiş Türkçe edebiyattaki diyaloglar (kamu malı).
 - Common Voice Türkçe metin cümlelerinin güncel sayısı indirme sırasında ölçülecek.
-- Sentetik (LLM ile üretilmiş) sohbet cümleleri: sohbet açığını hızla kapatır ama dil doğallığı
-  riski var. İlk sürümde kullanılmaz; elle yazılmış set yetmezse ayrı karar olarak ele alınır.
+- ~~Sentetik (LLM ile üretilmiş) sohbet cümleleri~~: karara bağlandı, aşağıya bakın.
+
+### Sentetik sohbet metni (karar, 2026-11-13)
+
+`data/sohbet/sohbet-v1.txt` (2 801 mesaj) **yapay zekâ ile üretildi, insan gözden geçirdi**, CC0-1.0.
+Fable kararıyla dil modeline alındı. Koşullar:
+
+- Üretim sırasında test seti okunmadı; derlemede test setiyle 4-gram örtüşen mesajlar atılır
+  (35 mesaj, %1,25; Common Voice'ta %0,17).
+- Test seti de aynı yöntemle yazıldığından ölçülen kazanç (test @3 +9 puan) üst sınırdır; ürün
+  kalitesi gerçek kullanıcı metniyle ayrıca doğrulanır (`eval/private`, depoya girmez).
+- Konuşma dili kısaltmaları (geliyom, napıyosun...) bağlam olarak kullanılır, önerilmez
+  (`data/ngram-denylist.txt`).
+- Korpus büyütülürse model boyutu budamayla sınırda tutulur (CI bütçesi 1,1 MB).
