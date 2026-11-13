@@ -40,6 +40,15 @@ interface CandidateSource {
     fun candidates(query: Query, limit: Int): List<Candidate>
 }
 
+/**
+ * Yalnız boşluk dolduran kaynak (ek zinciri: sözlükte ve dil modelinde olmayan üretilmiş biçimler).
+ * Motor bu kaynağın adaylarını ayrı tutar: diğer kaynaklar (yazım hatası hariç) en az 3 aday
+ * verdiyse ilk 3 yuvanın en çok [maxInTop]'ünü alabilir; daha azsa boş kalan yuvaları doldurur.
+ */
+interface GapFillSource : CandidateSource {
+    val maxInTop: Int get() = 1
+}
+
 /** Kaynaklardan gelen adayları birleştirip sıralar. */
 fun interface Ranker {
     fun rank(query: Query, candidates: List<Candidate>, limit: Int): List<Candidate>

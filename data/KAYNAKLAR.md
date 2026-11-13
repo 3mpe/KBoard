@@ -12,7 +12,7 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 | `eval/testset/kisisel-v0.jsonl` | Kişisel öğrenme test seti (8 sentetik kullanıcı × 40 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, seed-v0 okunmadan; dil modeline sızıntı süzgeciyle girmez (bkz. "Sentetik sohbet metni") |
 | [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
 | `data/suffix/chains-tr.tsv` | Ek zinciri modeli: kök sınıfı (N, P, V) başına soyut ek zincirleri ve sayıları (`data/tools/build_suffix_chains.py`; Common Voice + sohbet korpusu, ağırlık 1/3, seed-v0 ve kisisel-v0 sızıntı süzgeci; Zemberek 0.17.1 ile masaüstünde çözümlendi) | CC0-1.0 | türetildi; yalnız sayımlar, metin içermez. Kaynak korpuslar CC0 |
-| `data/suffix/stems-tr.tsv` | Kök sınıfı ve çekim öznitelikleri (yumuşama, ince ek, geniş zaman, ettirgen, özel isim); aksan dizininin boş bayrak bitlerine yazılır | CC0-1.0 (proje katkısı) | türetildi: kelimeler `main_tr.dict` ile Zemberek kök sözlüğünün (Apache-2.0) kesişimi, öznitelikler Zemberek'ten; sözlük lisansı yukarıda "doğrulanacak" |
+| `data/suffix/stems-tr.tsv` | Kök sınıfı ve çekim öznitelikleri (yumuşama, ince ek, geniş zaman, ettirgen, özel isim); aksan dizininin boş bayrak bitlerine yazılır | **Apache-2.0** (Zemberek-NLP 0.17.1 kök sözlüğünden türetildi; `NOTICE`, `LICENSE-Apache-2.0`) | türetildi: kelimeler `main_tr.dict` ile Zemberek kök sözlüğünün kesişimi, öznitelikler Zemberek'ten; sözlük lisansı yukarıda "doğrulanacak" |
 
 ## Türetilen veriler (depoya girmez)
 

@@ -94,7 +94,7 @@ class EvalServer(private val engine: SuggestionEngine, private val personal: Per
  *   --no-user-morph           kişisel sözlük çekimlerini (UserWordSuffixSource) kapatır
  *   --suffix <model.kbs>      ek zinciri tamamlaması (SuffixChainSource; --deasciify dizininin kök
  *                             bayraklarını kullanır); ortam: KBOARD_SUFFIX
- *   --suffix-params ad=değer,...  SuffixChainSource.Config alanları (ör. knownBonus=0.3,oovMargin=0.5)
+ *   --suffix-params ad=değer,...  SuffixChainSource.Config alanları (ör. oovMargin=0.5,minChainLogProb=-4)
  *   --no-typo                 yazım hatası önerilerini (TypoSource, --deasciify dizinini kullanır) kapatır
  *   --typo-autocorrect        TypoSource oto. düzeltmesini açar (varsayılan kapalı; yalnızca ölçüm için)
  *   --personal                kişisel model (PersonalSource, dil modelini sarar); `learn` ile öğrenir
@@ -171,7 +171,6 @@ fun main(args: Array<String>) {
             config = when (k) {
                 "base" -> config.copy(base = v)
                 "slope" -> config.copy(slope = v)
-                "knownBonus" -> config.copy(knownBonus = v)
                 "oovMargin" -> config.copy(oovMargin = v)
                 "maxScore" -> config.copy(maxScore = v)
                 "priorWeight" -> config.copy(priorWeight = v)

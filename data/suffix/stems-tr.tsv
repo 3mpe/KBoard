@@ -1,5 +1,7 @@
-# KBoard kök sınıfı tablosu (CC0-1.0). Üreten: data/tools/build_suffix_chains.py
-# Zemberek-NLP 0.17.1 kök sözlüğünün main_tr.dict'te olan isim/sıfat/özel isim ve fiil kökleri.
+# KBoard kök sınıfı tablosu. Lisans: Apache-2.0 (Zemberek-NLP 0.17.1 kök sözlüğünden türetildi;
+# Copyright Ahmet A. Akın ve katkıcılar; bkz. LICENSE-Apache-2.0 ve NOTICE).
+# Üreten: data/tools/build_suffix_chains.py. Zemberek kök sözlüğünün main_tr.dict'te olan
+# isim/sıfat/özel isim ve fiil kökleri.
 # Sütunlar: sözcük (küçük harf; fiil kökü sözlükte yoksa mastarı) <TAB> sınıf (N, V, NV) <TAB>
 # öznitelikler: Y yumuşama, F ince ek (isim), T ettirgen -t (fiil), I geniş zaman -Ir (fiil),
 # X ünlüyle başlayan ek yok (isim); '-' hiçbiri. DeasciifyTool bunları dizin bayraklarına yazar.

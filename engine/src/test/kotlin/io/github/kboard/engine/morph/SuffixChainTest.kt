@@ -1,6 +1,10 @@
 package io.github.kboard.engine.morph
 
+import io.github.kboard.engine.Candidate
+import io.github.kboard.engine.CandidateSource
 import io.github.kboard.engine.Denylist
+import io.github.kboard.engine.GapFillSource
+import io.github.kboard.engine.Source
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
@@ -148,14 +152,41 @@ class SuffixChainTest {
     }
 
     @Test
-    fun oovMarginAndChainFloor() {
-        val strict = SuffixChainSource(index, model, SuffixChainSource.Config(knownBonus = 0.0, oovMargin = 0.5, minChainLogProb = -3.0))
-        val c = strict.candidates(Query(emptyList(), "kitap"), 10).associate { it.word to it.score }
-        // kitapta (sözlükte, DA 150) ile kitaplar (hiçbir yerde, lAr 100): fark zincir oranı + pay
-        assertEquals(0.05 * (log10(150.0 / 100) + 0.5), c.getValue("kitapta") - c.getValue("kitaplar"), 1e-6)
+    fun onlyUnknownFormsMarginAndChainFloor() {
+        // Sözlükteki biçim (kitapta) önerilmez: bilinen tamamlamalar yeniden sıralanmaz
+        assertFalse("kitapta" in words("kitap"))
+        assertTrue("kitaplar" in words("kitap"))
+        val strict = SuffixChainSource(index, model, SuffixChainSource.Config(oovMargin = 0.5, minChainLogProb = -3.0))
+        val loose = SuffixChainSource(index, model, SuffixChainSource.Config(oovMargin = 0.0))
+        fun score(s: SuffixChainSource, w: String) = s.candidates(Query(emptyList(), "kitap"), 10).first { it.word == w }.score
+        assertEquals(0.5 * 0.05, score(loose, "kitaplar") - score(strict, "kitaplar"), 1e-6)
         // log10(1/1151) < en düşük zincir olasılığı: bilinmeyen "kitabında" önerilmez
         assertFalse("kitabında" in words("kitabın", strict))
         assertTrue("kitabında" in words("kitabın")) // varsayılan taban -4
+    }
+
+    private class Fixed(override val name: String, val out: List<Candidate>) : CandidateSource {
+        override fun candidates(query: Query, limit: Int) = out
+    }
+
+    private class FixedGap(val out: List<Candidate>) : GapFillSource {
+        override val name = "gap"
+        override fun candidates(query: Query, limit: Int) = out
+    }
+
+    @Test
+    fun gapFillTakesAtMostOneTopSlot() {
+        fun c(w: String, s: Double, src: Source = Source.NGRAM) = Candidate(w, s, src)
+        val gap = FixedGap(listOf(c("g1", 0.9, Source.MORPHOLOGY), c("g2", 0.85, Source.MORPHOLOGY), c("b1", 0.99, Source.MORPHOLOGY)))
+        // Temelde 3 aday: ilk 3'te en çok bir üretilmiş biçim, temel sıra korunur, tekrar yok
+        val full = SuggestionEngine(listOf(Fixed("lm", listOf(c("b1", 0.5), c("b2", 0.4), c("b3", 0.3))), gap))
+        assertEquals(listOf("g1", "b1", "b2", "g2", "b3"), full.suggest(Query(emptyList(), "x")).candidates.map { it.word })
+        // Temelde 1 aday (yazım hatası önerisi sayılmaz): iki boş yuva dolar, temel aday ilk 3'te kalır
+        val sparse = SuggestionEngine(listOf(Fixed("lm", listOf(c("b1", 0.5), c("t1", 0.01, Source.TYPO))), gap))
+        assertEquals(listOf("g1", "g2", "b1", "t1"), sparse.suggest(Query(emptyList(), "x")).candidates.map { it.word })
+        // Temel boş: üretilmiş biçimler bütün yuvaları alır
+        val empty = SuggestionEngine(listOf(Fixed("lm", emptyList()), gap))
+        assertEquals(listOf("b1", "g1", "g2"), empty.suggest(Query(emptyList(), "x")).candidates.map { it.word })
     }
 
     @Test

@@ -1,7 +1,7 @@
 package io.github.kboard.engine.morph
 
 import io.github.kboard.engine.Candidate
-import io.github.kboard.engine.CandidateSource
+import io.github.kboard.engine.GapFillSource
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.Source
 import io.github.kboard.engine.TurkishText
@@ -30,11 +30,12 @@ import kotlin.math.pow
  *   zincir olasılığı ağırlığıyla sözlük sıklığından gelen bir ön kestirime çekilir; bilinen biçimi
  *   olmayan kökte yalnız o kalır. Kısa kökün çekimleri ("kit" → kiti) bu yüzden kökün gerçek
  *   kullanımıyla sınırlı kalır, uzun kelimeleri ("kitap") geçemez.
- * - Sözlükte ya da dil modelinde olan biçim ("bilinen") tahminle puanlanır ([Config.knownBonus]
- *   eklenir); motor en yüksek puanı tuttuğu için bu, aynı kökü paylaşan tamamlamaları yeniden
- *   sıralar.
- * - Hiçbir yerde olmayan biçim [Config.oovMargin] (log10) geride başlar: bilinen bir biçimi ancak
- *   zincir istatistiği onu açıkça öne koyuyorsa geçer.
+ * - Sözlükte ya da dil modelinde olan biçim ("bilinen") önerilmez: yalnız kök kütlesi
+ *   kestirimine girer. Bilinen tamamlamaların puanı ve sırası kaynaklarında kalır (yeniden
+ *   sıralama yok, Fable kararı).
+ * - Kaynak boşluk doldurur ([GapFillSource]): temel kaynaklar en az 3 aday verdiyse ilk 3
+ *   yuvanın en çoğu birini alır; daha azsa boşlukları doldurur ([SuggestionEngine]).
+ * - Hiçbir yerde olmayan biçim [Config.oovMargin] (log10) geride başlar.
  * - Zincir olasılığı [Config.minChainLogProb]'un altındaki bilinmeyen biçim önerilmez.
  * - Hiçbir aday otomatik düzeltme yapmaz; puan en çok [Config.maxScore]. Küfür bayraklı kök çekilmez;
  *   öneri yasağı (Denylist) üretilen biçimlere de motorda uygulanır.
@@ -43,15 +44,13 @@ class SuffixChainSource(
     private val index: DeasciifyIndex,
     private val model: SuffixChainModel,
     private val config: Config = Config(),
-) : CandidateSource {
+) : GapFillSource {
 
     data class Config(
         val base: Double = 0.95,
         val slope: Double = 0.05,
-        /** Bilinen biçimin tahminine eklenen log10 (yeniden sıralamanın gücü). */
-        val knownBonus: Double = 0.2,
         /** Bilinmeyen biçimin log10 gerisi. */
-        val oovMargin: Double = 0.0,
+        val oovMargin: Double = 0.3,
         val maxScore: Double = 0.9,
         /** Kök kütlesi kestiriminde sözlük ön kestiriminin ağırlığı (zincir olasılığı birimi). */
         val priorWeight: Double = 0.05,
@@ -63,7 +62,7 @@ class SuffixChainSource(
         /** Kökün en az uzunluğu (harf). */
         val minStem: Int = 3,
         /** Kök (ve sınıf) başına çıkarılan en çok biçim. */
-        val perStem: Int = 8,
+        val perStem: Int = 4,
     )
 
     /** Dil modeli: bağlama göre olasılık ve bilinen biçim denetimi (bağlanmadıysa yalnız sözlük). */
@@ -117,10 +116,10 @@ class SuffixChainSource(
             val prior = 10.0.pow(config.priorA + config.priorB * s.freq / 255.0)
             val mass = log10((num + config.priorWeight * prior) / (den + config.priorWeight))
             for ((l, f) in forms) {
-                if (l == typedLower) continue
+                if (l == typedLower || f.known) continue
                 val chainLp = log10(f.chainProb)
-                if (!f.known && chainLp < config.minChainLogProb) continue
-                val est = mass + chainLp + if (f.known) config.knownBonus else -config.oovMargin
+                if (chainLp < config.minChainLogProb) continue
+                val est = mass + chainLp - config.oovMargin
                 val score = (config.base + config.slope * est).coerceIn(0.0, config.maxScore)
                 val prev = best[l]
                 if (prev == null || score > prev.score) {

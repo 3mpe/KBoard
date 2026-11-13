@@ -16,17 +16,60 @@ class SuggestionEngine(
      */
     private val denylist: Denylist = Denylist.EMPTY,
 ) {
+    private val baseSources = sources.filter { it !is GapFillSource }
+    private val gapSources = sources.filterIsInstance<GapFillSource>()
+
     fun suggest(query: Query, limit: Int = DEFAULT_LIMIT): Suggestions {
         if (sources.isEmpty()) return EMPTY
-        var all = sources.flatMap { it.candidates(query, limit) }
-        if (!denylist.isEmpty) {
-            all = all.filter { it.source == Source.USER || it.source == Source.PERSONAL || TurkishText.sameWord(it.word, query.prefix) || !denylist.blocks(it.word) }
-        }
-        val ranked = ranker.rank(query, all, limit)
+        val base = allowed(query, baseSources.flatMap { it.candidates(query, limit) })
+        var ranked = ranker.rank(query, base, limit)
+        if (gapSources.isNotEmpty()) ranked = mergeGapFill(query, ranked, base, limit)
         val autocorrect = if (query.isNextWord) null else ranked.firstOrNull {
             it.autocorrectable && !TurkishText.sameWord(it.word, query.prefix)
         }?.word
         return Suggestions(ranked, autocorrect)
+    }
+
+    private fun allowed(query: Query, c: List<Candidate>): List<Candidate> =
+        if (denylist.isEmpty) c
+        else c.filter { it.source == Source.USER || it.source == Source.PERSONAL || TurkishText.sameWord(it.word, query.prefix) || !denylist.blocks(it.word) }
+
+    /**
+     * Boşluk dolduran kaynakların ([GapFillSource]) adayları temel sıralamayla puana göre
+     * birleşir. İlk [TOP] yuvada en çok max(`maxInTop`, boş yuva sayısı) boşluk adayı olur: temelde
+     * (yazım hatası önerileri sayılmaz) en az [TOP] aday varsa bir, daha azsa boş kalan yuvalar
+     * kadar. Fazlası sonraki yuvalara kayar. Temel adayların kendi
+     * aralarındaki sırası değişmez; temelde olan kelime boşluk adayı olarak tekrar gelmez.
+     */
+    private fun mergeGapFill(query: Query, ranked: List<Candidate>, base: List<Candidate>, limit: Int): List<Candidate> {
+        val seen = ranked.mapTo(HashSet()) { TurkishText.lower(it.word) }
+        base.forEach { seen += TurkishText.lower(it.word) }
+        val maxInTop = gapSources.minOf { it.maxInTop }
+        val gap = ranker.rank(query, allowed(query, gapSources.flatMap { it.candidates(query, limit) }), limit)
+            .filter { TurkishText.lower(it.word) !in seen && !it.autocorrectable }
+        if (gap.isEmpty()) return ranked
+        val baseCount = base.filter { it.source != Source.TYPO }.distinctBy { TurkishText.lower(it.word) }.size
+        // Boş yuva kadar (en az maxInTop): temel aday üretilmiş biçim yüzünden ilk 3'ten düşmez
+        val cap = maxOf(maxInTop, TOP - baseCount)
+        val out = ArrayList<Candidate>(limit)
+        var i = 0
+        var j = 0
+        var inTop = 0
+        while (out.size < limit && (i < ranked.size || j < gap.size)) {
+            val g = gap.getOrNull(j)
+            val r = ranked.getOrNull(i)
+            val gapAllowed = out.size >= TOP || inTop < cap
+            if (g != null && gapAllowed && (r == null || g.score > r.score)) {
+                out += g; j++
+                if (out.size <= TOP) inTop++
+            } else if (r != null) {
+                out += r; i++
+            } else if (g != null) {
+                // Temel bitti, ilk yuvalardaki sınır doldu: kalan boşluk adayları sırayla
+                out += g; j++
+            }
+        }
+        return out
     }
 
     fun setUserWords(words: Collection<String>) {
@@ -37,6 +80,8 @@ class SuggestionEngine(
 
     companion object {
         const val DEFAULT_LIMIT = 5
+        /** Öneri çubuğunda görünen yuva sayısı (boşluk doldurma sınırı için). */
+        const val TOP = 3
         private val EMPTY = Suggestions(emptyList(), null)
     }
 }
