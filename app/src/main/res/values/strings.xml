@@ -237,6 +237,10 @@
     <string name="delete_swipe_letters">Letters</string>
     <!-- "delete_swipe" option to delete entire words by swiping. -->
     <string name="delete_swipe_words">Words</string>
+    <!-- KBoard: what holding the delete key down removes. -->
+    <string name="delete_long_press">Hold delete</string>
+    <!-- Description for "delete_long_press" option. -->
+    <string name="delete_long_press_summary">What is removed while the delete key is held down</string>
     <!-- Preferences item and dialog title for backup and restore -->
     <string name="backup_restore_title">Backup and restore</string>
     <!-- Message for backup and restore dialog -->

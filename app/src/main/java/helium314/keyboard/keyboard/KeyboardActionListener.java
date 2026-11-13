@@ -125,6 +125,13 @@ public interface KeyboardActionListener {
     void onUpWithDeletePointerActive();
     void resetMetaState();
 
+    /**
+     * KBoard: whether a held delete key should remove whole words. Only for text fields (not numbers,
+     * passwords or TYPE_NULL) where the cursor position and the text before it are known; otherwise the
+     * normal fast letter repeat is kept.
+     */
+    default boolean canDeleteWordsOnRepeat() { return false; }
+
     KeyboardActionListener EMPTY_LISTENER = new Adapter();
 
     enum SwipeAction { NONE, MOVE_CURSOR, SWITCH_LANGUAGE, TOGGLE_NUMPAD, TOGGLE_DPAD, HIDE_KEYBOARD, TOUCHPAD_MODE }

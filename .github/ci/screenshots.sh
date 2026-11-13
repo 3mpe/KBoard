@@ -107,6 +107,9 @@ type_word "kadikoyd"; shot "kboard-07-kisisel-sozluk-ek" 3 # cümle başı: K ot
 # Kişisel öğrenme uçtan uca (öğren, yeniden aç, yeniden başlat, yedek, sil).
 source .github/ci/personal-e2e.sh
 
+# Silme tuşunu basılı tutunca kelime kelime silme (field_text, ensure_kboard personal-e2e.sh'den).
+source .github/ci/delete-e2e.sh
+
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
 adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* KBoardPersonal:* > "$out/logcat-kboard.txt" 2>&1 || true
@@ -116,4 +119,6 @@ ls -la "$out"
 # e2e adımlarından biri kaldıysa iş kırmızı görünsün (zorunlu kontrol değil; görüntüler yine yazılır).
 [ -f "$out/kisisel-e2e.txt" ] || { echo "kisisel-e2e.txt yok"; exit 1; }
 grep -q "^KALDI" "$out/kisisel-e2e.txt" && exit 1
+[ -f "$out/silme-e2e.txt" ] || { echo "silme-e2e.txt yok"; exit 1; }
+grep -q "^KALDI" "$out/silme-e2e.txt" && exit 1
 exit 0

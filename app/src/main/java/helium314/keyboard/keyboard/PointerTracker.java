@@ -102,6 +102,8 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
 
     // Parameters for pointer handling.
     private static PointerTrackerParams sParams;
+    /** KBoard: word-wise delete repeats every 4 letter-repeat intervals (50 ms → 200 ms, ~5 words per second) */
+    private static final int WORD_DELETE_REPEAT_INTERVAL_FACTOR = 4;
     private static final int sPointerStep = KtxKt.dpToPx(10, Resources.getSystem());
     private static GestureStrokeRecognitionParams sGestureStrokeRecognitionParams;
     private static GestureStrokeDrawingParams sGestureStrokeDrawingParams;
@@ -1345,13 +1347,27 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         }
         mIsDetectingGesture = false;
         final int nextRepeatCount = repeatCount + 1;
-        startKeyRepeatTimer(nextRepeatCount);
-        callListenerOnPressAndCheckKeyboardLayoutChange(key, repeatCount);
-        callListenerOnCodeInput(key, code, mKeyX, mKeyY, SystemClock.uptimeMillis(), true);
+        // KBoard: holding delete removes whole words (like SwiftKey), at a slower pace than letters
+        final boolean deleteWords = isWordDeleteRepeat(code);
+        startKeyRepeatTimer(nextRepeatCount, deleteWords);
+        // feedback is thinned out to every second repeat for fast letter repeats; give it for every word
+        callListenerOnPressAndCheckKeyboardLayoutChange(key, deleteWords ? 1 : repeatCount);
+        callListenerOnCodeInput(key, deleteWords ? KeyCode.DELETE_WORD : code, mKeyX, mKeyY, SystemClock.uptimeMillis(), true);
+    }
+
+    private boolean isWordDeleteRepeat(final int code) {
+        return code == KeyCode.DELETE && sListener.canDeleteWordsOnRepeat();
     }
 
     private void startKeyRepeatTimer(final int repeatCount) {
-        final int delay = (repeatCount == 1) ? sParams.mKeyRepeatStartTimeout : sParams.mKeyRepeatInterval;
+        startKeyRepeatTimer(repeatCount, false);
+    }
+
+    private void startKeyRepeatTimer(final int repeatCount, final boolean deleteWords) {
+        final int delay;
+        if (repeatCount == 1) delay = sParams.mKeyRepeatStartTimeout;
+        else if (deleteWords) delay = sParams.mKeyRepeatInterval * WORD_DELETE_REPEAT_INTERVAL_FACTOR;
+        else delay = sParams.mKeyRepeatInterval;
         sTimerProxy.startKeyRepeatTimerOf(this, repeatCount, delay);
     }
 

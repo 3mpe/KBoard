@@ -102,7 +102,11 @@
     <string name="prefs_long_press_keyboard_to_change_lang_summary">Boşluk tuşuna uzun süre basmak, giriş yöntemi seçim menüsünü gösterecektir</string>
     <string name="android_spell_checker_settings">KBoard yazım denetleyicisi ayarları</string>
     <string name="prefs_keyboard_height_scale">Klavye yükseklik ölçeği</string>
-    <string name="delete_swipe">Kadırarak silme</string>
+    <string name="delete_swipe">Kaydırarak silme</string>
+    <string name="delete_swipe_letters">Harfler</string>
+    <string name="delete_swipe_words">Kelimeler</string>
+    <string name="delete_long_press">Silme tuşunu basılı tutma</string>
+    <string name="delete_long_press_summary">Silme tuşu basılı tutulurken harf harf mi, kelime kelime mi silinsin</string>
     <string name="key_borders">Tuş kenarlıkları</string>
     <string name="day_night_mode">Otomatik gündüz/gece modu</string>
     <string name="spell_checker_service_name">KBoard yazım denetleyicisi</string>

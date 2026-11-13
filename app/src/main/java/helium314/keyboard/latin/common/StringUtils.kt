@@ -179,6 +179,40 @@ fun CharSequence.getLastWordLength(sp: SpacingAndPunctuations): Int {
     return length - iterator.preceding(length)
 }
 
+/**
+ * KBoard: how many chars a word-wise backspace removes from the end of this text (text before the cursor).
+ * One step removes trailing whitespace, then attached punctuation / symbols / emoji, then the word itself, so
+ * "Kadıköy'de " or "Merhaba, " go in one step. Apostrophes (' and ’) and digits count as part of the word,
+ * so Turkish suffixes after an apostrophe ("Kadıköy'de", "2026'da") are not split. A run of whitespace that
+ * contains a line break is removed on its own, so lines are not merged together with a word.
+ */
+fun CharSequence.wordDeleteLength(sp: SpacingAndPunctuations): Int {
+    var i = length
+    var sawLineBreak = false
+    while (i > 0) {
+        val cp = codePointBefore(i)
+        if (!Character.isWhitespace(cp)) break
+        if (cp == '\n'.code || cp == '\r'.code) sawLineBreak = true
+        i -= Character.charCount(cp)
+    }
+    if (sawLineBreak || i == 0) return length - i
+
+    fun isWordPart(cp: Int) = sp.isWordCodePoint(cp) || Character.isDigit(cp) || cp == '\''.code || cp == 0x2019
+    // punctuation, symbols and emoji directly attached to the end of the word (combining marks go with them here)
+    while (i > 0) {
+        val cp = codePointBefore(i)
+        if (Character.isWhitespace(cp) || isWordPart(cp)) break
+        i -= Character.charCount(cp)
+    }
+    // the word, including combining marks inside it
+    while (i > 0) {
+        val cp = codePointBefore(i)
+        if (!isWordPart(cp) && Character.getType(cp) != Character.NON_SPACING_MARK.toInt()) break
+        i -= Character.charCount(cp)
+    }
+    return length - i
+}
+
 /** translates a move of [steps] in [text] as defined by [iterator] to character count */
 fun stepsToCharCount(text: CharSequence, steps: Int, iterator: CompatBreakIterator): Int {
     if (steps == 0) return 0
