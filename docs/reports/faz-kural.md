@@ -1,6 +1,6 @@
 # Yazım kuralları, PR A: yanlış yazım listesi ve bitişik soru eki (otomatik düzeltme)
 
-Tarih: 2026-11-13 · Dal: `kural` (`suffix` dalı, PR #41 üzerine; #41 henüz birleşmedi) · Kapsam:
+Tarih: 2026-11-13 · Dal: `kural` (`main` üzerine: #41 ve #42 birleşti; ilk ölçümler PR #41 dalında yapıldı, 2. tur sonuçları `main` üzerinde aynı çıktı) · Kapsam:
 motor (`engine/`), veri, ölçüm aracı (`eval/`), `app/` bağlantısı ve CI. Karar: Fable, "spelling
 rules PR A".
 
