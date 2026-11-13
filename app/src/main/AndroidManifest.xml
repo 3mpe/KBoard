@@ -125,6 +125,17 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/gesture_data_path"/>
         </provider>
+
+        <!-- KBOARD: dışa aktarılan dosyanın e-posta vb. ile paylaşımı; dışa açık değil, salt okunur geçici izin -->
+        <provider android:name="helium314.keyboard.kboard.KBoardTransferProvider"
+            android:authorities="${applicationId}.kboard_transfer"
+            android:enabled="true"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/kboard_transfer_path"/>
+        </provider>
     </application>
 
     <queries>

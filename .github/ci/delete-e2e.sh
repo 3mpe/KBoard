@@ -60,7 +60,7 @@ open_kboard_field() {
   for n in 1 2 3; do
     ensure_kboard; open_field >/dev/null
     adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard" && return 0
-    log "silme e2e: etkin klavye KBoard değil, yeniden seçiliyor ($n)"
+    log "silme e2e: etkin klavye KBoard değil, yeniden seçiliyor ($n)" >&2 # which_slot çıktısına karışmasın
     [ -n "${gboard:-}" ] && adb shell ime set "$gboard" >/dev/null 2>&1
     adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3
     adb shell input tap 540 400; sleep 3

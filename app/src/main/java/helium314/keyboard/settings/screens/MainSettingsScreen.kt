@@ -24,6 +24,7 @@ import helium314.keyboard.latin.utils.NextScreenIcon
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.latin.utils.Theme
 import helium314.keyboard.settings.initPreview
+import helium314.keyboard.settings.preferences.KBoardTransferPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.latin.utils.previewDark
 import helium314.keyboard.settings.screens.gesturedata.END_DATE_EPOCH_MILLIS
@@ -108,6 +109,7 @@ fun MainSettingsScreen(
                     onClick = onClickAdvanced,
                     icon = R.drawable.ic_settings_advanced
                 ) { NextScreenIcon() }
+                KBoardTransferPreference(icon = R.drawable.ic_share) // KBOARD: yeni telefona taşıma
                 Preference(
                     name = stringResource(R.string.settings_screen_about),
                     onClick = onClickAbout,

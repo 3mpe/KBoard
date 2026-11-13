@@ -143,6 +143,32 @@
     <string name="kboard_clear_personal_summary">Forget the words and word pairs learned from your typing. They are stored only on this device.</string>
     <string name="kboard_clear_personal_message">Delete everything the keyboard learned from your typing? This cannot be undone.</string>
     <string name="kboard_clear_personal_button">Delete</string>
+    <string name="kboard_transfer">Export / import</string>
+    <string name="kboard_transfer_summary">Move your settings, dictionary and learned words to a new phone</string>
+    <string name="kboard_transfer_message">Export creates one file you can save or send to yourself by e-mail. On the new phone, choose Import and pick that file. You choose which parts to include each time.</string>
+    <string name="kboard_transfer_export">Export</string>
+    <string name="kboard_transfer_import">Import</string>
+    <string name="kboard_transfer_export_title">What to export</string>
+    <string name="kboard_transfer_import_title">What to import</string>
+    <string name="kboard_transfer_section_settings">Settings and appearance</string>
+    <string name="kboard_transfer_section_dictionary">Personal dictionary</string>
+    <string name="kboard_transfer_section_learned">Learned words</string>
+    <string name="kboard_transfer_file_warning">The file is not encrypted; only send it to yourself.</string>
+    <string name="kboard_transfer_nothing_selected">Select at least one part.</string>
+    <string name="kboard_transfer_import_partial">These parts could not be imported: %s. The others were imported.</string>
+    <string name="kboard_transfer_learned_warning">The file will also contain words you typed.</string>
+    <string name="kboard_transfer_import_warning">Settings and learned words replace what is on this phone. Dictionary words are added to your existing dictionary. Parts you leave unchecked are not changed.</string>
+    <string name="kboard_transfer_share">Share (e-mail…)</string>
+    <string name="kboard_transfer_save">Save to file</string>
+    <string name="kboard_transfer_mail_subject">KBoard settings</string>
+    <string name="kboard_transfer_exported">Exported</string>
+    <string name="kboard_transfer_imported">Imported</string>
+    <string name="kboard_transfer_export_error">Could not export.</string>
+    <string name="kboard_transfer_import_error">Could not import. Nothing was changed.</string>
+    <string name="kboard_transfer_error_not_kboard">This is not a KBoard export file.</string>
+    <string name="kboard_transfer_error_newer">This file was made by a newer KBoard version. Update KBoard and try again.</string>
+    <string name="kboard_transfer_error_too_large">This file is too large to be a KBoard export file.</string>
+    <string name="kboard_transfer_error_corrupt">This file is damaged or incomplete. Nothing was changed.</string>
     <!-- Description for auto correction -->
     <string name="auto_correction_summary">Spacebar and punctuation automatically correct mistyped words</string>
     <!-- Option to enable auto correction for many fields that do not request auto correction -->

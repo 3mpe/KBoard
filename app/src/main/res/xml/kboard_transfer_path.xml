@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KBOARD: dışa aktarma dosyasının paylaşımı (yalnız cache/aktarim/, geçici) -->
+<paths>
+    <cache-path
+        name="kboard_transfer"
+        path="aktarim/"/>
+</paths>

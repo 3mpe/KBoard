@@ -512,6 +512,8 @@ class PersonalModel(val config: Config = Config()) {
         private const val FORMAT_VERSION = 1
         private val MAGIC = "KBPM".toByteArray(Charsets.US_ASCII)
         private const val MIN_COUNT = 0.05
+        /** Okumada kabul edilen en büyük sayı (gerçek modeller bunun çok altında; toplam taşmasın). */
+        private const val MAX_COUNT = 1.0e7f
         private val EMPTY_SUCC = arrayOfNulls<Uni>(0)
 
         /** Öğrenilebilir kelime mi: harf (+ kesme işareti, tire), rakamsız, en çok [maxLength] karakter. */
@@ -529,16 +531,23 @@ class PersonalModel(val config: Config = Config()) {
             require(version == FORMAT_VERSION) { "desteklenmeyen KBPM sürümü $version" }
             val m = PersonalModel(config)
             val tick = d.vint()
+            require(tick >= 0) { "bozuk KBPM tiki" }
             m.tick = tick
+            // Dosya içe aktarmadan da gelebilir: her alan sınırlarla denetlenir, bozuk ya da
+            // aşırı büyük bir dosya istisna verir (bellek ayırmadan önce).
             val n = d.vint()
+            require(n in 0..config.maxUnigrams) { "KBPM kelime sayısı sınır dışı" }
             val list = ArrayList<Uni>(n)
             var total = 0.0
             for (i in 0 until n) {
                 val display = d.utf()
+                require(learnable(display, config.maxWordLength)) { "KBPM'de geçersiz kelime" }
                 val flags = d.readByte().toInt()
                 val count = d.readFloat()
+                require(count.isFinite() && count in 0f..MAX_COUNT) { "bozuk KBPM sayısı" }
                 val uses = d.vint()
                 val age = d.vint()
+                require(uses >= 0) { "bozuk KBPM kullanımı" }
                 require(age in 0..tick) { "bozuk KBPM yaşı" }
                 val key = TurkishText.lower(display)
                 val u = newUni(key, display)
@@ -550,15 +559,24 @@ class PersonalModel(val config: Config = Config()) {
                 total += count * m.decay(age)
             }
             m.total = total.toFloat(); m.totalTick = tick
-            repeat(d.vint()) {
+            val rowCount = d.vint()
+            require(rowCount in 0..n + 1) { "KBPM satır sayısı sınır dışı" }
+            val seenRows = HashSet<Int>()
+            repeat(rowCount) {
                 val pi = d.vint()
+                require(pi in 0..n && seenRows.add(pi)) { "bozuk KBPM satırı" }
                 val p = if (pi == 0) m.bos else list[pi - 1]
                 val k = d.vint()
+                require(k in 1..n && m.bigrams + k <= config.maxBigrams) { "KBPM ikili sayısı sınır dışı" }
                 p.succ = arrayOfNulls(k); p.succData = LongArray(k)
                 var sum = 0.0
+                val seenSucc = HashSet<Int>()
                 for (i in 0 until k) {
-                    p.succ[i] = list[d.vint()]
+                    val si = d.vint()
+                    require(si in 0 until n && seenSucc.add(si)) { "bozuk KBPM ardılı" }
+                    p.succ[i] = list[si]
                     val count = d.readFloat()
+                    require(count.isFinite() && count in 0f..MAX_COUNT) { "bozuk KBPM sayısı" }
                     val age = d.vint()
                     require(age in 0..tick) { "bozuk KBPM yaşı" }
                     p.set(i, count, tick - age)
@@ -568,6 +586,7 @@ class PersonalModel(val config: Config = Config()) {
                 p.rowSum = sum.toFloat(); p.rowTick = tick
                 m.bigrams += k
             }
+            require(d.read() == -1) { "KBPM sonunda fazla veri" }
             return m
         }
 

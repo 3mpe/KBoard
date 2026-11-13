@@ -8,6 +8,7 @@ import helium314.keyboard.latin.utils.Log
 import io.github.kboard.engine.personal.PersonalModel
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -22,7 +23,8 @@ import java.util.concurrent.TimeUnit
  * - Tek dosya: uygulamanın özel deposunda `files/kboard/personal-tr.bin` (cihaz korumalı depo,
  *   HeliBoard'un kullanıcı geçmişi gibi). Yazma geçici dosya + yeniden adlandırmayla atomik, son
  *   değişiklikten [SAVE_DELAY_MS] sonra, arka plan iş parçacığında. Android yedeğinden hariç
- *   (res/xml/kboard_backup_rules.xml), dışa aktarma yok.
+ *   (res/xml/kboard_backup_rules.xml). Yalnız kullanıcı isterse, ayarlardaki "Dışa / içe aktar" ile
+ *   ([KBoardTransfer]; dışa aktarmada varsayılan olarak seçili değil) dosyaya çıkar.
  * - İçerik hiçbir zaman günlüğe yazılmaz (hata ayıklamada da): günlükte yalnız istisna türü.
  * - Silme: HeliBoard'un geçmişi silme yolu (`clearUserHistoryDictionary`, kişiselleştirme
  *   kapatılınca da çağrılır) ve ayarlardaki "Öğrenilenleri sil".
@@ -137,6 +139,54 @@ object KBoardPersonal {
                 f.delete()
                 File(f.path + ".tmp").delete()
             }
+        }
+    }
+
+    /**
+     * Dışa aktarma için modelin ve geri alınan düzeltmelerin anlık kopyası (bekleyen öğrenmeler
+     * dahil); model boşsa bayt dizisi null.
+     */
+    fun snapshot(): Pair<ByteArray?, Map<String, String>> =
+        executor.submit(Callable {
+            Pair(if (model.isEmpty) null else model.toBytes(), KBoardSuggestions.reverts())
+        }).get(30, TimeUnit.SECONDS)
+
+    /**
+     * İçe aktarma: öğrenilenleri [personal] (KBPM baytları, null = boş) ve [reverts] ile değiştirir.
+     * Model önce ayrıştırılır (bozuksa istisna, mevcut veri aynen kalır), sonra dosyalar geçici ad +
+     * yeniden adlandırmayla yazılır ve bellekteki model değiştirilir. Çağıran bekler.
+     */
+    fun importLearned(personal: ByteArray?, reverts: Map<String, String>) {
+        val parsed = personal?.let { PersonalModel.read(it.inputStream()) } ?: PersonalModel()
+        executor.submit(Runnable {
+            pendingSave?.cancel(false)
+            pendingSave = null
+            val f = file
+            if (f != null) {
+                f.parentFile?.mkdirs()
+                writeAtomically(f, if (parsed.isEmpty) null else parsed.toBytes())
+                writeAtomically(File(f.parentFile, REVERTS_FILE), if (reverts.isEmpty()) null else
+                    reverts.entries.sortedBy { it.key }.joinToString("") { "${it.key}\t${it.value}\n" }.toByteArray(Charsets.UTF_8))
+            }
+            model.replaceWith(parsed)
+            KBoardSuggestions.loadReverts(reverts)
+        }).get(30, TimeUnit.SECONDS)
+    }
+
+    /** [bytes] null ise dosya silinir; değilse geçici dosyaya yazılıp yerine taşınır. */
+    private fun writeAtomically(f: File, bytes: ByteArray?) {
+        if (bytes == null) {
+            f.delete()
+            return
+        }
+        val tmp = File(f.path + ".tmp")
+        FileOutputStream(tmp).use { out ->
+            out.write(bytes)
+            out.fd.sync()
+        }
+        if (!tmp.renameTo(f)) {
+            tmp.delete()
+            throw java.io.IOException("yeniden adlandırma")
         }
     }
 

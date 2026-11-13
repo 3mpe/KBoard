@@ -177,4 +177,69 @@ class PersonalModelTest {
         repeat(4) { sb.append('a' + x % 26); x /= 26 }
         return sb.toString()
     }
+
+    // İçe aktarılan dosya güvenilmez: elle kurulmuş bozuk başlıklar istisna vermeli, bellek ayırmamalı.
+    private fun header(tick: Int, words: Int): java.io.ByteArrayOutputStream {
+        val b = java.io.ByteArrayOutputStream()
+        val d = java.io.DataOutputStream(b)
+        d.write("KBPM".toByteArray()); d.writeInt(1)
+        vint(d, tick); vint(d, words)
+        return b
+    }
+
+    private fun vint(d: java.io.DataOutputStream, n: Int) {
+        var x = n
+        while (true) {
+            val b = x and 0x7f
+            x = x ushr 7
+            if (x != 0) d.writeByte(b or 0x80) else { d.writeByte(b); return }
+        }
+    }
+
+    private fun wordEntry(b: java.io.ByteArrayOutputStream, w: String) {
+        val d = java.io.DataOutputStream(b)
+        val bytes = w.toByteArray()
+        vint(d, bytes.size); d.write(bytes)
+        d.writeByte(0); d.writeFloat(1f); vint(d, 1); vint(d, 0)
+    }
+
+    @Test
+    fun readRejectsHostileFiles() {
+        fun read(b: java.io.ByteArrayOutputStream) = PersonalModel.read(ByteArrayInputStream(b.toByteArray()))
+        // Sınırı aşan kelime sayısı (ArrayList(n) ayrılmadan reddedilir).
+        assertFailsWith<IllegalArgumentException> { read(header(1, Int.MAX_VALUE)) }
+        assertFailsWith<IllegalArgumentException> { read(header(1, 5001)) }
+        // Öğrenilemeyecek kelime (rakam, boşluk).
+        assertFailsWith<IllegalArgumentException> { read(header(1, 1).also { wordEntry(it, "abc123") }) }
+        assertFailsWith<IllegalArgumentException> { read(header(1, 1).also { wordEntry(it, "a b") }) }
+        // Geçersiz satır / ardıl sırası.
+        fun twoWords(vararg rows: Int) = header(1, 2).also {
+            wordEntry(it, "bir"); wordEntry(it, "iki")
+            val d = java.io.DataOutputStream(it)
+            rows.forEach { r -> vint(d, r) }
+        }
+        assertFailsWith<IllegalArgumentException> { read(twoWords(1, 0, 0)) } // ardılsız satır
+        assertFailsWith<IllegalArgumentException> { read(twoWords(1, 9, 1, 0)) } // satır 9 yok
+        assertFailsWith<IllegalArgumentException> { read(twoWords(1, 1, 1, 7)) } // ardıl 7 yok
+        val dupRow = twoWords(2, 1, 1, 1).also {
+            val d = java.io.DataOutputStream(it)
+            d.writeFloat(1f); vint(d, 0)
+            vint(d, 1); vint(d, 1); vint(d, 1); d.writeFloat(1f); vint(d, 0)
+        }
+        assertFailsWith<IllegalArgumentException> { read(dupRow) } // aynı satır iki kez
+        val negCount = twoWords(1, 1, 1, 1).also {
+            val d = java.io.DataOutputStream(it)
+            d.writeFloat(Float.NaN); vint(d, 0)
+        }
+        assertFailsWith<IllegalArgumentException> { read(negCount) }
+        // Geçerli küçük dosya okunur.
+        val ok = header(1, 2).also {
+            wordEntry(it, "bir"); wordEntry(it, "iki")
+            val d = java.io.DataOutputStream(it)
+            vint(d, 1); vint(d, 1); vint(d, 1); vint(d, 1); d.writeFloat(1f); vint(d, 0)
+        }
+        val m = read(ok)
+        assertEquals(2, m.unigramCount)
+        assertEquals(1, m.bigramCount)
+    }
 }
