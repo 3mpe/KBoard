@@ -10,48 +10,80 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class NgramSourceTest {
-    // id: 0 <s>, 1 çok, 2 güzel, 3 gün, 4 günaydın, 5 iyi, 6 ankara
-    private val words = listOf("<s>", "çok", "güzel", "gün", "günaydın", "iyi", "ankara")
-    private val display = listOf("<s>", "çok", "güzel", "gün", "günaydın", "iyi", "Ankara")
-    private val uni = listOf(1e-9, 0.3, 0.2, 0.15, 0.05, 0.2, 0.1)
+    // Biçim 3: id sırası kod noktası sözlük sırası (<s> başta).
+    private val words = listOf("<s>", "ankara", "gün", "günaydın", "güzel", "iyi", "çok")
+    private val uni = mapOf("<s>" to 1e-9, "ankara" to 0.1, "gün" to 0.15, "günaydın" to 0.05,
+        "güzel" to 0.2, "iyi" to 0.2, "çok" to 0.3)
+    private fun id(w: String) = words.indexOf(w)
 
     private fun model(blockGunaydin: Boolean = false): NgramModel {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).apply {
-            write("KBNG".toByteArray()); writeInt(2)
-            writeInt(words.size)
-            words.indices.forEach {
-                writeUTF(words[it]); writeUTF(display[it]); writeFloat(log10(uni[it]).toFloat())
-                writeByte(if (words[it] == "günaydın" && blockGunaydin) 1 else 0)
+            write("KBNG".toByteArray()); writeInt(3)
+            vint(words.size)
+            for (w in words) {
+                utf(w)
+                val blocked = if (w == "günaydın" && blockGunaydin) 1 else 0
+                val shown = if (w == "ankara") 2 else 0
+                writeByte(blocked or shown); writeByte(q(uni.getValue(w)))
+                if (shown != 0) utf("Ankara")
             }
-            writeInt(0)
-            writeInt(2); writeInt(1); writeInt(2)
-            // bigram: <s> → günaydın, iyi; çok → güzel; iyi → gün
-            writeInt(3)
-            row(0, 0.3, listOf(4 to 0.4, 5 to 0.2))
-            row(1, 0.3, listOf(2 to 0.5))
-            row(5, 0.3, listOf(3 to 0.6))
-            // trigram: (<s> iyi) → günler değil gün
-            writeInt(1); writeInt(0); row(5, 0.2, listOf(3 to 0.8))
+            vint(id("<s>"))
+            vint(2); vint(id("çok")); vint(id("güzel"))
+            // bigram (bağlam id'sine göre artan): <s> → günaydın, iyi; iyi → gün; çok → güzel
+            vint(3)
+            var prev = 0
+            for ((ctx, ents) in listOf(
+                "<s>" to listOf("günaydın" to 0.4, "iyi" to 0.2),
+                "iyi" to listOf("gün" to 0.6),
+                "çok" to listOf("güzel" to 0.5),
+            )) {
+                vint(id(ctx) - prev); prev = id(ctx)
+                writeByte(q(0.3)); entries(ents)
+            }
+            // trigram: (<s> iyi) → gün
+            vint(1); vint(id("<s>")); vint(id("iyi")); writeByte(q(0.2)); entries(listOf("gün" to 0.8))
         }
         return NgramModel.read(ByteArrayInputStream(bytes.toByteArray()))
     }
 
-    private fun DataOutputStream.row(ctx: Int, gamma: Double, ents: List<Pair<Int, Double>>) {
-        writeInt(ctx); writeFloat(log10(gamma).toFloat()); writeShort(ents.size)
-        ents.forEach { (id, p) -> writeInt(id); writeFloat(log10(p).toFloat()) }
+    private fun q(p: Double) = minOf(255, maxOf(0, Math.round(-log10(p) / 8 * 255).toInt()))
+
+    private fun DataOutputStream.vint(n: Int) {
+        var x = n
+        while (true) {
+            val b = x and 0x7f
+            x = x ushr 7
+            if (x != 0) writeByte(b or 0x80) else { writeByte(b); return }
+        }
+    }
+
+    private fun DataOutputStream.utf(s: String) {
+        val b = s.toByteArray(Charsets.UTF_8)
+        vint(b.size); write(b)
+    }
+
+    private fun DataOutputStream.entries(ents: List<Pair<String, Double>>) {
+        vint(ents.size)
+        ents.forEach { (w, p) -> vint(id(w)); writeByte(q(p)) }
     }
 
     @Test
     fun backoffOrder() {
         val m = model()
         val (u, v) = m.context(listOf("iyi"))
-        assertEquals(0, u); assertEquals(5, v)
-        assertEquals(log10(0.8).toFloat(), m.logProb(3, u, v), 1e-6f) // trigram
-        assertEquals(log10(0.6).toFloat(), m.logProb(3, -1, 5), 1e-6f) // bigram
+        assertEquals(id("<s>"), u); assertEquals(id("iyi"), v)
+        val step = 0.03f // nicemleme adımı ~0,031
+        assertEquals(log10(0.8).toFloat(), m.logProb(id("gün"), u, v), step) // trigram
+        assertEquals(log10(0.6).toFloat(), m.logProb(id("gün"), -1, v), step) // bigram
         // görülmemiş: gamma(<s> iyi) · gamma(iyi) · P_uni
-        assertEquals((log10(0.2) + log10(0.3) + log10(0.2)).toFloat(), m.logProb(2, u, v), 1e-5f)
-        assertEquals(log10(0.1).toFloat(), m.logProb(6, -1, -1), 1e-6f) // bilinmeyen bağlam
+        assertEquals((log10(0.2) + log10(0.3) + log10(0.2)).toFloat(), m.logProb(id("güzel"), u, v), 3 * step)
+        assertEquals(log10(0.1).toFloat(), m.logProb(id("ankara"), -1, -1), step) // bilinmeyen bağlam
+        assertEquals(id("günaydın"), m.id("Günaydın"))
+        assertEquals(id("<s>"), m.id("<s>"))
+        assertEquals(-1, m.id("yok"))
+        assertEquals("Ankara", m.display(id("ankara")))
+        assertEquals("çok", m.display(id("çok")))
     }
 
     @Test
@@ -73,7 +105,7 @@ class NgramSourceTest {
     fun unknownContextIsNotSentenceStart() {
         val m = model()
         assertEquals(-1 to -1, m.context(emptyList(), sentenceStart = false))
-        assertEquals(-1 to 5, m.context(listOf("iyi"), sentenceStart = false))
+        assertEquals(-1 to id("iyi"), m.context(listOf("iyi"), sentenceStart = false))
         // virgülden sonra: <s> ardılları değil genel en sıklar, küçük harfle
         val words = NgramSource(m).candidates(Query(emptyList(), "", sentenceStart = false), 3).map { it.word }
         assertEquals(listOf("çok", "güzel"), words.take(2))

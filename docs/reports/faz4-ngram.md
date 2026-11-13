@@ -13,9 +13,10 @@ kelime) yalnız ayar için, **test** (170 vaka, 654 kelime) yalnız rapor için.
   ("ankara" → "Ankara").
 - Öneri yasağı (`data/ngram-denylist.txt`): küfürler, OCR hataları ("Haşan", "bazan"), eski yazımlar
   ("candarma") ve romanlardaki karakter adları modelde bağlam olarak kalır ama hiç önerilmez (64 kelime).
-- Dosya `kboard-tr.kbn` (biçim 2): 2,03 MB (APK içinde sıkıştırılmış ~0,83 MB). Derleme her koşuda
-  aynı baytı üretir. JVM'de yükleme ~0,5 s, bellek ~12 MB; kendi iş parçacığında yüklenir, aksan
-  düzelticiyi bekletmez. CI bütçesi şimdilik ≤ 2,1 MB.
+- Dosya `kboard-tr.kbn` (biçim 3: vint id'ler, 8 bit nicemlenmiş log10 olasılık [-8, 0], gösterim
+  yalnız farklıysa): 0,87 MB (APK içinde ~0,48 MB). Bellekte ~2,4 MB (kelimeler tek `CharArray`,
+  satırlar düz sıralı diziler). Derleme her koşuda aynı baytı üretir. Kendi iş parçacığında yüklenir,
+  aksan düzelticiyi bekletmez. CI bütçesi ≤ 1 MB.
 - Bağlam bir virgül ya da başka bir ayraçta kesildiyse cümle başı sayılmaz: `<s>` yerine bilinmeyen
   bağlam (tek kelime olasılığı) kullanılır, öneri büyük harfle başlamaz.
 - `NgramSource`: önek boşsa bağlamın en olası ardılları; önek varsa önekle başlayan ve yazılan
@@ -59,8 +60,9 @@ eklenenler (ulaşılanın ~2 puan altı): @0 ≥ %9,5, @1 ≥ %19, @3 ≥ %40, K
 
 - Korpus okunmak üzere yazılmış cümleler; mesajlaşma dili (kısaltma, argo) zayıf. Elle yazılan
   sohbet korpusu ayrı modelle araya katılacak.
-- Biçim 3 (sohbet modeli araya katılmadan önce zorunlu): kelime/gösterim tekrarını kaldırma, varint
-  id, 8 bit log-olasılık, `HashMap` yerine düz sıralı diziler. Hedef ≤ 1 MB dosya, ≤ 4 MB bellek.
+- Biçim 3'e geçiş (biçim 2: 2,03 MB dosya, ~12 MB bellek) ölçümü değiştirmedi: test @3 %42,3,
+  KSR %31,5; @0 %11,8 → %11,4 (güven aralığı içinde). 12 birimlik aralıkla nicemleme @3'ü 1,4 puan
+  düşürmüştü; 8 birim kayıpsız.
 - Ölçüm masaüstünde; telefonda tek harfli önek gecikmesi (12 000 adaya kadar tarama) ölçülecek.
 - Uygulamada motor yüklüyken HeliBoard'un kendi yazım hatası düzeltmesinin hâlâ çalıştığını sınayan
   test eklenecek (motor tamamlamaları ilk sıraya çıkıp onu bastırabilir).

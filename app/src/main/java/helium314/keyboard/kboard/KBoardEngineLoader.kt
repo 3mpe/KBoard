@@ -20,7 +20,7 @@ import kotlin.concurrent.thread
  * `main_tr.dict`'ten üretilir (engine/build.gradle.kts: buildDeasciifyIndex). Yükleme arka planda
  * yapılır (~20 ms masaüstünde); yüklenene kadar motor boş kalır ve klavye HeliBoard gibi çalışır.
  *
- * Dil modeli (`assets/kboard/kboard-tr.kbn`, ~2 MB) `data/corpus/`'tan üretilir
+ * Dil modeli (`assets/kboard/kboard-tr.kbn`, ~0,9 MB, bellekte ~2,4 MB) `data/corpus/`'tan üretilir
  * (engine/build.gradle.kts: buildNgramModel). Aksan düzeltici ayarından bağımsız, hep yüklenir.
  */
 object KBoardEngineLoader {

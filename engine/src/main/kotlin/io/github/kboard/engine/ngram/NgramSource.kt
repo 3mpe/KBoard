@@ -43,16 +43,16 @@ class NgramSource(
         if (typed.isEmpty()) {
             val succ = model.successors(u, v)
             return top(succ.asSequence(), limit, u, v).map { (id, lp) ->
-                Candidate(sentenceCase(query, model.display[id]), clamp(config.nextOffset + config.nextSlope * lp), Source.NGRAM)
+                Candidate(sentenceCase(query, model.display(id)), clamp(config.nextOffset + config.nextSlope * lp), Source.NGRAM)
             }
         }
         if (typed.any { it == '\'' || it == '’' }) return emptyList()
         val key = TurkishText.fold(typed)
         val mustMatch = DeasciifySource.accentConstraints(typed)
         val ids = model.withPrefix(key, config.prefixCap).asSequence()
-            .filter { mustMatch == null || DeasciifySource.compatible(model.words[it], mustMatch) }
+            .filter { mustMatch == null || DeasciifySource.compatible(model.word(it), mustMatch) }
         return top(ids, limit, u, v).map { (id, lp) ->
-            Candidate(DeasciifySource.applyCase(typed, model.display[id]), clamp(config.offset + config.slope * lp), Source.NGRAM)
+            Candidate(DeasciifySource.applyCase(typed, model.display(id)), clamp(config.offset + config.slope * lp), Source.NGRAM)
         }
     }
 

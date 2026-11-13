@@ -16,13 +16,15 @@ vakanın tamamını içeren cümleler atılır.
 Öneri yasağı: `--denylist` dosyasındaki kelimeler (küfür, OCR hatası; `önek*` biçimi desteklenir)
 modelde bağlam olarak kalır ama hiçbir zaman aday olarak önerilmez (bayrak 1).
 
-Biçim (büyük endian, java.io.DataInputStream):
-  "KBNG" u32 sürüm(2)
-  u32 V; V kez: utf(kelime küçük) utf(gösterim) f32 log10 P_uni u8 bayrak (1 = önerme)
-  u32 bos_id                      (cümle başı belirteci "<s>")
-  u32 topUniN; topUniN kez u32 id (P_uni'ye göre azalan; bağlam bilinmezken öneri)
-  u32 B; B kez: u32 bağlam_id f32 log10 gamma u16 n; n kez: u32 id f32 log10 P   (P'ye göre azalan)
-  u32 T; T kez: u32 id1 u32 id2 f32 log10 gamma u16 n; n kez: u32 id f32 log10 P
+Biçim 3 (vint = işaretsiz LEB128; q = u8 nicemlenmiş log10 olasılık, log10 P = -q · 8 / 255):
+  "KBNG" u32be sürüm(3)
+  vint V; V kez: vint+utf8 kelime (küçük harf, sıralı) u8 bayrak (1 = önerme, 2 = gösterim farklı)
+                 q P_uni [bayrak 2 ise: vint+utf8 gösterim]
+  vint bos_id                      (cümle başı belirteci "<s>")
+  vint topUniN; topUniN kez vint id (P_uni'ye göre azalan; bağlam bilinmezken öneri)
+  vint B; B kez (bağlam id'sine göre artan): vint bağlam_id farkı, q gamma, vint n, n kez: vint id q P
+  vint T; T kez ((id1, id2)'ye göre artan): vint id1 vint id2 q gamma vint n, n kez: vint id q P
+  Satır içi kayıtlar P'ye göre azalan.
 """
 
 from __future__ import annotations
@@ -40,6 +42,20 @@ _UPPER_TO_LOWER = str.maketrans({"I": "ı", "İ": "i"})
 _WORD_RE = re.compile(r"[^\W_\d]+(?:['’][^\W_]+)*", re.UNICODE)
 BOS = "<s>"
 D = 0.75
+QMAX = 8.0  # nicemleme: log10 olasılık [-QMAX, 0] → 0..255
+
+
+def varint(n: int) -> bytes:
+    """İşaretsiz LEB128."""
+    out = bytearray()
+    while True:
+        b = n & 0x7F
+        n >>= 7
+        if n:
+            out.append(b | 0x80)
+        else:
+            out.append(b)
+            return bytes(out)
 
 
 def tr_lower(s: str) -> str:
@@ -223,28 +239,41 @@ def main() -> int:
         return sc.most_common(1)[0][0] if sc else w
 
     lg = lambda p: math.log10(max(p, 1e-12))
-    out = bytearray(b"KBNG") + struct.pack(">I", 2)
+
+    def q(p):  # log10 olasılık → 0..255 (0 = 1, 255 = 1e-8; adım ~0,031)
+        return min(255, max(0, round(-lg(p) / QMAX * 255)))
+
+    out = bytearray(b"KBNG") + struct.pack(">I", 3)
 
     def utf(s):
         b = s.encode("utf-8")
-        return struct.pack(">H", len(b)) + b
+        return varint(len(b)) + b
 
-    out += struct.pack(">I", len(words))
+    out += varint(len(words))
     for w in words:
-        out += utf(w) + utf(disp(w)) + struct.pack(">fB", lg(p_uni[w]), 1 if w in blocked else 0)
-    out += struct.pack(">I", ids[BOS])
+        d = disp(w)
+        flags = (1 if w in blocked else 0) | (2 if d != w else 0)
+        out += utf(w) + bytes([flags, q(p_uni[w])])
+        if d != w:
+            out += utf(d)
+    out += varint(ids[BOS])
     top = sorted(vocab - blocked, key=lambda w: (-p_uni[w], w))[: args.top_uni]
-    out += struct.pack(">I", len(top)) + b"".join(struct.pack(">I", ids[w]) for w in top)
-    out += struct.pack(">I", len(bigram_rows))
-    for v, gamma, ents in bigram_rows:
-        out += struct.pack(">IfH", ids[v], lg(gamma), len(ents))
+    out += varint(len(top)) + b"".join(varint(ids[w]) for w in top)
+
+    def entries(ents):
+        b = bytearray(varint(len(ents)))
         for w, p in ents:
-            out += struct.pack(">If", ids[w], lg(p))
-    out += struct.pack(">I", len(trigram_rows))
-    for u, v, gamma, ents in trigram_rows:
-        out += struct.pack(">IIfH", ids[u], ids[v], lg(gamma), len(ents))
-        for w, p in ents:
-            out += struct.pack(">If", ids[w], lg(p))
+            b += varint(ids[w]) + bytes([q(p)])
+        return b
+
+    out += varint(len(bigram_rows))
+    prev = 0
+    for v, gamma, ents in sorted(bigram_rows, key=lambda r: ids[r[0]]):
+        out += varint(ids[v] - prev) + bytes([q(gamma)]) + entries(ents)
+        prev = ids[v]
+    out += varint(len(trigram_rows))
+    for u, v, gamma, ents in sorted(trigram_rows, key=lambda r: (ids[r[0]], ids[r[1]])):
+        out += varint(ids[u]) + varint(ids[v]) + bytes([q(gamma)]) + entries(ents)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(bytes(out))
     print(f"cümle: {dict(kept)} (sızıntı nedeniyle atılan: {dict(dropped)}); kelime türü {V}, "
