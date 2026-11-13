@@ -45,7 +45,7 @@ ensure_kboard() {
 # döndürebiliyor; o zaman dokunuşlar Gboard'a yazar).
 open_kboard_field() {
   local n
-  open_kboard_field
+  ensure_kboard; open_field >/dev/null
   for n in 1 2 3; do
     adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard" && return 0
     echo "   etkin klavye KBoard değil, yeniden seçiliyor ($n)" >&2
