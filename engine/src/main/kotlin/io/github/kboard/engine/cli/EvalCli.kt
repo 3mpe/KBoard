@@ -14,6 +14,7 @@ import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.personal.PersonalModel
 import io.github.kboard.engine.personal.PersonalSource
 import io.github.kboard.engine.rules.MisspellingList
+import io.github.kboard.engine.rules.ConjunctionSplitter
 import io.github.kboard.engine.rules.SpellingRuleSource
 import io.github.kboard.engine.typo.TypoSource
 import java.io.File
@@ -117,6 +118,10 @@ class EvalServer(
  *                             soru eki) kapatır; varsayılan olarak --deasciify ile açıktır
  *   --no-rule-list / --no-rule-particle  kurallardan yalnız birini kapatır (ölçüm için)
  *   --rules <liste.tsv>       motorla gelen liste yerine bu yanlış yazım listesi
+ *   --no-split                bitişik bağlaç de/da/ki ayrık önerisini (ConjunctionSplitter) kapatır;
+ *                             varsayılan olarak --deasciify ile açıktır
+ *   --split-params ilk,üçüncü[,bİlk,bÜçüncü]  belirsiz sınıfta ilk ve üçüncü yuva için log10 oran
+ *                             eşikleri; bitişik biçim modelde yokken log10 P(de | L) eşikleri
  *   --personal-warm <metin>   açılışta metin dosyasındaki bütün kelimeleri öğrenir (dolu depo ölçümü;
  *                             öğrenme, kaydetme ve yükleme sürelerini stderr'e yazar)
  * UserWordSuffixSource varsayılan olarak hep açıktır; kişisel sözlük boşken aday döndürmez. Bu
@@ -200,6 +205,27 @@ fun main(args: Array<String>) {
                 questionParticle = "--no-rule-particle" !in args,
             ),
         ).also { sources += it }
+    }
+    if (deasciify != null && "--no-split" !in args) {
+        val d = deasciify
+        val lm = ngramSource
+        val ps = personalSource
+        var config = ConjunctionSplitter.Config()
+        // Ayar (geliştirme): belirsiz sınıfta ilk yuva ve üçüncü yuva için log10 oran eşikleri
+        argValue(args, "--split-params")?.split(',')?.map { it.toDouble() }?.let { p ->
+            config = config.copy(firstMargin = p[0], thirdMargin = p[1])
+            if (p.size >= 4) config = config.copy(unknownFirst = p[2], unknownThird = p[3])
+        }
+        sources += ConjunctionSplitter(
+            dictKnown = { d.isKnown(it) },
+            lmKnown = { lm?.contains(it) == true },
+            lmLogProb = { w, c, st -> lm?.logProb(w, c, st) },
+            lmFollows = { w, prev -> lm?.follows(w, prev) == true },
+            personalKnown = { ps?.isKnown(it) == true },
+            userWord = { d.isUserWord(it) },
+            deasciify = { d.autocorrection(it) },
+            config = config,
+        )
     }
     val suffixPath = argValue(args, "--suffix") ?: System.getenv("KBOARD_SUFFIX")
     if (index != null && suffixPath != null) {

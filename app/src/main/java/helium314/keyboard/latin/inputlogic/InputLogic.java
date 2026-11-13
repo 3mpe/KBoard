@@ -345,7 +345,9 @@ public final class InputLogic {
         commitChosenWord(settingsValues, suggestion, suggestionInfo, LastComposedWord.COMMIT_TYPE_MANUAL_PICK, LastComposedWord.NOT_A_SEPARATOR);
         mConnection.endBatchEdit();
         // Don't allow cancellation of manual pick
-        mLastComposedWord.deactivate();
+        // KBOARD: ayrık bağlaç önerisi ("dedim ki") seçildikten hemen sonra geri silme yazılanı ("dedimki") geri getirir
+        if (!helium314.keyboard.kboard.KBoardSuggestions.isRevertiblePick(suggestionInfo))
+            mLastComposedWord.deactivate();
 
         if (suggestionInfo.isEmoji()) {
             RecentEmojis.add(suggestion);

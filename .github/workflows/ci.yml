@@ -67,6 +67,19 @@ jobs:
           python -m kboard_eval score testset/kural-v0.jsonl -t out/kural.jsonl --json out/kural.json --markdown out/kural.md --title "kural-v0 (yazım kuralları)"
           cat out/kural.md >> "$GITHUB_STEP_SUMMARY"
           python ../.github/ci/kural-gate.py out/kural.json --trace out/kural.jsonl --testset testset/kural-v0.jsonl | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: de/da/ki ayrımı (dedaki-v0 test yarısı; ilk 3 ve ilk yuva, tuzaklar, yalnız öneri)
+        working-directory: eval
+        run: |
+          set -o pipefail
+          python -m kboard_eval simulate testset/dedaki-v0.jsonl -o out/dedaki.jsonl --predictor subprocess \
+            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn --denylist ../data/ngram-denylist.txt --suffix ../engine/build/kboard/suffix-tr.kbs"
+          python ../.github/ci/dedaki-gate.py out/dedaki.jsonl testset/dedaki-v0.jsonl --split test --json out/dedaki.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Korpusta ayrık bağlaç önerisi (doğru yazılmış -de/-da/-ki; ilk yuvada en çok %5)
+        run: |
+          set -o pipefail
+          python data/tools/corpus_split.py --engine engine/build/install/engine/bin/engine \
+            --deasciify engine/build/kboard/deasciify-tr.kbd --args "--suffix engine/build/kboard/suffix-tr.kbs" \
+            --gate 0.05 --json eval/out/corpus-split.json | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Korpusta yanlış oto. düzeltme (her 10. satır ayrılır, dil modeli onsuz derlenir)
         run: |
           python data/tools/corpus_false_ac.py --engine engine/build/install/engine/bin/engine \
@@ -98,6 +111,8 @@ jobs:
             eval/out/engine.*
             eval/out/corpus-false-ac.json
             eval/out/kural.*
+            eval/out/dedaki.*
+            eval/out/corpus-split.json
             eval/out/kisisel-*
             eval/out/seed-acik.*
 

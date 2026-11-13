@@ -113,6 +113,9 @@ source .github/ci/delete-e2e.sh
 # Dışa / içe aktarma (dışa aktar, pm clear, öğrenilenler seçilmeden ve seçilerek içe aktar).
 source .github/ci/transfer-e2e.sh
 
+# Bitişik bağlaç ayrımı (öneri, iki kelime yazılması, geri silme, tuzak).
+source .github/ci/dedaki-e2e.sh
+
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
 adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* KBoardPersonal:* KBoardTransfer:* > "$out/logcat-kboard.txt" 2>&1 || true
@@ -126,4 +129,6 @@ grep -q "^KALDI" "$out/kisisel-e2e.txt" && exit 1
 grep -q "^KALDI" "$out/silme-e2e.txt" && exit 1
 [ -f "$out/aktarim-e2e.txt" ] || { echo "aktarim-e2e.txt yok"; exit 1; }
 grep -q "^KALDI" "$out/aktarim-e2e.txt" && exit 1
+[ -f "$out/dedaki-e2e.txt" ] || { echo "dedaki-e2e.txt yok"; exit 1; }
+grep -q "^KALDI" "$out/dedaki-e2e.txt" && exit 1
 exit 0
