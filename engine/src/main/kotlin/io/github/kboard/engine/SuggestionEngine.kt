@@ -9,10 +9,15 @@ package io.github.kboard.engine
 class SuggestionEngine(
     private val sources: List<CandidateSource> = emptyList(),
     private val ranker: Ranker = MaxScoreRanker,
+    /** Önerilmeyecek kelimeler; yazılanın kendisi ve kişisel sözlük adayları muaf. */
+    private val denylist: Denylist = Denylist.EMPTY,
 ) {
     fun suggest(query: Query, limit: Int = DEFAULT_LIMIT): Suggestions {
         if (sources.isEmpty()) return EMPTY
-        val all = sources.flatMap { it.candidates(query, limit) }
+        var all = sources.flatMap { it.candidates(query, limit) }
+        if (!denylist.isEmpty) {
+            all = all.filter { it.source == Source.USER || TurkishText.sameWord(it.word, query.prefix) || !denylist.blocks(it.word) }
+        }
         val ranked = ranker.rank(query, all, limit)
         val autocorrect = if (query.isNextWord) null else ranked.firstOrNull {
             it.autocorrectable && !TurkishText.sameWord(it.word, query.prefix)

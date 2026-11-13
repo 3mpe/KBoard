@@ -157,6 +157,10 @@ abstract class KBoardAssetsTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val ngramModel: RegularFileProperty
 
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val denylist: RegularFileProperty
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -167,6 +171,7 @@ abstract class KBoardAssetsTask : DefaultTask() {
         dir.mkdirs()
         deasciifyIndex.get().asFile.copyTo(dir.resolve("deasciify-tr.kbd"))
         ngramModel.get().asFile.copyTo(dir.resolve("kboard-tr.kbn"))
+        denylist.get().asFile.copyTo(dir.resolve("denylist-tr.txt"))
     }
 }
 
@@ -174,6 +179,7 @@ val kboardAssets = tasks.register<KBoardAssetsTask>("kboardAssets") {
     dependsOn(":engine:buildDeasciifyIndex", ":engine:buildNgramModel")
     deasciifyIndex.set(rootProject.layout.projectDirectory.file("engine/build/kboard/deasciify-tr.kbd"))
     ngramModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/kboard-tr.kbn"))
+    denylist.set(rootProject.layout.projectDirectory.file("data/ngram-denylist.txt"))
 }
 
 androidComponents.onVariants { variant ->

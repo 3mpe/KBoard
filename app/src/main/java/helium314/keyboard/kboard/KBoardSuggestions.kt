@@ -6,12 +6,15 @@ import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.suggestions.SuggestedWordInfo
 import io.github.kboard.engine.Candidate
+import io.github.kboard.engine.Denylist
 import io.github.kboard.engine.Query
+import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramSource
+import io.github.kboard.engine.typo.TypoSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -55,6 +58,30 @@ object KBoardSuggestions {
     @Volatile
     private var userWords: List<String> = emptyList()
 
+    @Volatile
+    private var denylist: Denylist = Denylist.EMPTY
+
+    /** Yazım hatası önerileri (yalnız öneri çubuğu; otomatik düzeltme kapalı, bkz. faz-typo.md). */
+    @Volatile
+    private var typo: TypoSource? = null
+
+    /** Dil modelinin önerilebilir kelimeleri bilinen kelimedir; yazım hatası sayılmaz. */
+    internal fun isLmKnown(word: String): Boolean = ngram?.isKnown(word) == true
+
+    /** Yazım hatası kaynağını bağlar ya da (null) kaldırır; aksan düzeltici dizinini kullanır. */
+    @Synchronized
+    fun setTypo(source: TypoSource?) {
+        typo = source
+        rebuild()
+    }
+
+    /** Önerilmeyecek kelimeleri bağlar (`assets/kboard/denylist-tr.txt`). */
+    @Synchronized
+    fun setDenylist(list: Denylist) {
+        denylist = list
+        rebuild()
+    }
+
     /** Aksan düzelticiyi bağlar ya da (null) kaldırır. */
     @Synchronized
     fun setDeasciifier(source: DeasciifySource?) {
@@ -70,7 +97,8 @@ object KBoardSuggestions {
     }
 
     private fun rebuild() {
-        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, userMorph)).also { it.setUserWords(userWords) }
+        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, typo, userMorph), denylist = denylist)
+            .also { it.setUserWords(userWords) }
     }
 
     /** Kişisel sözlük (yalnız Türkçe) değiştiğinde `UserBinaryDictionary` çağırır. */
@@ -153,7 +181,16 @@ object KBoardSuggestions {
 
     private val dictionaries = ConcurrentHashMap<Locale, KBoardDictionary>()
 
-    fun getSuggestions(composedData: ComposedData, ngramContext: NgramContext, locale: Locale): List<SuggestedWordInfo> {
+    /**
+     * [native]: HeliBoard'un kendi sözlüklerinden aynı istek için gelen öneriler. Motorun yazım
+     * hatası adayları yalnız boşluk doldurur: HeliBoard'da otomatik düzeltmeye uygun bir öneri ya da
+     * aynı kelime varsa eklenmez. Yoksa düzeltmeye uygun olmayan aday ilk sıraya çıkıp HeliBoard'un
+     * kendi yazım hatası düzeltmesini kapatabilirdi.
+     */
+    fun getSuggestions(
+        composedData: ComposedData, ngramContext: NgramContext, locale: Locale,
+        native: Collection<SuggestedWordInfo> = emptyList(),
+    ): List<SuggestedWordInfo> {
         calls.incrementAndGet()
         val e = engine
         // Motor yalnızca Türkçe için; diğer dil gruplarına (ör. yazım denetleyicisinin kendi örneği) aday eklemez.
@@ -161,7 +198,15 @@ object KBoardSuggestions {
         val words = contextWords(ngramContext)
         val query = Query(words, composedData.mTypedWord, startsSentence(ngramContext, words.size))
         val dict = dictionaries.getOrPut(locale) { KBoardDictionary(locale) }
-        return e.suggest(query).candidates.map { it.toWordInfo(query, dict) }
+        var candidates = e.suggest(query).candidates
+        if (candidates.any { it.source == Source.TYPO }) {
+            val nativeFixes = native.any { it.isAppropriateForAutoCorrection }
+            val nativeWords = native.mapTo(HashSet()) { TurkishText.lower(it.word) }
+            candidates = candidates.filter {
+                it.source != Source.TYPO || (!nativeFixes && TurkishText.lower(it.word) !in nativeWords)
+            }
+        }
+        return candidates.map { it.toWordInfo(query, dict) }
     }
 
     /** NgramContext'teki önceki kelimeler, eskiden yeniye; cümle başında durur. */

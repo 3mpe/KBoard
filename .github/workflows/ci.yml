@@ -47,16 +47,24 @@ jobs:
         run: |
           mkdir -p out
           python -m kboard_eval simulate testset/seed-v0.jsonl -o out/engine.jsonl --predictor subprocess \
-            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn"
+            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn --denylist ../data/ngram-denylist.txt"
           python -m kboard_eval score testset/seed-v0.jsonl -t out/engine.jsonl --json out/engine.json --markdown out/engine.md
           cat out/engine.md >> "$GITHUB_STEP_SUMMARY"
       - name: Eşikler
         run: python .github/ci/eval-gate.py eval/out/engine.json
+      - name: Korpusta yanlış oto. düzeltme (her 10. satır ayrılır, dil modeli onsuz derlenir)
+        run: |
+          python data/tools/corpus_false_ac.py --engine engine/build/install/engine/bin/engine \
+            --deasciify engine/build/kboard/deasciify-tr.kbd \
+            --run varsayilan= --run typo-otomatik=--typo-autocorrect \
+            --gate varsayilan=0.003 --json eval/out/corpus-false-ac.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: engine-eval
-          path: eval/out/engine.*
+          path: |
+            eval/out/engine.*
+            eval/out/corpus-false-ac.json
 
   android:
     name: Debug APK + izin kontrolü
@@ -96,6 +104,7 @@ jobs:
           apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
           unzip -l "$apk" | grep -E 'assets/kboard/deasciify-tr\.kbd' || { echo "::error::assets/kboard/deasciify-tr.kbd APK'da yok"; exit 1; }
           unzip -l "$apk" | grep -E 'assets/kboard/kboard-tr\.kbn' || { echo "::error::assets/kboard/kboard-tr.kbn APK'da yok"; exit 1; }
+          unzip -l "$apk" | grep -E 'assets/kboard/denylist-tr\.txt' || { echo "::error::assets/kboard/denylist-tr.txt APK'da yok"; exit 1; }
           # Dil modeli boyut bütçesi: <= 1,1 MB (biçim 3; sohbet korpusuyla 1,08 MB)
           size=$(stat -c %s engine/build/kboard/kboard-tr.kbn)
           echo "kboard-tr.kbn: $size bayt"
