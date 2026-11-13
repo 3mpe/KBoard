@@ -204,7 +204,7 @@ class DeasciifySource(
         private fun isAscii(s: String) = s.all { it.code < 0x80 }
 
         /** Yazılanda aksanlı harf varsa, konum → beklenen küçük harf; yoksa null. */
-        private fun accentConstraints(typed: String): Map<Int, Char>? {
+        internal fun accentConstraints(typed: String): Map<Int, Char>? {
             var m: HashMap<Int, Char>? = null
             typed.forEachIndexed { i, c ->
                 if (c in TURKISH_ACCENTED) {
@@ -215,7 +215,7 @@ class DeasciifySource(
             return m
         }
 
-        private fun compatible(word: String, mustMatch: Map<Int, Char>): Boolean =
+        internal fun compatible(word: String, mustMatch: Map<Int, Char>): Boolean =
             mustMatch.all { (i, c) -> i < word.length && TurkishText.lower(word[i].toString())[0] == c }
 
         private fun lastVowelFront(s: String): Boolean? {

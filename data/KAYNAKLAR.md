@@ -8,6 +8,7 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 | `data/deasciify-koruma.txt` | Aksansız yazımı da geçerli kelimeler (oto. düzeltme koruması) | CC0-1.0 | elle yazıldı |
 | [Zemberek-NLP](https://github.com/ahmetaa/zemberek-nlp) 0.17.1 | Ön hesaplama ve ölçüm (masaüstü, `tools/zemberek-spike`) | Apache-2.0 | doğrulandı (depodaki LICENSE) |
 | `eval/testset/seed-v0.jsonl` | Test seti | CC0-1.0 | elle yazıldı |
+| [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
 
 ## Türetilen veriler (depoya girmez)
 
@@ -22,6 +23,9 @@ java -cp "engine/build/install/engine/lib/*" io.github.kboard.engine.deasciify.D
 - `main_tr.tsv`: `main_tr.dict`'ten (v2, sürüm 202, sözlük sürümü 54) çıkarılan 180 841 kelime ve
   0..255 sıklık. Lisansı `main_tr.dict` ile aynıdır (yukarıda "doğrulanacak").
 - `deasciify-tr.kbd`: DeasciifySource dizini (biçim: `engine/.../deasciify/DeasciifyIndex.kt`).
+- `kboard-tr.kbn`: n-gram dil modeli (`./gradlew :engine:buildNgramModel`; biçim ve parametreler:
+  `data/tools/build_ngram.py`). Test setiyle normalize 4-gram paylaşan eğitim cümleleri atılır.
+  Lisansı kaynağıyla aynı: CC0-1.0.
 
 ## Faz 4: sonraki kelime modeli için korpus seçimi (#22)
 

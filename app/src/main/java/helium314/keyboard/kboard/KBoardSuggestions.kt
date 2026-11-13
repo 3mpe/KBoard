@@ -11,6 +11,7 @@ import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
+import io.github.kboard.engine.ngram.NgramSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -47,6 +48,10 @@ object KBoardSuggestions {
     @Volatile
     private var deasciifier: DeasciifySource? = null
 
+    /** Dil modeli: sonraki kelime tahmini ve tamamlamaları bağlama göre sıralama. */
+    @Volatile
+    private var ngram: NgramSource? = null
+
     @Volatile
     private var userWords: List<String> = emptyList()
 
@@ -54,7 +59,18 @@ object KBoardSuggestions {
     @Synchronized
     fun setDeasciifier(source: DeasciifySource?) {
         deasciifier = source
-        engine = SuggestionEngine(listOfNotNull(source, userMorph)).also { it.setUserWords(userWords) }
+        rebuild()
+    }
+
+    /** Dil modelini bağlar ya da (null) kaldırır. */
+    @Synchronized
+    fun setNgram(source: NgramSource?) {
+        ngram = source
+        rebuild()
+    }
+
+    private fun rebuild() {
+        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, userMorph)).also { it.setUserWords(userWords) }
     }
 
     /** Kişisel sözlük (yalnız Türkçe) değiştiğinde `UserBinaryDictionary` çağırır. */

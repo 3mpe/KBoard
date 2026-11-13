@@ -41,13 +41,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - name: Motor + aksan dizini
-        run: ./gradlew :engine:installDist :engine:buildDeasciifyIndex
+        run: ./gradlew :engine:installDist :engine:buildDeasciifyIndex :engine:buildNgramModel
       - name: 327 vakalık sette ölçüm
         working-directory: eval
         run: |
           mkdir -p out
           python -m kboard_eval simulate testset/seed-v0.jsonl -o out/engine.jsonl --predictor subprocess \
-            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd"
+            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn"
           python -m kboard_eval score testset/seed-v0.jsonl -t out/engine.jsonl --json out/engine.json --markdown out/engine.md
           cat out/engine.md >> "$GITHUB_STEP_SUMMARY"
       - name: Eşikler
@@ -95,6 +95,7 @@ jobs:
         run: |
           apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
           unzip -l "$apk" | grep -E 'assets/kboard/deasciify-tr\.kbd' || { echo "::error::assets/kboard/deasciify-tr.kbd APK'da yok"; exit 1; }
+          unzip -l "$apk" | grep -E 'assets/kboard/kboard-tr\.kbn' || { echo "::error::assets/kboard/kboard-tr.kbn APK'da yok"; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
