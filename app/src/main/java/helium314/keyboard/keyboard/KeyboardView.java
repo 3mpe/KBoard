@@ -369,6 +369,14 @@ public class KeyboardView extends View {
         return mFunctionalKeyBackground;
     }
 
+    /** KBOARD: Rounded biçimde ipucu yerleşimi hap biçimli tuşlara göre yapılır. Hap arka plan varsa
+     *  yalnızca ?123/ABC ve eylem tuşu haptır; virgül, nokta, shift, sil köşeli dikdörtgendir. */
+    private boolean hasPillLikeBackground(@NonNull final Key key, final boolean includeAction) {
+        if (includeAction && key.hasActionKeyBackground()) return true;
+        if (!key.hasFunctionalBackground()) return false;
+        return mPillFunctionalKeyBackground == null || functionalBackgroundFor(key) == mPillFunctionalKeyBackground;
+    }
+
     // Draw key background.
     protected void onDrawKeyBackground(@NonNull final Key key, @NonNull final Canvas canvas,
             @NonNull final Drawable background) {
@@ -486,7 +494,7 @@ public class KeyboardView extends View {
             blendAlpha(paint, params.mAnimAlpha);
             final float labelCharHeight = TypefaceUtils.getReferenceCharHeight(paint);
             final float labelCharWidth = TypefaceUtils.getReferenceCharWidth(paint);
-            final boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && key.hasFunctionalBackground();
+            final boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && hasPillLikeBackground(key, false);
             final float hintX, hintBaseline;
             if (key.hasHintLabel()) {
                 // The hint label is placed just right of the key label. Used mainly on
@@ -525,7 +533,7 @@ public class KeyboardView extends View {
             canvas.drawText(hintLabel, 0, hintLabel.length(), hintX, hintBaseline + adjustmentY, paint);
         } else if (hintIcon != null) {
             int iconSize = (int) (key.selectHintTextSize(params) * mHintFontSizeMultiplier);
-            boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && (key.hasFunctionalBackground() || key.hasActionKeyBackground());
+            boolean isFunctionalKeyAndRoundedStyle = mColors.getThemeStyle().equals(STYLE_ROUNDED) && hasPillLikeBackground(key, true);
             float hintX, hintBaseline;
             if (key.hasHintLabel()) {
                 // The hint icon is placed just right of the key label. Used mainly on "phone number" layout.
@@ -587,7 +595,7 @@ public class KeyboardView extends View {
             if (key.getBackgroundType() == Key.BACKGROUND_TYPE_SPACEBAR)
                 hintX = keyWidth + hintBaseline + labelCharWidth * 0.1f;
             else
-                hintX = key.hasFunctionalBackground() || key.hasActionKeyBackground() ? keyWidth / 2.0f : keyWidth - mKeyHintLetterPadding - labelCharWidth / 2.0f;
+                hintX = hasPillLikeBackground(key, true) ? keyWidth / 2.0f : keyWidth - mKeyHintLetterPadding - labelCharWidth / 2.0f;
         } else {
             hintX = keyWidth - mKeyHintLetterPadding - TypefaceUtils.getReferenceCharWidth(paint) / 2.0f;
         }

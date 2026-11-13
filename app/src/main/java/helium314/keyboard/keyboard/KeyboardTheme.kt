@@ -157,30 +157,30 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                 THEME_LIGHT -> DefaultColors(
                     themeStyle,
                     hasBorders,
-                    "#d3d9e6".toColorInt(), // vurgu = eylem tuşu
+                    "#4a6fb8".toColorInt(), // vurgu (seçili sekme, pano iğnesi, kaydırma izi)
                     "#eceff5".toColorInt(), // zemin
                     "#ffffff".toColorInt(), // harf tuşu
                     "#d3d9e6".toColorInt(), // işlev tuşu
                     "#ffffff".toColorInt(), // boşluk
                     "#1b1c21".toColorInt(), // harf
                     "#6a6d78".toColorInt(), // ipucu
-                    gesture = "#4a6fb8".toColorInt(),
-                    keyboardBackground = backgroundImage
+                    keyboardBackground = backgroundImage,
+                    actionKey = "#d3d9e6".toColorInt(), // eylem tuşu işlev tuşu renginde
                 )
                 // KBOARD: varsayılan koyu görünüm. Koyu lacivert-gri zemin, zeminden bir ton açık harf
                 // tuşları, bir ton daha açık işlev tuşları (shift, sil, ?123, virgül, nokta, eylem).
                 THEME_DARK -> DefaultColors(
                     themeStyle,
                     hasBorders,
-                    "#353b4b".toColorInt(), // vurgu = eylem tuşu
+                    "#a8c4f5".toColorInt(), // vurgu (seçili sekme, pano iğnesi, kaydırma izi)
                     "#18191e".toColorInt(), // zemin
                     "#2a2d34".toColorInt(), // harf tuşu
                     "#353b4b".toColorInt(), // işlev tuşu
                     "#2a2d34".toColorInt(), // boşluk
                     "#e6e7ee".toColorInt(), // harf
                     "#a6a8b3".toColorInt(), // ipucu
-                    gesture = "#a8c4f5".toColorInt(),
-                    keyboardBackground = backgroundImage
+                    keyboardBackground = backgroundImage,
+                    actionKey = "#353b4b".toColorInt(), // eylem tuşu işlev tuşu renginde
                 )
                 THEME_HOLO_WHITE -> DefaultColors(
                     themeStyle,
