@@ -5,6 +5,7 @@ import io.github.kboard.engine.CandidateSource
 import io.github.kboard.engine.Query
 import io.github.kboard.engine.Source
 import io.github.kboard.engine.TurkishText
+import io.github.kboard.engine.deasciify.ContextScorer
 import io.github.kboard.engine.deasciify.DeasciifySource
 import java.util.PriorityQueue
 
@@ -21,7 +22,7 @@ import java.util.PriorityQueue
 class NgramSource(
     private val model: NgramModel,
     private val config: Config = Config(),
-) : CandidateSource {
+) : CandidateSource, ContextScorer {
 
     data class Config(
         // Dev yarısında ayarlandı (docs/reports/faz4-ngram.md).
@@ -60,12 +61,17 @@ class NgramSource(
     fun isKnown(word: String): Boolean = model.id(word).let { it >= 0 && model.suggestable(it) }
 
     /** log10 P(w | bağlam). Kelime modelde yoksa null. */
-    fun logProb(word: String, context: List<String>): Float? {
+    override fun logProb(word: String, context: List<String>, sentenceStart: Boolean): Float? {
         val id = model.id(word)
         if (id < 0) return null
-        val (u, v) = model.context(context)
+        val (u, v) = model.context(context, sentenceStart)
         return model.logProb(id, u, v)
     }
+
+    override fun follows(word: String, previous: String): Boolean = model.hasBigram(model.id(word), model.id(previous))
+
+    override fun sameFold(fold: String): List<String> =
+        model.withFold(fold).filter { model.suggestable(it) }.map { model.display(it) }
 
     private fun top(ids: Sequence<Int>, limit: Int, u: Int, v: Int): List<Pair<Int, Float>> {
         val heap = PriorityQueue<Pair<Int, Float>>(limit + 1, compareBy { it.second })

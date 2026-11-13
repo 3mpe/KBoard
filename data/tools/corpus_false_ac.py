@@ -16,6 +16,8 @@ Kullanım (depo kökünden):
 
 Her --run ad=ek-argümanlar bir motor yapılandırmasıdır (ek argümanlar boşlukla ayrılır).
 --gate ad=oran: o yapılandırmanın oranı eşiği aşarsa çıkış kodu 1.
+--context: her yapılandırma ayrıca "ad+ctx" adıyla, her sözcük satırdaki önceki iki sözcükle
+birlikte sorularak da ölçülür (bağlama göre aksan seçimi ve soru eki uyumu yalnız bunda devreye girer).
 """
 
 from __future__ import annotations
@@ -78,8 +80,21 @@ def held_tokens(lines: list[str]) -> Counter:
     return c
 
 
-def run_engine(cmd: list[str], words: list[str]) -> list[str | None]:
-    req = "".join(json.dumps({"op": "predict", "context": [], "prefix": w}, ensure_ascii=False) + "\n" for w in words)
+def held_in_context(lines: list[str]) -> list[tuple[list[str], str]]:
+    """Ayrılan satırlardaki her uygun sözcük, satırdaki önceki (en çok) iki sözcükle."""
+    out: list[tuple[list[str], str]] = []
+    for line in lines:
+        toks = b.tokens(line)
+        for i, t in enumerate(toks):
+            if "'" not in t and t.isalpha():
+                out.append((toks[max(0, i - 2):i], t))
+    return out
+
+
+def run_engine(cmd: list[str], words: list[str], contexts: list[list[str]] | None = None) -> list[str | None]:
+    ctxs = contexts or [[] for _ in words]
+    req = "".join(json.dumps({"op": "predict", "context": c, "prefix": w}, ensure_ascii=False) + "\n"
+                  for c, w in zip(ctxs, words))
     p = subprocess.run(cmd, input=req, capture_output=True, text=True, encoding="utf-8", check=True)
     out = [json.loads(line).get("autocorrect") for line in p.stdout.splitlines() if line.strip()]
     if len(out) != len(words):
@@ -96,6 +111,7 @@ def main() -> int:
     ap.add_argument("--gate", action="append", default=[], help="ad=en yüksek oran")
     ap.add_argument("--json", type=Path)
     ap.add_argument("--examples", type=int, default=15)
+    ap.add_argument("--context", action="store_true", help="bağlamlı ölçümü de yap (ad+ctx)")
     args = ap.parse_args()
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -120,6 +136,20 @@ def main() -> int:
                              "examples": [f"{w}→{a} ({counts[w]})" for w, a in bad[: args.examples]]}
             print(f"{name:16s} yanlış oto. düzeltme {n_bad}/{total} = %{rate * 100:.2f}  "
                   + ", ".join(results[name]["examples"][:8]))
+            if args.context:
+                inst = held_in_context(held)
+                ac = run_engine(cmd, [w for _, w in inst], [c for c, _ in inst])
+                bad_c: Counter = Counter()
+                for (c, w), a in zip(inst, ac):
+                    if a is not None and b.tr_lower(a) != b.tr_lower(w):
+                        bad_c[f"{' '.join(c)} {w}→{a}".strip()] += 1
+                n_bad = sum(bad_c.values())
+                rate = n_bad / len(inst) if inst else 0.0
+                cname = name + "+ctx"
+                results[cname] = {"args": extra, "false_autocorrect": n_bad, "tokens": len(inst), "rate": rate,
+                                  "examples": [f"{k} ({v})" for k, v in bad_c.most_common(args.examples)]}
+                print(f"{cname:16s} yanlış oto. düzeltme {n_bad}/{len(inst)} = %{rate * 100:.2f}  "
+                      + ", ".join(results[cname]["examples"][:8]))
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
         args.json.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")

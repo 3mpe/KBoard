@@ -103,6 +103,20 @@ class KBoardSuggestionsTest {
     }
 
     @Test
+    fun autoCorrectionUsesPreviousWords() {
+        KBoardSuggestions.setDeasciifier(deasciifier())
+        val heli = false to false
+        // Soru eki önceki kelimenin ünlüsüne uyar: "yemeğe çıkalım mi" → mı
+        val ctx = NgramContext(NgramContext.WordInfo("çıkalım"), NgramContext.WordInfo("yemeğe"))
+        val list = mutableListOf(info("mi"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("mi", list, tr, true, heli, ngramContext = ctx))
+        assertEquals("mı", list[0].word)
+        // Bağlam verilmezse eski davranış: mi'ye dokunulmaz
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("mi", mutableListOf(info("mi")), tr, true, heli))
+        KBoardSuggestions.setDeasciifier(null)
+    }
+
+    @Test
     fun deasciifierDecidesAutoCorrection() {
         KBoardSuggestions.setDeasciifier(deasciifier())
         val heli = false to false

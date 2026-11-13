@@ -1,0 +1,38 @@
+# Son ünlüsü kalın olduğu hâlde eki ince ünlüyle alan kelimeler (çoğu alıntı): "saat mi", "normal mi".
+# Önceki kelime bunlardan biriyse soru eki (mi, misin...) değiştirilmez. Küçük harf, satır başına bir kelime.
+# Kaynak: elle derlendi (Fable incelemesi, 2026-11-13); dil bilgisi kitaplarındaki ünlü uyumu istisnaları.
+saat
+dikkat
+hal
+harf
+kalp
+seyahat
+normal
+festival
+iptal
+hakikat
+ihtimal
+hayal
+ideal
+sosyal
+final
+metal
+global
+istiklal
+ihmal
+emsal
+misal
+kemal
+cemal
+celal
+hilal
+helal
+istikbal
+idrak
+iştirak
+cemaat
+itaat
+şefaat
+kanaat
+sadakat
+liyakat

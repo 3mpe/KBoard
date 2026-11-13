@@ -34,7 +34,19 @@ class DeasciifySource(
         val validWordMargin: Int = 30,
         /** Tam katlanmış eşleşmeye (kelimenin kendisi) tamamlamalara göre verilen ek puan. */
         val exactBonus: Double = 0.25,
+        /** Sözlük kuralının seçtiği biçim, dil modelinde bağlama göre bu kadar (log10) gerideyse değişir. */
+        val lmSwitchMargin: Double = 1.5,
+        /** Yazılan hiçbir yerde yoksa: dil modelinde en iyi biçim ikinciden bu kadar önde olmalı. */
+        val lmUnknownMargin: Double = 1.0,
+        /** Yazılan geçerli bir kelimeyse bile bu kadar önde bir biçime düzeltilir; null: hiç. */
+        val lmValidMargin: Double? = null,
+        /** Soru eki (mi/mı/mu/mü, misin...) önceki kelimenin ünlüsüne uydurulur. */
+        val questionHarmony: Boolean = true,
     )
+
+    /** Bağlam için dil modeli; null ise yalnız sözlük kuralları. */
+    @Volatile
+    var contextScorer: ContextScorer? = null
 
     override val name = "deasciify"
 
@@ -59,7 +71,7 @@ class DeasciifySource(
 
         val key = TurkishText.fold(typed)
         val out = ArrayList<Candidate>(limit + 2)
-        val correction = autocorrection(typed)
+        val correction = autocorrection(typed, query.context, query.sentenceStart)
         if (correction != null) out += Candidate(applyCase(typed, correction), 1.0, Source.DEASCIIFY, autocorrectable = true)
 
         val mustMatch = accentConstraints(typed)
@@ -106,8 +118,53 @@ class DeasciifySource(
      * 4. En iyi biçim, yazılan dışındaki ikinci biçimden en az [Config.dominanceMargin] önde
      *    ("sik" → sık/şık gibi belirsizlikte düzeltme yok).
      */
-    fun autocorrection(typed: String): String? {
+    fun autocorrection(typed: String, context: List<String> = emptyList(), sentenceStart: Boolean = true): String? {
         val forms = exactForms(typed)
+        if (config.questionHarmony && context.isNotEmpty()) {
+            questionParticle(typed, context)?.let { return if (it == typed) null else it }
+        }
+        val base = ruleCorrection(typed, forms)
+        val lm = contextScorer ?: return base
+        // Tek harf ("s" → "ş") kelime değil, yazmanın başıdır
+        if (!isAscii(typed) || typed.length < 2) return base
+        val lowerTyped = TurkishText.lower(typed)
+        val self = forms.firstOrNull { TurkishText.lower(it.word) == lowerTyped }
+        if (self != null && (self.user || self.flags and DeasciifyIndex.FLAG_PROTECTED != 0)) return base
+
+        // Aynı katlanmış biçimin sözlük ve dil modeli biçimleri, bağlama göre puanlı
+        val seen = HashSet<String>()
+        val scored = ArrayList<Pair<String, Float>>()
+        fun add(w: String) {
+            val l = TurkishText.lower(w)
+            if (!seen.add(l)) return
+            val lp = lm.logProb(l, context, sentenceStart) ?: return
+            scored += w to lp
+        }
+        forms.forEach { if (!it.user) add(it.word) }
+        lm.sameFold(TurkishText.fold(typed)).forEach { add(it) }
+        if (scored.isEmpty()) return base
+        scored.sortByDescending { it.second }
+        val (best, bestLp) = scored[0]
+        val bestIsTyped = TurkishText.lower(best) == lowerTyped
+        if (base != null) {
+            val baseLp = scored.firstOrNull { TurkishText.lower(it.first) == TurkishText.lower(base) }?.second
+            return if (!bestIsTyped && baseLp != null && bestLp - baseLp >= config.lmSwitchMargin) best else base
+        }
+        if (bestIsTyped) return null
+        val second = scored.getOrNull(1)?.second
+        val typedLp = scored.firstOrNull { TurkishText.lower(it.first) == lowerTyped }?.second
+        if (self == null && typedLp == null) {
+            // Yazılan ne sözlükte ne modelde: aksanlı biçim belirgin öndeyse ("kacta" → kaçta).
+            // Sözlükteki biçimler ("kir", "lazim") sıklıkla ayırt edilemez; onlara dokunulmaz.
+            return if (second == null || bestLp - second >= config.lmUnknownMargin) best else null
+        }
+        val m = config.lmValidMargin ?: return null
+        val ref = typedLp ?: return null
+        return if (bestLp - ref >= m && (second == null || bestLp - second >= m)) best else null
+    }
+
+    /** Sözlük sıklığına dayalı kural (bağlamsız). */
+    private fun ruleCorrection(typed: String, forms: List<Form>): String? {
         if (forms.isEmpty()) return null
         val lowerTyped = TurkishText.lower(typed)
         val best = forms[0]
@@ -122,6 +179,41 @@ class DeasciifySource(
         val second = forms.drop(1).firstOrNull { it !== self }
         if (second != null && best.freq - second.freq < config.dominanceMargin) return null
         return best.word
+    }
+
+    /**
+     * Ayrı yazılan soru eki: ünlüsü önceki kelimenin son ünlüsüne uyar ("çıkalım mi" → mı,
+     * "kapatır misin" → mısın, "gördün mu" → mü). Yalnız ASCII'nin kaybettiği incelik düzeltilir:
+     * yazılan i, a/ı'dan sonra ı olur; u, ö/ü'den sonra ü olur. Başka her durumda yazılan kalır
+     * ("geldi mu", "okul mi" dokunulmaz). Eki ince alan alıntılardan sonra ("saat mi", "normal mi";
+     * front-harmony-tr.txt) ve dil modeli yazılanı bu kelimeden sonra görüp en az o kadar olası
+     * buluyorsa da değişmez. Ek biçiminde değilse null.
+     */
+    private fun questionParticle(typed: String, context: List<String>): String? {
+        if (!isAscii(typed)) return null
+        val fold = TurkishText.lower(typed)
+        if (!QUESTION.matches(fold)) return null
+        var prev = context.last()
+        if (prev.isEmpty() || !prev.last().isLetter()) return null
+        if (isAscii(prev)) prev = autocorrection(prev, context.dropLast(1)) ?: prev
+        val lowerPrev = TurkishText.lower(prev)
+        if (lowerPrev in FRONT_HARMONY_EXCEPTIONS) return typed
+        val last = lastVowel(lowerPrev) ?: return typed
+        val v = fold[1]
+        val hv = when {
+            v == 'i' && (last == 'a' || last == 'ı') -> 'ı'
+            v == 'u' && (last == 'ö' || last == 'ü') -> 'ü'
+            else -> return typed
+        }
+        var word = fold.replace(v, hv)
+        if (word.endsWith("m${hv}s") && word.length > 3) word = word.dropLast(1) + "ş" // miymiş
+        val lm = contextScorer
+        if (lm != null && lm.follows(fold, lowerPrev)) {
+            val typedLp = lm.logProb(fold, context, false)
+            val harmLp = lm.logProb(word, context, false)
+            if (typedLp != null && (harmLp == null || typedLp >= harmLp)) return typed
+        }
+        return applyCase(typed, word)
     }
 
     /**
@@ -203,6 +295,9 @@ class DeasciifySource(
 
         private fun isAscii(s: String) = s.all { it.code < 0x80 }
 
+        /** mi, misin, miyim, miyiz, misiniz, midir, miydi(m/n/k/niz), miymiş — ASCII ve küçük harf. */
+        private val QUESTION = Regex("m([iu])(s\\1n(\\1z)?|y\\1m|y\\1z|d\\1r|yd\\1(m|n|k|n\\1z)?|ym\\1s)?")
+
         /** Yazılanda aksanlı harf varsa, konum → beklenen küçük harf; yoksa null. */
         internal fun accentConstraints(typed: String): Map<Int, Char>? {
             var m: HashMap<Int, Char>? = null
@@ -217,6 +312,25 @@ class DeasciifySource(
 
         internal fun compatible(word: String, mustMatch: Map<Int, Char>): Boolean =
             mustMatch.all { (i, c) -> i < word.length && TurkishText.lower(word[i].toString())[0] == c }
+
+        /** Ünlü uyumu istisnaları (kaynak dosyası; yoksa boş). */
+        private val FRONT_HARMONY_EXCEPTIONS: Set<String> by lazy {
+            DeasciifySource::class.java.getResourceAsStream("front-harmony-tr.txt")?.bufferedReader(Charsets.UTF_8)
+                ?.useLines { lines ->
+                    lines.map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }
+                        .map { TurkishText.lower(it) }.toSet()
+                } ?: emptySet()
+        }
+
+        private const val VOWELS = "aeıioöuüâîû"
+
+        private fun lastVowel(s: String): Char? {
+            for (i in s.indices.reversed()) {
+                val c = s[i]
+                if (c in VOWELS) return when (c) { 'â' -> 'a'; 'î' -> 'i'; 'û' -> 'u'; else -> c }
+            }
+            return null
+        }
 
         private fun lastVowelFront(s: String): Boolean? {
             for (i in s.indices.reversed()) {

@@ -134,6 +134,13 @@ class NgramModel private constructor(
         return if (e >= 0) deq(entQ[e]) else deq(biGamma[b]) + logUnigram(id)
     }
 
+    /** [id] kelimesinin [v]'den sonra görülmüş bir bigram kaydı var mı? */
+    fun hasBigram(id: Int, v: Int): Boolean {
+        if (id < 0 || v < 0) return false
+        val b = biRow(v)
+        return b >= 0 && find(biStart[b], biStart[b + 1], id) >= 0
+    }
+
     /** Bağlamda en olası ardıllar (trigram + bigram satırları, yoksa genel en sıklar). */
     fun successors(u: Int, v: Int): IntArray {
         val out = LinkedHashSet<Int>()
@@ -151,15 +158,28 @@ class NgramModel private constructor(
 
     /** Katlanmış biçimi [foldedPrefix] ile başlayan kelimelerin id'leri (en çok [cap] tane). */
     fun withPrefix(foldedPrefix: String, cap: Int): IntArray {
+        val lo = lowerBound(foldedPrefix)
+        var end = lo
+        while (end < byFold.size && end - lo < cap && foldStartsWith(end, foldedPrefix)) end++
+        return IntArray(end - lo) { byFold[lo + it] }
+    }
+
+    /** Katlanmış biçimi tam olarak [fold] olan kelimelerin id'leri ("uc" → uç, üç). */
+    fun withFold(fold: String): IntArray {
+        var lo = lowerBound(fold)
+        val start = lo
+        while (lo < byFold.size && compareFold(lo, fold) == 0) lo++
+        return IntArray(lo - start) { byFold[start + it] }
+    }
+
+    private fun lowerBound(key: String): Int {
         var lo = 0
         var hi = byFold.size
         while (lo < hi) {
             val mid = (lo + hi) ushr 1
-            if (compareFold(mid, foldedPrefix) < 0) lo = mid + 1 else hi = mid
+            if (compareFold(mid, key) < 0) lo = mid + 1 else hi = mid
         }
-        var end = lo
-        while (end < byFold.size && end - lo < cap && foldStartsWith(end, foldedPrefix)) end++
-        return IntArray(end - lo) { byFold[lo + it] }
+        return lo
     }
 
     private fun compareFold(k: Int, key: String): Int {
