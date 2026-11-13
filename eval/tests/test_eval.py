@@ -192,6 +192,27 @@ class EndToEndTest(unittest.TestCase):
         self.assertGreater(o["deasciify_accuracy"]["value"], 0.5)
         self.assertIn("Genel", metrics.to_markdown(result))
 
+    def test_split_is_stable_and_balanced(self):
+        cases = testset.load(SEED)
+        dev = testset.filter_split(cases, "dev")
+        test = testset.filter_split(cases, "test")
+        self.assertEqual(len(dev) + len(test), len(cases))
+        self.assertFalse({c.id for c in dev} & {c.id for c in test})
+        self.assertGreater(min(len(dev), len(test)), len(cases) // 3)
+        self.assertEqual(testset.split_of("sohbet-0001"), testset.split_of("sohbet-0001"))
+
+    def test_bootstrap_interval_contains_point_estimate(self):
+        cases = testset.load(SEED)[:40]
+        words = {}
+        for c in cases:
+            for w in c.target_words:
+                words[w] = words.get(w, 0) + 1
+        events = list(simulate(cases, FrequencyPredictor(words)))
+        point = metrics.score(cases, events)["overall"]["ksr"]["value"]
+        ci = metrics.bootstrap(cases, events, n=30)["KSR"]
+        self.assertLessEqual(ci["lo"], point)
+        self.assertGreaterEqual(ci["hi"], point)
+
     def test_user_words_reset_between_cases(self):
         pred = FrequencyPredictor({"kadın": 5})
         pred.add_user_words(["Kadıköy"])

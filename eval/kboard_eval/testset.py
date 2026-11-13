@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -104,3 +105,17 @@ def load_with_errors(paths: list[Path] | Path) -> tuple[list[Case], list[str]]:
                 seen[case.id] = where
                 cases.append(case)
     return cases, errors
+
+
+def split_of(case_id: str) -> str:
+    """Kararlı geliştirme/test ayrımı: crc32(id) çiftse "dev", tekse "test".
+
+    Ağırlık ve eşikler yalnızca "dev" yarısında ayarlanır; "test" yarısı rapor içindir.
+    """
+    return "dev" if zlib.crc32(case_id.encode("utf-8")) % 2 == 0 else "test"
+
+
+def filter_split(cases: list[Case], split: str) -> list[Case]:
+    if split == "all":
+        return cases
+    return [c for c in cases if split_of(c.id) == split]

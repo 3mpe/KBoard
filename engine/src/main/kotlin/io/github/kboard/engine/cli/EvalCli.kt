@@ -6,6 +6,8 @@ import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
+import io.github.kboard.engine.ngram.NgramModel
+import io.github.kboard.engine.ngram.NgramSource
 import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -67,6 +69,8 @@ class EvalServer(private val engine: SuggestionEngine) {
  * Seçenekler:
  *   --deasciify <dizin.kbd>   DeasciifySource'u etkinleştirir (ortam değişkeni: KBOARD_DEASCIIFY_INDEX)
  *   --deasciify-valid-margin <n|off>  sözlükte olan biçimi düzeltme eşiği (varsayılan 30)
+ *   --ngram <model.kbn>       NgramSource (sonraki kelime + bağlama göre tamamlama); ortam: KBOARD_NGRAM
+ *   --ngram-params a,b,na,nb  skor eşlemesi: offset, slope, sonraki-kelime offset, slope
  *   --no-user-morph           kişisel sözlük çekimlerini (UserWordSuffixSource) kapatır
  * UserWordSuffixSource varsayılan olarak hep açıktır; kişisel sözlük boşken aday döndürmez. Bu
  * yüzden seçeneksiz ve kullanıcı kelimesiz çalıştırma Faz 1.7 davranışıdır: öneri yok.
@@ -82,6 +86,15 @@ fun main(args: Array<String>) {
             config = config.copy(validWordMargin = if (it == "off") Int.MAX_VALUE else it.toInt())
         }
         deasciify = DeasciifySource(index, config).also { sources += it }
+    }
+    val ngramPath = argValue(args, "--ngram") ?: System.getenv("KBOARD_NGRAM")
+    if (ngramPath != null) {
+        val model = File(ngramPath).inputStream().buffered().use { NgramModel.read(it) }
+        var config = NgramSource.Config()
+        argValue(args, "--ngram-params")?.split(',')?.map { it.toDouble() }?.let { p ->
+            config = config.copy(offset = p[0], slope = p[1], nextOffset = p[2], nextSlope = p[3])
+        }
+        sources += NgramSource(model, config)
     }
     if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
     val server = EvalServer(SuggestionEngine(sources))

@@ -147,11 +147,15 @@ dependencies {
     testImplementation("androidx.test:core:1.7.0")
 }
 
-// KBOARD: engine/ derleme sırasında üretilen aksan düzeltici dizinini assets/kboard/ altına koyar.
+// KBOARD: engine/ derleme sırasında üretilen aksan düzeltici dizinini ve dil modelini assets/kboard/ altına koyar.
 abstract class KBoardAssetsTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val deasciifyIndex: RegularFileProperty
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val ngramModel: RegularFileProperty
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -162,12 +166,14 @@ abstract class KBoardAssetsTask : DefaultTask() {
         dir.deleteRecursively()
         dir.mkdirs()
         deasciifyIndex.get().asFile.copyTo(dir.resolve("deasciify-tr.kbd"))
+        ngramModel.get().asFile.copyTo(dir.resolve("kboard-tr.kbn"))
     }
 }
 
 val kboardAssets = tasks.register<KBoardAssetsTask>("kboardAssets") {
-    dependsOn(":engine:buildDeasciifyIndex")
+    dependsOn(":engine:buildDeasciifyIndex", ":engine:buildNgramModel")
     deasciifyIndex.set(rootProject.layout.projectDirectory.file("engine/build/kboard/deasciify-tr.kbd"))
+    ngramModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/kboard-tr.kbn"))
 }
 
 androidComponents.onVariants { variant ->

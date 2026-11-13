@@ -159,6 +159,46 @@ def score(cases: list[Case], events: list[Event]) -> dict:
     }
 
 
+BOOTSTRAP_KEYS = {
+    "İlk-3 @0": lambda o: o["top3_at_k"]["0"]["value"],
+    "İlk-3 @1": lambda o: o["top3_at_k"]["1"]["value"],
+    "İlk-3 @3": lambda o: o["top3_at_k"]["3"]["value"],
+    "KSR": lambda o: o["ksr"]["value"],
+    "Aksan düzeltme": lambda o: o["deasciify_accuracy"]["value"],
+    "Yanlış oto. düzeltme": lambda o: o["false_autocorrect_rate"]["value"],
+    "Yazım hatası düzeltme": lambda o: o["typo_correction_accuracy"]["value"],
+}
+
+
+def bootstrap(cases: list[Case], events: list[Event], n: int = 200, seed: int = 1) -> dict:
+    """Vakaları yerine koyarak yeniden örnekler; genel metrikler için %95 güven aralığı."""
+    import random
+
+    rng = random.Random(seed)
+    by_case: dict[str, list[Event]] = defaultdict(list)
+    for ev in events:
+        by_case[ev.case_id].append(ev)
+    samples: dict[str, list[float]] = {k: [] for k in BOOTSTRAP_KEYS}
+    for _ in range(n):
+        picked = [rng.choice(cases) for _ in cases]
+        # Aynı vaka birden çok seçilirse kimliklerini ayır.
+        cs, evs = [], []
+        for j, c in enumerate(picked):
+            cid = f"{c.id}#{j}"
+            cs.append(Case(**{**c.__dict__, "id": cid}))
+            evs.extend(Event(**{**e.__dict__, "case_id": cid}) for e in by_case.get(c.id, []))
+        o = score(cs, evs)["overall"]
+        for k, f in BOOTSTRAP_KEYS.items():
+            v = f(o)
+            if v is not None:
+                samples[k].append(v)
+    out = {}
+    for k, vals in samples.items():
+        vals.sort()
+        out[k] = {"lo": _percentile(vals, 2.5), "hi": _percentile(vals, 97.5)} if vals else None
+    return out
+
+
 def _pct(v: float | None) -> str:
     return "–" if v is None else f"%{v * 100:.1f}"
 
@@ -186,6 +226,12 @@ def to_markdown(result: dict, title: str = "Ölçüm raporu") -> str:
     fmt = lambda v: "–" if v is None else f"{v:.2f} ms"
     lines += ["", f"Gecikme: p50 {fmt(lat['p50'])} · p95 {fmt(lat['p95'])} · max {fmt(lat['max'])} "
                   f"({lat['count']} ölçüm)"]
+    ci = result.get("bootstrap")
+    if ci:
+        lines += ["", "%95 güven aralığı (vaka bazlı bootstrap):", ""]
+        for k, r in ci.items():
+            if r:
+                lines.append(f"- {k}: {_pct(r['lo'])} – {_pct(r['hi'])}")
     missing = result["overall"]["missing_events"]
     if missing:
         lines.append(f"\nUyarı: izde {missing} kelime/olay eksik.")

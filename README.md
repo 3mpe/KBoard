@@ -22,6 +22,11 @@ HeliBoard tabanlı, **yalnızca Türkçe** ve tamamen çevrimdışı bir Android
 | `data/` | Sözlük/korpus üretim betikleri ve veri kaynakları listesi |
 | `docs/` | Plan, kararlar, ölçüm raporları |
 
+## Derleme
+
+`./gradlew assembleDebug`. JDK 21 ve Android SDK'nın yanında **Python 3** gerekir: aksan düzeltici
+dizini ve dil modeli derleme sırasında `data/tools/` betikleriyle üretilir.
+
 ## Ölçüm aracı hızlı başlangıç
 
 ```sh

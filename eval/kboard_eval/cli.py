@@ -105,9 +105,11 @@ def _cmd_drive(args) -> int:
 
 
 def _cmd_score(args) -> int:
-    cases = testset.load(args.testset)
+    cases = testset.filter_split(testset.load(args.testset), args.split)
     events = trace.read(args.trace)
     result = metrics.score(cases, events)
+    if args.bootstrap:
+        result["bootstrap"] = metrics.bootstrap(cases, events, args.bootstrap)
     if args.json:
         Path(args.json).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     md = metrics.to_markdown(result, args.title)
@@ -152,6 +154,10 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--json", type=Path)
     r.add_argument("--markdown", type=Path)
     r.add_argument("--title", default="Ölçüm raporu")
+    r.add_argument("--split", choices=["all", "dev", "test"], default="all",
+                   help="dev: ayar yapılan yarı, test: yalnızca rapor (crc32(id) çift/tek)")
+    r.add_argument("--bootstrap", type=int, default=0, metavar="N",
+                   help="genel metrikler için N örnekli %%95 güven aralığı")
     r.set_defaults(func=_cmd_score)
 
     args = p.parse_args(argv)

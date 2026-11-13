@@ -1,9 +1,15 @@
 package io.github.kboard.engine
 
-/** Öneri isteği: metne geçmiş önceki kelimeler (eskiden yeniye) ve yazılmakta olan kelimenin öneki. */
+/**
+ * Öneri isteği: metne geçmiş önceki kelimeler (eskiden yeniye) ve yazılmakta olan kelimenin öneki.
+ *
+ * [sentenceStart]: [context]'in ilk kelimesi (boşsa yazılan kelime) cümle başında mı. Bağlam bir
+ * virgül ya da başka bir ayraçta kesildiyse false: bilinmeyen bağlam cümle başı sayılmaz.
+ */
 data class Query(
     val context: List<String>,
     val prefix: String,
+    val sentenceStart: Boolean = true,
 ) {
     val isNextWord: Boolean get() = prefix.isEmpty()
 }
