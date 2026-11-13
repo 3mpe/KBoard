@@ -136,6 +136,7 @@ else result KALDI "emülatör yeniden açılmadı"; fi
 
 # 5) Ayarlar (KBoard seçili değilse ayarlar kurulum sihirbazını açar)
 # Metin düzeltme → Öğrenilenleri sil → Sil.
+ensure_kboard
 adb shell am force-stop "$pkg"
 adb shell am start -W -n "$pkg/helium314.keyboard.settings.SettingsActivity" >/dev/null; sleep 4
 shot kboard-e2e-4-ayarlar 1
