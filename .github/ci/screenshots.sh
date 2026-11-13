@@ -6,7 +6,7 @@ out=screenshots; mkdir -p "$out"
 # "System UI isn't responding" kutusu (emülatörün ilk dakikalarında) varsa "Wait"e dokun.
 dismiss_anr() {
   local xml b
-  xml=$(adb shell uiautomator dump /dev/tty 2>/dev/null | tr '>' '\n')
+  adb shell uiautomator dump /sdcard/anr.xml >/dev/null 2>&1; xml=$(adb shell cat /sdcard/anr.xml 2>/dev/null | tr '>' '\n')
   echo "$xml" | grep -qiE "isn.t responding|yanıt vermiyor" || return 0
   b=$(echo "$xml" | grep -m1 -E 'text="(Wait|Bekle)"' | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
   log "ANR kutusu kapatılıyor: $b"
@@ -104,10 +104,16 @@ adb shell cmd uimode night no; sleep 1
 open_field
 type_word "kadikoyd"; shot "kboard-07-kisisel-sozluk-ek" 3 # cümle başı: K otomatik büyük
 
+# Kişisel öğrenme uçtan uca (öğren, yeniden aç, yeniden başlat, yedek, sil).
+source .github/ci/personal-e2e.sh
+
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
-adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* > "$out/logcat-kboard.txt" 2>&1 || true
+adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* KBoardPersonal:* > "$out/logcat-kboard.txt" 2>&1 || true
 adb logcat -d -b crash > "$out/logcat-crash.txt" 2>&1 || true
 adb logcat -d -s AndroidRuntime:E ActivityManager:W InputMethodManagerService:* > "$out/logcat-system.txt" 2>&1 || true
 ls -la "$out"
+# e2e adımlarından biri kaldıysa iş kırmızı görünsün (zorunlu kontrol değil; görüntüler yine yazılır).
+[ -f "$out/kisisel-e2e.txt" ] || { echo "kisisel-e2e.txt yok"; exit 1; }
+grep -q "^KALDI" "$out/kisisel-e2e.txt" && exit 1
 exit 0
