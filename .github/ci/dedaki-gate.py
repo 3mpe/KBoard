@@ -39,11 +39,11 @@ for line in LIST.read_text(encoding="utf-8").splitlines():
     if line.strip():
         listed.add(line.split("\t")[0].strip().lower())
 
-FOLD = str.maketrans("çğıöşüâîûIİ", "cgiosuaiuii")
+FOLD = str.maketrans("çğıöşüâîû", "cgiosuaiu")
 
 
 def fold(s: str) -> str:
-    return s.translate(FOLD).lower()
+    return s.replace("I", "ı").replace("İ", "i").lower().translate(FOLD)
 
 
 def is_split_of(s: str, typed: str) -> bool:

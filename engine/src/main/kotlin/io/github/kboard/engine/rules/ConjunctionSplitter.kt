@@ -22,7 +22,8 @@ import io.github.kboard.engine.deasciify.DeasciifySource
  * - Belirsiz sınıf: W, L'nin geçerli bulunma eki biçimi ("bende", "evde", "okulda"). Dil modeli
  *   karar verir: r = log P(L | bağlam) + log P(de | bağlam, L) − log P(W | bağlam). r ≥ [Config.firstMargin]
  *   ilk yuva, r ≥ [Config.thirdMargin] üçüncü yuva, altında öneri yok. W modelde yoksa (seyrek
- *   bulunma eki olabilir) karar log P(de | bağlam, L) ile ([Config.unknownFirst], [Config.unknownThird]). W kişisel modelde 2+ kullanılmışsa en çok üçüncü yuva.
+ *   bulunma eki olabilir) karar log P(de | bağlam, L) ile ([Config.unknownFirst], [Config.unknownThird]);
+ *   modelde L'den sonra bağlaç hiç görülmemişse öneri yok. W kişisel modelde 2+ kullanılmışsa en çok üçüncü yuva.
  *
  * ki: yalnız L çekimli bir fiilse ("dedim", "biliyorum") ya da kapalı listedeyse ([CERTAIN_KI]:
  * öyle, demek, tabii...) ve W bilinen bir kelime değilse. Bitişik yazılan ki'li kelimeler
@@ -32,13 +33,15 @@ import io.github.kboard.engine.deasciify.DeasciifySource
  * Kişisel sözlükteki kelime hiç ayrılmaz.
  *
  * [dictKnown]: sözlük ya da kişisel sözlük kelimesi; [lmKnown]: dil modelinde var; [lmLogProb]:
- * log10 P(w | bağlam, cümle başı), modelde yoksa null; [personalKnown]: kişisel modelde 2+
+ * log10 P(w | bağlam, cümle başı), modelde yoksa null; [lmFollows]: modelde bigram kaydı var; [personalKnown]: kişisel modelde 2+
  * kullanım; [userWord]: kişisel sözlükte; [deasciify]: aksanlı okunuş (yoksa null).
  */
 class ConjunctionSplitter(
     private val dictKnown: (String) -> Boolean,
     private val lmKnown: (String) -> Boolean = { false },
     private val lmLogProb: (String, List<String>, Boolean) -> Float? = { _, _, _ -> null },
+    /** Dil modelinde [word] kelimesi [previous]'tan sonra görülmüş mü (bigram kaydı)? */
+    private val lmFollows: (word: String, previous: String) -> Boolean = { _, _ -> true },
     private val personalKnown: (String) -> Boolean = { false },
     private val userWord: (String) -> Boolean = { false },
     private val deasciify: (String) -> String? = { null },
@@ -123,7 +126,7 @@ class ConjunctionSplitter(
         val wForm = if (known(w)) w else deasciify(w)?.let { TurkishText.lower(it) }?.takeIf { known(it) }
         // Çekimli fiilden sonra ("söyledimde", "geliyorumda") bulunma eki gelmez: bitişik biçim
         // hiçbir yerde yoksa bağlaçtır
-        if (wForm == null && FINITE_VERB.containsMatchIn(left) && left !in NEVER_BEFORE_KI) {
+        if (wForm == null && left !in NEVER_BEFORE_KI && isVerbForm(left)) {
             return Decision(split, Kind.CERTAIN_DE, Slot.FIRST, null)
         }
         val ctx = query.context
@@ -134,13 +137,17 @@ class ConjunctionSplitter(
         if (lpW == null) {
             // Bitişik biçim modelde yok (seyrek bulunma eki olabilir: "yalnızlıkta"): karar, L'den
             // sonra bağlacın olasılığına göre. "kardeşim" → "de" sık; "yalnızlık" → "da" seyrek.
+            // L'den sonra bağlaç hiç görülmemişse olasılık yalnız bağlacın genel sıklığıdır (seyrek
+            // isim: "çeltikte", "zeytinde"); ayrım önerilmez.
+            if (!lmFollows(particle, left)) return Decision(split, Kind.AMBIGUOUS_DE, null, null)
             val r = lpP.toDouble()
             var slot = when {
                 r >= config.unknownFirst -> Slot.FIRST
                 r >= config.unknownThird -> Slot.THIRD
                 else -> null
             }
-            if (slot == Slot.FIRST && personalKnown(w)) slot = Slot.THIRD
+            // Bitişik biçim sözlükte bir kelime ("zeytinde") ama dil modelinde yoksa da en çok üçüncü yuva
+            if (slot == Slot.FIRST && (personalKnown(w) || wForm != null)) slot = Slot.THIRD
             return Decision(split, Kind.AMBIGUOUS_DE, slot, r)
         }
         val ratio = (lpL + lpP).toDouble() - lpW.toDouble()
@@ -163,9 +170,38 @@ class ConjunctionSplitter(
         if (left !in CERTAIN_KI) {
             if (known(w) || personalKnown(w)) return null
             if (left in NEVER_BEFORE_KI || left.takeLast(2) in DE_TAILS) return null
-            if (!FINITE_VERB.containsMatchIn(left)) return null
+            if (!isVerbForm(left)) return null
         }
         return Decision("$left ki", Kind.KI, Slot.FIRST, null)
+    }
+
+    /**
+     * L çekimli bir fiil mi: sonu fiil eki kalıbına uyar ([FINITE_VERB]) ve kalıp çıkarılınca kalan
+     * gövdenin mastarı (+mek/+mak, olağan gövde değişimleriyle: gid → git, bekl → bekle, d → de)
+     * sözlükte ya da dil modelinde bir kelimedir. Yalnız kalıba uyan isimler (kedi, kadın, plastik,
+     * gümüş, tasarım) fiil sayılmaz.
+     */
+    private fun isVerbForm(left: String): Boolean {
+        val m = FINITE_VERB.find(left) ?: return false
+        // Kalıp atılınca kalan gövde ("dedim" → "de", "biliyorum" → "bil", "umarım" → "um")
+        val stem = left.substring(0, m.range.first)
+        val ending = m.value
+        if (stem.isEmpty()) return false
+        // Geçmiş zaman ekinin ünsüzü gövdeye uymalı: "çeldik" olurdu, "çeltik" fiil değil
+        if (ending[0] in "dt" && ending[0] != (if (stem.last() in VOICELESS) 't' else 'd')) return false
+        val stems = LinkedHashSet<String>()
+        stems += stem
+        if (stem.last() == 'd') stems += stem.dropLast(1) + "t" // gidiyor → git
+        if (stem.last() == 'ğ') stems += stem.dropLast(1) + "k"
+        // -iyor önünde düşen ünlü: bekl(iyor) → bekle, anl(ıyor) → anla, d(iyor) → de
+        if (ending.length >= 3 && ending.substring(1).startsWith("yor")) {
+            stems += stem + "e"
+            stems += stem + "a"
+        }
+        for (st in stems) {
+            if (known(st + "mek") || known(st + "mak")) return true
+        }
+        return false
     }
 
     companion object {

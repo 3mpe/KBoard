@@ -220,6 +220,7 @@ fun main(args: Array<String>) {
             dictKnown = { d.isKnown(it) },
             lmKnown = { lm?.contains(it) == true },
             lmLogProb = { w, c, st -> lm?.logProb(w, c, st) },
+            lmFollows = { w, prev -> lm?.follows(w, prev) == true },
             personalKnown = { ps?.isKnown(it) == true },
             userWord = { d.isUserWord(it) },
             deasciify = { d.autocorrection(it) },

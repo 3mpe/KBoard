@@ -132,6 +132,7 @@ object KBoardSuggestions {
             dictKnown = { deasciifier?.isKnown(it) == true },
             lmKnown = { ngram?.contains(it) == true },
             lmLogProb = { w, ctx, start -> ngram?.logProb(w, ctx, start) },
+            lmFollows = { w, prev -> ngram?.follows(w, prev) == true },
             personalKnown = { personal?.isKnown(it) == true }, // yalnız belirsiz sınıfta
             userWord = { deasciifier?.isUserWord(it) == true },
             deasciify = { deasciifier?.autocorrection(it) },

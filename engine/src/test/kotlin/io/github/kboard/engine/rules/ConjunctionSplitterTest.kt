@@ -17,6 +17,10 @@ class ConjunctionSplitterTest {
         "ben", "bende", "sen", "sende", "ev", "evde", "okul", "okulda", "ya", "hem", "yine", "mehmet",
         "yemek", "dedim", "biliyorum", "söyledim", "öyle", "demek", "benim", "benimki", "yarın", "şimdi",
         "şimdiki", "evdeki", "o", "oda", "ağaç", "ağaçta", "kibrit", "kibrite", "kardeşim", "de", "da", "ki",
+        // mastarlar: çekimli fiil, gövdesinin mastarı bir kelimeyse fiil sayılır
+        "demek", "bilmek", "söylemek", "çelmek",
+        // fiil ekine benzeyen isimler (mastarları yok)
+        "kedi", "plastik", "gümüş", "çeltik", "kadın", "sepetin",
     )
     private val personal = mutableSetOf<String>()
     private val userWords = mutableSetOf<String>()
@@ -106,6 +110,34 @@ class ConjunctionSplitterTest {
         for (w in listOf("belki", "sanki", "çünkü", "halbuki", "benimki", "evdeki", "yarınki", "şimdiki")) {
             assertNull(s.at(w), w)
         }
+    }
+
+    @Test
+    fun nounsThatLookLikeVerbFormsAreNotCertain() {
+        val s = splitter()
+        // bitişik biçim hiçbir yerde yok, ama L fiil değil: belirsiz sınıf, dil modeli yetmezse öneri yok
+        for ((w, ctx) in listOf("kedide" to "bizim", "plastikte" to "bu", "gümüşte" to "eski", "çeltikte" to "şu")) {
+            val l = w.dropLast(2)
+            lp[ctx to l] = -4f; lp[l to (if (ConjunctionSplitter.backHarmony(l)) "da" else "de")] = -3f
+            assertTrue(s.at(w, ctx)?.slot != Slot.FIRST, w)
+        }
+        // ki: fiil olmayan L'den sonra hiç ayrılmaz
+        assertNull(s.at("kadınki", "bu"))
+        assertNull(s.at("sepetinki", "o"))
+    }
+
+    @Test
+    fun unseenConjunctionAfterARareNounGivesNoSplit() {
+        // "çeltikte": bitişik biçim modelde yok; P(de | çeltik) yalnız "de"nin genel sıklığı
+        lp[null to "çeltik"] = -5f; lp["çeltik" to "de"] = -1.2f
+        assertEquals(Slot.FIRST, splitter().at("çeltikte")?.slot)
+        val unseen = ConjunctionSplitter(
+            dictKnown = { TurkishText.lower(it) in dict },
+            lmLogProb = { w, ctx, _ -> lp[ctx.lastOrNull() to w] },
+            lmFollows = { _, _ -> false },
+        )
+        assertNull(unseen.split(Query(emptyList(), "çeltikte")))
+        assertEquals("ya da", unseen.split(Query(emptyList(), "yada"))?.word) // kesin sınıf etkilenmez
     }
 
     @Test

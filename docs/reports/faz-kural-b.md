@@ -11,33 +11,51 @@ ayarlandı.
 
 ## Sonuçlar
 
-Test yarısı (`dedaki-v0`, kelimenin tamamı yazıldığında, boşluktan önceki ilk 3 öneri). Köşeli
-parantezde vakalar üzerinden 2 000 örnekli bootstrap ile %95 aralık.
+Test yarısı (`dedaki-v0`, kelimenin tamamı yazıldığında, boşluktan önceki ilk 3 öneri). Tablodaki
+sayılar Fable incelemesinden sonraki son sürümün.
 
 | Ölçü | Hedef | Test |
 |---|---|---|
-| Bitişik bağlaç: ayrım ilk 3'te | ≥ %60 | **%75,9** [%63,0–%87,0] (54 kelime) |
-| Bitişik bağlaç: ayrım ilk yuvada | ≥ %40 | **%66,7** [%53,7–%79,6] |
-| · yalnız de/da (40) | | ilk yuva %55,0, ilk 3 %67,5 |
+| Bitişik bağlaç: ayrım ilk 3'te | ≥ %60 | **%75,9** (54 kelime) |
+| Bitişik bağlaç: ayrım ilk yuvada | ≥ %40 | **%63,0** |
+| · yalnız de/da (40) | | ilk yuva %50,0, ilk 3 %67,5 |
 | · yalnız ki (14) | | ilk yuva %100, ilk 3 %100 |
 | Tuzak vakada ayrım ilk yuvada | ≤ %10 | **%8,6** [%0–%20] (35 vaka; 3 vaka) |
 | Tuzak vakada ayrım ilk 3'te | eşiksiz (Fable ~%40 üstüne itiraz) | %22,9 |
 | Ayrım otomatik düzeltme oldu | 0 | **0** |
-| Korpus: doğru yazılmış -de/-da/-te/-ta/-ki'de ayrım ilk yuvada | ≤ %5 | **%0,59** (6/1015) |
-| Korpus: aynısı ilk 3'te | rapor | %1,58 (16/1015) |
+| Korpus: doğru yazılmış -de/-da/-te/-ta/-ki'de ayrım ilk yuvada | ≤ %5 | **%0,20** (2/1015) |
+| Korpus: aynısı ilk 3'te | rapor | %1,08 (11/1015) |
 | seed-v0 @0/@1/@3/KSR, aksan, yazım hatası | düşüş ≤ 0,2 puan | değişmedi (aynı) |
-| kural-v0 @0/@1/@3 | düşüş ≤ 0,2 puan | değişmedi; KSR +0,17, yazım hatası ilk 3 +6,3 puan |
+| kural-v0 @0/@1/@3 | düşüş ≤ 0,2 puan | değişmedi; KSR +0,17, yazım hatası ilk 3 +4,7 puan |
 | kural-v0 eşikleri (PR A) | geçmeli | geçti |
-| Hız p95 (seed-v0, bilgisayarda) | ≤ 1,5 ms | 1,12 → 1,23 ms |
+| Hız p95 (seed-v0, bilgisayarda) | ≤ 1,5 ms | 1,12 → 1,21 ms |
 
 Sayılar yerelde, main'in dil modeliyle ölçüldü. Bu PR yeni seti dil modelinin sızıntı süzgecine de
 ekliyor; CI'daki resmî sayılar o modelle çıkar (bkz. "CI").
 
-**Testin iki kez okunması.** Test yarısı ilk kez okunduğunda de/da ilk yuvası %47,5 idi. Kaçanlar
-arasında "Söyledimde", "Aradımda" vardı: Fable'ın tasarımındaki "çekimli fiil + bitişik biçim hiçbir
-yerde yok → kesin sınıf" kuralı ilk sürümde eksikti. Kural tasarıma göre eklendi, dev yarısında
-denendi (dev ilk yuva %62,3 → %64,2, tuzak değişmedi), sonra test bir kez daha ölçüldü. Tabloda bu
-ikinci ölçüm var. İlk ölçüm: hata ilk yuva %61,1, ilk 3 %70,4; tuzak aynı.
+**Test yarısının okunmaları.** Test yarısı üç kez ölçüldü; üçü de eşikleri geçiyor.
+
+| Okuma | Neden | Hata ilk yuva / ilk 3 | Tuzak ilk yuva / ilk 3 |
+|---|---|---|---|
+| 1 | ilk sürüm | %61,1 [%48,1–%74,1] / %70,4 [%57,4–%81,5] | %8,6 / %22,9 |
+| 2 | tasarımda olan "çekimli fiil → kesin sınıf" kuralı de/da'ya eklendi ("Söyledimde") | %66,7 [%53,7–%79,6] / %75,9 [%63,0–%87,0] | %8,6 / %22,9 |
+| 3 | Fable incelemesi: fiil sanılan isimler (aşağıda) | %63,0 / %75,9 | %8,6 / %22,9 |
+
+Köşeli parantezde vakalar üzerinden 2 000 örnekli bootstrap ile %95 aralık. Fable kararı: test yarısı
+artık açığa çıkmış sayılır; sonraki ayar adımından (sağ bağlam) önce, ölçümden önce yazılmış yeni
+bir test grubu eklenir (kesmesiz özel isimler ve seyrek isim bulunma ekleri dahil).
+
+**Fable incelemesinden sonra (2. tur).** İlk sürümde "çekimli fiil" yalnız ek kalıbıyla tanınıyordu;
+kalıba uyan isimler (kedi, kadın, plastik, gümüş, tasarım...) kesin sınıfa düşüyordu ("bizim kedide"
+→ "kedi de" ilk yuvada). Şimdi:
+- Fiil, kalıp atılınca kalan gövdenin mastarı (+mek/+mak; gid → git, bekl → bekle) sözlükte ya da dil
+  modelinde bir kelimeyse fiil sayılır; geçmiş zaman ekinin ünsüzü gövdeye uymalı ("çeltik" ≠ çel + dik).
+- Bitişik biçim dil modelinde yokken L'den sonra bağlaç modelde hiç görülmemişse ayrım önerilmez
+  (P(de | L) yalnız "de"nin genel sıklığıdır).
+- Bitişik biçim sözlükte bir kelimeyse ("zeytinde") ama dil modelinde yoksa ayrım en çok üçüncü yuvaya.
+- Dev yarısına 12 tuzak eklendi (fiil ekine benzeyen isim + bulunma eki); test yarısına eklenmedi.
+- Fable'ın kendi 118 doğru kelimelik denemesinde ilk yuvada ayrım 7 → 1 ("telefonum annemde",
+  sağ bağlam), ilk 3'te 9 → 3.
 
 ## Kural
 
@@ -71,6 +89,11 @@ puana göre sıralar). Yeni kaynak türü `Source.RULE_SPLIT`, hiçbir zaman oto
 değil. Yanlış yazım listesinin (PR A) düzeltmesi varsa o önce gelir ("yinede" → "yine de" boşlukta
 düzelir, bu PR'dan önce de öyleydi).
 
+**PR A listesi.** "herkesde → herkeste" kaydı kaldırıldı (Fable: çıplak "herkesde" daha çok
+bağlaç; az olası okunuşa otomatik düzeltme düzeltmemekten kötü). Artık "herkes de" ilk yuvada
+öneriliyor, "herkeste" öneri olarak duruyor. kural-v0'daki "Herkesde aynı fikir var" vakası
+`kural_liste`'den `kural_dedaki`'ye alındı. Listede aynı biçimde başka kayıt yok.
+
 **Uygulama.** `KBoardSuggestions`: ayırıcı yazım kurallarıyla birlikte, aksan düzelticiyle açılır
 (ayrı bir ayar yok; yazım kuralları gibi). HeliBoard ilk öneriyi puanına bakıp kendisi de otomatik
 düzeltme yapabildiği için, ilk öneri ayrık bağlaçsa (KBoard kaynağı, boşluklu, düzeltmeye uygun
@@ -83,9 +106,7 @@ HeliBoard kullanıcı geçmişine (ve kişisel öğrenmeye) kelime kelime ekler,
   çoğu zaman sonraki kelimeye bağlı ("Bende kalsın" / "Ben de geldim"). Bu, yol haritasındaki "sağ
   bağlamla geri düzeltme" adımına kalıyor. Tuzaklarda ilk yuvaya çıkan üç vakanın üçü de bu türden
   ("Bende de aynı sorun", "Annemde biraz para", "annemde kalacağım").
-- **"herkesde" PR A listesinde** "herkeste"ye düzeltiliyor; "Herkesde biliyor" için doğrusu "Herkes
-  de". Liste kaydı bulunma eki okunuşunu seçiyor. Fable'ın kararına bırakıldı: kayıt kaldırılırsa
-  ayırıcı ilk yuvada "herkes de" önerir (herkes kapalı listede).
+- **Kesmesiz özel isimler** küçük harfle kalıyor ("mehmetde" → "mehmet de").
 - **Kesmeli özel isim** ("Ankara'da" → "Ankara da") bu sürümde yok: kesmeli kelimeyi motor öneri
   kaynaklarına hiç sormuyor.
 - **Dil modelinde olmayan sol parça** ("gitsen", "istersen") ayrılmıyor.
@@ -98,6 +119,9 @@ HeliBoard kullanıcı geçmişine (ve kişisel öğrenmeye) kelime kelime ekler,
 - `de/da/ki ayrımı` adımı: `dedaki-v0` test yarısı, `.github/ci/dedaki-gate.py` (ilk 3 ≥ %60, ilk
   yuva ≥ %40, tuzak ilk yuva ≤ %10, ayrım otomatik düzeltme 0).
 - `Korpusta ayrık bağlaç önerisi` adımı: `data/tools/corpus_split.py` (ilk yuva ≤ %5).
+- Fable'ın açtığı izleme işi: HeliBoard, yazılan kelime sözlüğünde yoksa ilk öneriyi bayrağa
+  bakmadan otomatik düzeltmeye çevirebiliyor (Suggest.kt). Bu PR yalnız ayrık öneri için kapatıyor;
+  yazım hatası, ek zinciri ve dil modeli adayları için emülatörde ayrıca denenecek.
 - Emülatör: `.github/ci/dedaki-e2e.sh` ("dedimki" → şeritte "dedim ki", dokununca iki kelime;
   hemen geri silme yazılanı geri getirir; boşluk düzeltmez; "bu akşam bizde" ilk öneri ayrım değil).
 - `dedaki-v0` dil modeli derlemesinin ve korpus aracının sızıntı süzgecine eklendi.
@@ -108,5 +132,5 @@ HeliBoard kullanıcı geçmişine (ve kişisel öğrenmeye) kelime kelime ekler,
 |---|---|
 | Motor | `Api.kt` (`SplitSuggester`, `Source.RULE_SPLIT`), `SuggestionEngine.kt` (`placeSplit`), `rules/ConjunctionSplitter.kt`, `cli/EvalCli.kt` (`--no-split`, `--split-params`) |
 | Uygulama | `kboard/KBoardSuggestions.kt` |
-| Testler | `engine/src/test/.../rules/ConjunctionSplitterTest.kt` (10), `app/src/test/.../KBoardSuggestionsTest.kt` (adaptör: öneri, düzeltme yok, puan sırası, kişisel sözlük) |
+| Testler | `engine/src/test/.../rules/ConjunctionSplitterTest.kt` (12; fiil sanılan isimler ve seyrek isim dahil), `app/src/test/.../KBoardSuggestionsTest.kt` (adaptör: öneri, düzeltme yok, puan sırası, kişisel sözlük) |
 | Ölçüm | `eval/testset/dedaki-v0.jsonl`, `.github/ci/dedaki-gate.py`, `data/tools/corpus_split.py`, `.github/ci/dedaki-e2e.sh` |
