@@ -6,7 +6,7 @@ out=screenshots; mkdir -p "$out"
 # "System UI isn't responding" kutusu (emülatörün ilk dakikalarında) varsa "Wait"e dokun.
 dismiss_anr() {
   local xml b
-  xml=$(adb shell uiautomator dump /dev/tty 2>/dev/null | tr '>' '\n')
+  adb shell uiautomator dump /sdcard/anr.xml >/dev/null 2>&1; xml=$(adb shell cat /sdcard/anr.xml 2>/dev/null | tr '>' '\n')
   echo "$xml" | grep -qiE "isn.t responding|yanıt vermiyor" || return 0
   b=$(echo "$xml" | grep -m1 -E 'text="(Wait|Bekle)"' | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
   log "ANR kutusu kapatılıyor: $b"

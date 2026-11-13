@@ -19,6 +19,8 @@ field_text() {
   adb shell cat /sdcard/f.xml | tr '>' '\n' | grep -m1 'class="android.widget.EditText"' \
     | sed -E 's/.* text="([^"]*)".*/\1/'
 }
+# `uiautomator dump /dev/tty` boru içinde tty olmadığından boş döner; dosyaya yazıp okunur.
+ui_xml() { adb shell uiautomator dump /sdcard/t.xml >/dev/null 2>&1; adb shell cat /sdcard/t.xml 2>/dev/null; }
 personal_file() { adb shell run-as "$pkg" ls -l "$de_dir" 2>&1 | tr -d '\r' | grep -E "personal-tr\.bin$" || true; }
 
 # KBoard seçili değilse (yeniden başlatmadan sonra sistem Gboard'a dönebiliyor) yeniden seç.
@@ -67,7 +69,7 @@ wait_boot() {
 tap_text() { # $1 = grep -E deseni (text="..." içinde)
   local n b
   for n in 1 2 3 4 5 6; do
-    b=$(adb shell uiautomator dump /dev/tty 2>/dev/null | tr '>' '\n' | grep -m1 -E "text=\"($1)\"" \
+    b=$(ui_xml | tr '>' '\n' | grep -m1 -E "text=\"($1)\"" \
       | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
     if [ -n "$b" ]; then set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); sleep 2; return 0; fi
     adb shell input swipe 540 1700 540 900 400; sleep 1
@@ -144,7 +146,7 @@ adb shell am start -W -n "$pkg/helium314.keyboard.settings.SettingsActivity" >/d
 # Yine de kurulum sihirbazı açıldıysa son adımdan ayarlara geç.
 # Sihirbaz 2. adımda KBoard'un seçilmesini bekler, sonra 3. adımın düğmesi ayarlara geçer.
 for n in 1 2 3 4 5; do
-  adb shell uiautomator dump /dev/tty 2>/dev/null | grep -qE "uygulamasını kurma|Set up " || break
+  ui_xml | grep -qE "uygulamasını kurma|Set up " || break
   log "kurulum sihirbazı açık ($n): $(adb shell settings get secure default_input_method | tr -d '\r')"
   adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3
   tap_text "Klavyeyi yapılandır|Configure.*" ; sleep 2
