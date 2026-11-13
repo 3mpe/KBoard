@@ -114,5 +114,6 @@ adb logcat -d -b crash > "$out/logcat-crash.txt" 2>&1 || true
 adb logcat -d -s AndroidRuntime:E ActivityManager:W InputMethodManagerService:* > "$out/logcat-system.txt" 2>&1 || true
 ls -la "$out"
 # e2e adımlarından biri kaldıysa iş kırmızı görünsün (zorunlu kontrol değil; görüntüler yine yazılır).
-grep -q "^KALDI" "$out/kisisel-e2e.txt" 2>/dev/null && exit 1
+[ -f "$out/kisisel-e2e.txt" ] || { echo "kisisel-e2e.txt yok"; exit 1; }
+grep -q "^KALDI" "$out/kisisel-e2e.txt" && exit 1
 exit 0
