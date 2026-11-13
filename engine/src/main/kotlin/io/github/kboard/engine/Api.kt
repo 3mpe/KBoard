@@ -14,7 +14,8 @@ data class Query(
     val isNextWord: Boolean get() = prefix.isEmpty()
 }
 
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, OTHER }
+/** [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource). */
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası

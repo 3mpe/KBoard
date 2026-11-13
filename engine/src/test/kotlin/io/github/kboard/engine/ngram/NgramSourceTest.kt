@@ -16,7 +16,7 @@ class NgramSourceTest {
         "güzel" to 0.2, "iyi" to 0.2, "çok" to 0.3)
     private fun id(w: String) = words.indexOf(w)
 
-    private fun model(blockGunaydin: Boolean = false): NgramModel {
+    internal fun model(blockGunaydin: Boolean = false): NgramModel {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).apply {
             write("KBNG".toByteArray()); writeInt(3)

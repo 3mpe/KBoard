@@ -9,14 +9,18 @@ package io.github.kboard.engine
 class SuggestionEngine(
     private val sources: List<CandidateSource> = emptyList(),
     private val ranker: Ranker = MaxScoreRanker,
-    /** Önerilmeyecek kelimeler; yazılanın kendisi ve kişisel sözlük adayları muaf. */
+    /**
+     * Önerilmeyecek kelimeler; yazılanın kendisi ve kişisel sözlük adayları muaf. Kişisel model
+     * adayları ([Source.PERSONAL]) kuralı kendisi uygular (PersonalSource: sonraki kelime olarak
+     * hiç, tamamlama olarak en az 3 kullanımda), burada süzülmez.
+     */
     private val denylist: Denylist = Denylist.EMPTY,
 ) {
     fun suggest(query: Query, limit: Int = DEFAULT_LIMIT): Suggestions {
         if (sources.isEmpty()) return EMPTY
         var all = sources.flatMap { it.candidates(query, limit) }
         if (!denylist.isEmpty) {
-            all = all.filter { it.source == Source.USER || TurkishText.sameWord(it.word, query.prefix) || !denylist.blocks(it.word) }
+            all = all.filter { it.source == Source.USER || it.source == Source.PERSONAL || TurkishText.sameWord(it.word, query.prefix) || !denylist.blocks(it.word) }
         }
         val ranked = ranker.rank(query, all, limit)
         val autocorrect = if (query.isNextWord) null else ranked.firstOrNull {
