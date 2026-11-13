@@ -12,6 +12,7 @@ import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.morph.SuffixChainSource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.personal.PersonalModel
@@ -63,6 +64,13 @@ object KBoardSuggestions {
     @Volatile
     private var denylist: Denylist = Denylist.EMPTY
 
+    /**
+     * Ek zinciri tamamlaması (bilinen kök + ek harfleri; yalnız öneri çubuğu, otomatik düzeltme yok,
+     * bkz. docs/reports/faz-ek-zinciri.md). Aksan düzelticinin dizinini kullanır.
+     */
+    @Volatile
+    private var suffix: SuffixChainSource? = null
+
     /** Yazım hatası önerileri (yalnız öneri çubuğu; otomatik düzeltme kapalı, bkz. faz-typo.md). */
     @Volatile
     private var typo: TypoSource? = null
@@ -102,6 +110,13 @@ object KBoardSuggestions {
         rebuild()
     }
 
+    /** Ek zinciri kaynağını bağlar ya da (null) kaldırır. */
+    @Synchronized
+    fun setSuffix(source: SuffixChainSource?) {
+        suffix = source
+        rebuild()
+    }
+
     /** Önerilmeyecek kelimeleri bağlar (`assets/kboard/denylist-tr.txt`). */
     @Synchronized
     fun setDenylist(list: Denylist) {
@@ -133,7 +148,10 @@ object KBoardSuggestions {
         personal = p
         // Aksan düzeltici belirsiz kelimede bağlama göre dil modeline danışır ("uc" → üç)
         deasc?.contextScorer = lm
-        engine = SuggestionEngine(listOfNotNull(deasc, p ?: lm, typo, userMorph), denylist = denylist)
+        // Ek zinciri: kök kütlesi ve bilinen biçim için ham dil modeli (kişisel kaynaktan bağımsız)
+        val sfx = suffix
+        sfx?.lm = lm
+        engine = SuggestionEngine(listOfNotNull(deasc, p ?: lm, typo, sfx, userMorph), denylist = denylist)
             .also { it.setUserWords(userWords) }
     }
 

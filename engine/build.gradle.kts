@@ -39,18 +39,35 @@ val dumpTurkishDict by tasks.registering(Exec::class) {
     outputs.file(out)
     commandLine("python3", script.path, dict.path, "--offensive", "-o", out.get().asFile.path)
 }
+// Kök sınıfı bayrakları (data/suffix/stems-tr.tsv, ek zinciri modeli için) dizinin boş bayrak
+// bitlerine yazılır; dizin boyutu değişmez.
 val buildDeasciifyIndex by tasks.registering(JavaExec::class) {
     description = "Aksan düzeltici dizinini (deasciify-tr.kbd) derler"
     val tsv = kboardDir.map { it.file("main_tr.tsv") }
     val protect = file("../data/deasciify-koruma.txt")
+    val stems = file("../data/suffix/stems-tr.tsv")
     val out = kboardDir.map { it.file("deasciify-tr.kbd") }
     dependsOn(dumpTurkishDict)
-    inputs.files(tsv, protect)
+    inputs.files(tsv, protect, stems)
     outputs.file(out)
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("io.github.kboard.engine.deasciify.DeasciifyToolKt")
     jvmArgs("-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8")
-    args("build", tsv.get().asFile.path, protect.path, out.get().asFile.path)
+    args("build", tsv.get().asFile.path, protect.path, out.get().asFile.path, stems.path)
+}
+
+// Ek zinciri modeli (suffix-tr.kbs): data/suffix/chains-tr.tsv'den, Zemberek'siz ve belirlenimci.
+// Tablo masaüstünde data/tools/build_suffix_chains.py ile üretilip depoya girer.
+val buildSuffixModel by tasks.registering(JavaExec::class) {
+    description = "Ek zinciri modelini (suffix-tr.kbs) derler"
+    val chains = file("../data/suffix/chains-tr.tsv")
+    val out = kboardDir.map { it.file("suffix-tr.kbs") }
+    inputs.files(chains)
+    outputs.file(out)
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("io.github.kboard.engine.morph.SuffixToolKt")
+    jvmArgs("-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8")
+    args("build", chains.path, out.get().asFile.path)
 }
 
 // Sonraki kelime / bağlam dil modeli (kboard-tr.kbn): data/corpus/ ve data/sohbet/ altındaki CC0 korpustan, test

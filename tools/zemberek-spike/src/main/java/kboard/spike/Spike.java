@@ -37,6 +37,8 @@ import zemberek.morphology.lexicon.RootLexicon;
  *       Sonucu tek satır {@code RESULT k=v ...} olarak basar.
  *   <li>{@code bench}: {@code probe}'u ayrı alt JVM'lerde tekrar tekrar çalıştırır, en küçük
  *       çalışan {@code -Xmx}'i arar, bağımlılık boyutlarını toplar ve Markdown rapor yazar.
+ *   <li>{@code analyze}, {@code lexicon}, {@code validate}: ek zinciri ön hesaplaması, bkz.
+ *       {@link SuffixChains}.
  * </ul>
  */
 public final class Spike {
@@ -53,6 +55,8 @@ public final class Spike {
     switch (args[0]) {
       case "probe" -> probe(opts);
       case "bench" -> bench(opts);
+      // Ek zinciri ön hesaplaması (data/tools/build_suffix_chains.py)
+      case "analyze", "lexicon", "validate" -> SuffixChains.main(args);
       default -> {
         System.err.println("bilinmeyen mod: " + args[0]);
         System.exit(2);
