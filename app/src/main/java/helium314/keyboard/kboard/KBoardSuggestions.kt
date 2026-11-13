@@ -97,6 +97,8 @@ object KBoardSuggestions {
     }
 
     private fun rebuild() {
+        // Aksan düzeltici belirsiz kelimede bağlama göre dil modeline danışır ("uc" → üç)
+        deasciifier?.contextScorer = ngram
         engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, typo, userMorph), denylist = denylist)
             .also { it.setUserWords(userWords) }
     }
@@ -120,9 +122,11 @@ object KBoardSuggestions {
         data class Replace(val word: String) : AutoCorrection
     }
 
-    fun autoCorrection(typedWord: String, locale: Locale): AutoCorrection {
+    fun autoCorrection(
+        typedWord: String, locale: Locale, context: List<String> = emptyList(), sentenceStart: Boolean = true,
+    ): AutoCorrection {
         if (locale.language != "tr" || typedWord.isEmpty()) return AutoCorrection.NoOpinion
-        engine.suggest(Query(emptyList(), typedWord)).autocorrect?.let {
+        engine.suggest(Query(context, typedWord, sentenceStart)).autocorrect?.let {
             return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it))
         }
         return if (deasciifier?.isProtected(typedWord) == true) AutoCorrection.Keep else AutoCorrection.NoOpinion
@@ -142,19 +146,19 @@ object KBoardSuggestions {
      * yazılan kelime) motor düzeltmez; bu durumda HeliBoard'un kararı aynen geçerlidir.
      *
      * [trailingQuotes]: yazılanın sonundaki tek tırnak sayısı; düzeltme kelimesine geri eklenir.
+     *
+     * [ngramContext]: önceki kelimeler; soru eki uyumu ("çıkalım mi" → mı) ve belirsiz aksan
+     * seçimi ("hafta yine uc" → üç) için. null ise bağlamsız karar verilir.
      */
     fun mergeAutoCorrection(
         typedWord: String, suggestions: MutableList<SuggestedWordInfo>, locale: Locale,
         correctionAllowed: Boolean, base: Pair<Boolean, Boolean>,
-        typedWordSourceType: String? = null, trailingQuotes: Int = 0,
+        typedWordSourceType: String? = null, trailingQuotes: Int = 0, ngramContext: NgramContext? = null,
     ): Pair<Boolean, Boolean> {
-        if (helium314.keyboard.latin.BuildConfig.DEBUG) android.util.Log.d(
-            "KBoardSuggestions", "merge typed=$typedWord allowed=$correctionAllowed base=$base " +
-                "src=$typedWordSourceType locale=$locale deasc=${deasciifier != null} " +
-                "ac=${if (locale.language == "tr") autoCorrection(typedWord, locale) else "-"}"
-        )
         if (!correctionAllowed) return base
-        return when (val ac = autoCorrection(typedWord, locale)) {
+        val words = ngramContext?.let { contextWords(it) } ?: emptyList()
+        val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
+        return when (val ac = autoCorrection(typedWord, locale, words, sentenceStart)) {
             AutoCorrection.NoOpinion -> base
             AutoCorrection.Keep -> base.first to false
             // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.

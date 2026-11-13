@@ -91,6 +91,11 @@ fun main(args: Array<String>) {
         argValue(args, "--deasciify-valid-margin")?.let {
             config = config.copy(validWordMargin = if (it == "off") Int.MAX_VALUE else it.toInt())
         }
+        // Bağlam ayarı (geliştirme): lmSwitchMargin / lmUnknownMargin / lmValidMargin
+        argValue(args, "--accent-lm")?.split(',')?.map { it.toDouble() }?.let { p ->
+            config = config.copy(lmSwitchMargin = p[0], lmUnknownMargin = p[1], lmValidMargin = p.getOrNull(2))
+        }
+        if ("--no-question-harmony" in args) config = config.copy(questionHarmony = false)
         deasciify = DeasciifySource(index, config).also { sources += it }
     }
     var ngramSource: NgramSource? = null
@@ -102,6 +107,7 @@ fun main(args: Array<String>) {
             config = config.copy(offset = p[0], slope = p[1], nextOffset = p[2], nextSlope = p[3])
         }
         ngramSource = NgramSource(model, config).also { sources += it }
+        if ("--no-context-accent" !in args) deasciify?.contextScorer = ngramSource
     }
     if (index != null && "--no-typo" !in args) {
         val lm = ngramSource

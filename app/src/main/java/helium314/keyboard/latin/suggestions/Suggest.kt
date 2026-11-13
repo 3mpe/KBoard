@@ -133,9 +133,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             firstOccurrenceOfTypedWordInSuggestions,
             typedWordFirstOccurrenceWordInfo
         )
-        if (helium314.keyboard.latin.BuildConfig.DEBUG) android.util.Log.d("KBoardSuggestions", // KBOARD: teşhis
-            "correction=$isCorrectionEnabled composing=${wordComposer.isComposingWord} digits=${wordComposer.hasDigits()} " +
-                "resumed=${wordComposer.isResumed} mostlyCaps=${wordComposer.isMostlyCaps}")
         // KBOARD: Türkçe aksan düzeltici otomatik düzeltme kararına katılır (cok → çok, "sus" korunur)
         val (allowsToBeAutoCorrected, hasAutoCorrection) = KBoardSuggestions.mergeAutoCorrection(
             capitalizedTypedWord.dropLast(trailingSingleQuotesCount), suggestionsContainer, mDictionaryFacilitator.mainLocale,
@@ -143,7 +140,8 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 && !(wordComposer.isMostlyCaps && !wordComposer.isAllUpperCase),
             heliBoardAutoCorrection,
             typedWordFirstOccurrenceWordInfo?.sourceDict?.mDictType,
-            trailingSingleQuotesCount
+            trailingSingleQuotesCount,
+            ngramContext
         )
         val typedWordInfo = SuggestedWordInfo(typedWordString, "", SuggestedWordInfo.MAX_SCORE,
             SuggestedWordInfo.KIND_TYPED, typedWordFirstOccurrenceWordInfo?.sourceDict ?: Dictionary.DICTIONARY_USER_TYPED,
