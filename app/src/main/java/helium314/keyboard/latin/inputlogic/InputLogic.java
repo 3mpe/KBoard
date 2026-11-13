@@ -1398,7 +1398,8 @@ public final class InputLogic {
                 : mConnection.getGraphemeLengthBeforeCursor();
             mConnection.deleteTextBeforeCursor(lengthToDelete);
             int totalDeletedLength = lengthToDelete;
-            if (mDeleteCount > Constants.DELETE_ACCELERATE_AT) {
+            // KBoard: never delete two words per repeat (held delete in word mode already removes whole words)
+            if (!deleteWord && mDeleteCount > Constants.DELETE_ACCELERATE_AT) {
                 // If this is an accelerated (i.e., double) deletion, then we need to
                 // consider unlearning here because we may have already reached
                 // the previous word, and will lose it after next deletion.

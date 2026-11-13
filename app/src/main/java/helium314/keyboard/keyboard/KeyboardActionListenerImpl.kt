@@ -58,6 +58,16 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         latinIME.hapticAndAudioFeedback(primaryCode, repeatCount, hapticEvent)
     }
 
+    override fun canDeleteWordsOnRepeat(): Boolean {
+        val sv = settings.current
+        if (!sv.mDeleteLongPressWords) return false
+        val attributes = sv.mInputAttributes
+        if (attributes.isTypeNull() || attributes.mIsPasswordField) return false
+        if (attributes.mInputType and InputType.TYPE_MASK_CLASS != InputType.TYPE_CLASS_TEXT) return false
+        if (connection.expectedSelectionEnd == Constants.NOT_A_CURSOR_POSITION) return false
+        return connection.codePointBeforeCursor != Constants.NOT_A_CODE
+    }
+
     override fun onLongPressKey(primaryCode: Int) {
         metaOnLongPressKey(primaryCode)
         performHapticFeedback(HapticEvent.KEY_LONG_PRESS)

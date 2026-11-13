@@ -1076,6 +1076,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         CharSequence text = getTextBeforeCursor(NUM_CHARS_TO_GET_BEFORE_CURSOR, 0);
         if (TextUtils.isEmpty(text)) return 1;
         // KBoard: whitespace + punctuation + word in one step, Turkish apostrophe suffixes kept with the word
+        if (!spacingAndPunctuations.mCurrentLanguageHasSpaces) // scripts without spaces: keep the word iterator
+            return StringUtilsKt.getLastWordLength(text, spacingAndPunctuations);
         return Math.max(1, StringUtilsKt.wordDeleteLength(text, spacingAndPunctuations));
     }
 

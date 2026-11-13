@@ -1350,15 +1350,13 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         // KBoard: holding delete removes whole words (like SwiftKey), at a slower pace than letters
         final boolean deleteWords = isWordDeleteRepeat(code);
         startKeyRepeatTimer(nextRepeatCount, deleteWords);
-        callListenerOnPressAndCheckKeyboardLayoutChange(key, repeatCount);
+        // feedback is thinned out to every second repeat for fast letter repeats; give it for every word
+        callListenerOnPressAndCheckKeyboardLayoutChange(key, deleteWords ? 1 : repeatCount);
         callListenerOnCodeInput(key, deleteWords ? KeyCode.DELETE_WORD : code, mKeyX, mKeyY, SystemClock.uptimeMillis(), true);
     }
 
-    private static boolean isWordDeleteRepeat(final int code) {
-        if (code != KeyCode.DELETE) return false;
-        final SettingsValues sv = Settings.getValues();
-        // fields without a text view (terminals, TYPE_NULL) only get key events; keep fast letter repeat there
-        return sv.mDeleteLongPressWords && !sv.mInputAttributes.isTypeNull();
+    private boolean isWordDeleteRepeat(final int code) {
+        return code == KeyCode.DELETE && sListener.canDeleteWordsOnRepeat();
     }
 
     private void startKeyRepeatTimer(final int repeatCount) {
