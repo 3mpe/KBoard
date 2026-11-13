@@ -1,0 +1,4 @@
+BILGI yazilan: önce 'Bir iki masa kalem defter kitap kapı pencere bahçe ağaç elma armut', 1300 ms basılı tutunca 'Bir iki masa kalem defter kitap kapı '
+GECTI yazilan: kelime kelime silindi, kalan 'Bir iki masa kalem defter kitap kapı '
+BILGI kesme: önce 'Yarin ogleden sonra saat ikide Bugun Kadikoy'de bulusalim', 1000 ms basılı tutunca 'Yarin ogleden sonra saat ikide '
+GECTI kesme: kelime kelime silindi, kalan 'Yarin ogleden sonra saat ikide '
