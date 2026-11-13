@@ -68,3 +68,25 @@ eklenenler (ulaşılanın ~2 puan altı): @0 ≥ %9,5, @1 ≥ %19, @3 ≥ %40, K
   test eklenecek (motor tamamlamaları ilk sıraya çıkıp onu bastırabilir).
 - Aksan düzeltme henüz bağlamı kullanmıyor ("sık/şık" belirsizliği); sıradaki adım dil modeliyle
   bağlama göre aksan seçimi.
+
+## Ek: sohbet korpusu (2026-11-13)
+
+`data/sohbet/sohbet-v1.txt`: proje için sıfırdan yazılmış 2 801 mesaj (CC0-1.0, yapay zekâ destekli;
+yazılırken test seti okunmadı). Common Voice'a 3 kat ağırlıkla eklendi; test setiyle örtüşen 35 mesaj
+derlemede atılır. Ağırlık dev yarısında seçildi (1: @3 %52,8, 2: %53,0, 3: %53,0 ve en iyi @0/KSR,
+4: %53,0).
+
+| Test yarısı | Yalnız Common Voice | + sohbet | %95 GA (+ sohbet) |
+|---|---|---|---|
+| Sonraki kelime İlk-3 @0 | %11,4 | **%20,2** | %17,1 – %23,2 |
+| İlk-3 @1 | %21,9 | **%29,8** | %26,3 – %34,0 |
+| İlk-3 @3 | %42,3 | **%51,6** | %47,0 – %56,0 |
+| KSR | %31,5 | **%39,4** | %36,8 – %41,7 |
+| Aksan düzeltme / yanlış düzeltme | %78,8 / %0,0 | %78,8 / %0,0 | |
+
+Kategoriye göre (test, @0 / @3 / KSR): sohbet %23,0 / %54,0 / %42,7; dogru_yazim %17,3 / %51,6 /
+%35,0; kullanici_sozlugu %13,7 / %42,4 / %35,4; ozel_isim %41,7 / %66,7 / %50,5. Kazanç yalnız sohbet
+kategorisinde değil. Dosya 1,08 MB (bütçe 1,1 MB), p95 0,78 ms.
+
+Not: test seti ve sohbet korpusu aynı yöntemle (elle, yapay zekâ destekli) yazıldı; üslup benzerliği
+kazancı bir miktar şişirebilir. Gerçek kullanıcı metniyle doğrulama telefonda yapılacak.
