@@ -54,3 +54,17 @@ case "$txt" in
   *"biz de"*) dd_result KALDI "'bu akşam bizde' ilk öneri 'biz de' oldu: \"$txt\"";;
   *) dd_result GECTI "'bu akşam bizde' ilk öneri ayrım değil: \"$txt\"";;
 esac
+
+# Yalnız öneri olan motor adayları (yazım hatası, ek zinciri, tamamlama) boşlukta kendiliğinden yazılmamalı.
+# KBoardSuggestions.mergeAutoCorrection, ilk öneri işaretsiz bir KBoard adayıyken HeliBoard düzeltmeye karar
+# verirse bunu engeller ve (debug APK'da) logcat'e yazar. Kayıt sayısı bilgi içindir: >0 ise HeliBoard'un
+# kendi yolu işaretsiz adayı düzeltecekti. Alan içeriği de kayda geçer (HeliBoard'un kendi işaretli
+# düzeltmesi meşrudur, bu yüzden alan eşik değil).
+adb logcat -c 2>/dev/null || true
+for w in gidiyprum kitapalr telefonumy okulsa bilgisayarm; do
+  open_kboard_field
+  type_word "$w"; sleep 2; tap_space; sleep 2
+  echo "   '$w' + boşluk → alan: \"$(field_text)\"" | tee -a "$dd_out" >&2
+done
+guard=$(adb logcat -d -s KBoardSuggestions:W 2>/dev/null | grep -c "işaretsiz KBoard önerisi" || true)
+dd_result BILGI "işaretsiz KBoard adayının otomatik düzeltmeye gitmesi engellendi: $guard kez (5 kelime)"

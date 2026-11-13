@@ -375,3 +375,22 @@ Fark ölçüm gürültüsü içinde. 1,5 ms eşiği seed-v0 için.
 - **`data/suffix/chains-tr.tsv` yeniden üretilmedi.** Zemberek gerekiyor; kural-v0 bu yüzden ek
   zinciri tablosunun sızıntı süzgecinde yok. Tablo yalnız soyut zincir sayıları içeriyor.
 - **CI eşiği kural-v0'ın tamamında** (dev + test) uygulanıyor; hedef tablosu test yarısı içindir.
+
+## Sonradan düzeltilenler (2026-11-13, PR #47 sonrası)
+
+- **"orjinal mi" → "mı" hatası.** Ayrı soru ekinin uyumu, önceki kelimenin yazım kuralı düzeltmesine göre
+  bulunur (`DeasciifySource.previousWordFix`, uygulama ve CLI `SpellingRuleSource.replacement` bağlar).
+  "Bu orjinal mi" ve "bu sezeryanla mi" artık "mi" kalır. Düzeltmesi olmayan önceki kelimede davranış aynı.
+- **Uyum sınıfı değişen tam kayıtların çekimleri.** "sezeryan" → "sezaryen", "vejeteryan" → "vejetaryen",
+  "mütevazi" → "mütevazı" kayıtlarında ek yeni köke göre yeniden uydurulur ("sezeryanla" → "sezaryenle",
+  "mütevazisin" → "mütevazısın", "vejeteryanım" → "vejetaryenim"). Kök kayıtlarındaki kural geçerli:
+  çekim bilinen bir kelime olmalı, değilse yalnız yanlış kök aynen yazıldıysa ve yazılan hiçbir yerde yoksa.
+- **Geri alınan iki kelimelik düzeltme kelime kelime unutulur.** "her şey" ya da "dedim ki" geri alınınca
+  `unlearnFromUserHistory` iki kelimeyi ayrı ayrı geri alır (öğrenme de kelime kelimeydi).
+- **Yalnız öneri olan motor adayları.** HeliBoard ilk öneriyi yalnız düzeltmeye uygun işaretliyse düzeltir
+  (`AutoCorrectionUtils.suggestionExceedsThreshold`). Yine de `mergeAutoCorrection` ilk öneri işaretsiz bir
+  KBoard adayıyken düzeltmeyi engeller (önce yalnız ayrık bağlaç için vardı) ve debug APK'da logcat'e yazar;
+  emülatör denemesi (`dedaki-e2e.sh`, BILGI satırı) kaç kez engellendiğini kaydeder.
+
+Ölçüm: seed-v0, kural-v0 (tüm eşikler, tuzakta 0 düzeltme, kesinlik 120/120, liste 91/92, soru eki 29/30)
+ve korpus yanlış oto. düzeltme (%0,10 / bağlamlı %0,11) değişmedi.

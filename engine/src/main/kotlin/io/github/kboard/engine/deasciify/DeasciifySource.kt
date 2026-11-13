@@ -48,6 +48,13 @@ class DeasciifySource(
     @Volatile
     var contextScorer: ContextScorer? = null
 
+    /**
+     * Önceki kelimenin yazım kuralı düzeltmesi (yanlış yazım listesi; uygulama ve CLI bağlar). Ayrı soru
+     * ekinin uyumu düzeltilmiş kelimeye göre bulunur: "orjinal mi" ("orijinal" ince ek alır) mı olmaz,
+     * "sezeryanla mi" ("sezaryenle") mı olmaz.
+     */
+    var previousWordFix: ((String) -> String?)? = null
+
     override val name = "deasciify"
 
     private class UserWord(val word: String, val fold: String, val lower: String)
@@ -195,7 +202,8 @@ class DeasciifySource(
         if (!QUESTION.matches(fold)) return null
         var prev = context.last()
         if (prev.isEmpty() || !prev.last().isLetter()) return null
-        if (isAscii(prev)) prev = autocorrection(prev, context.dropLast(1)) ?: prev
+        previousWordFix?.invoke(prev)?.let { prev = it.substringAfterLast(' ') }
+            ?: run { if (isAscii(prev)) prev = autocorrection(prev, context.dropLast(1)) ?: prev }
         val lowerPrev = TurkishText.lower(prev)
         if (lowerPrev in FRONT_HARMONY_EXCEPTIONS) return typed
         val last = lastVowel(lowerPrev) ?: return typed

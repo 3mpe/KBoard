@@ -23,11 +23,14 @@ class SpellingRuleSourceTest {
         "eşortman\teşofman\tkök",
         "müsade\tmüsaade\tkök",
         "yada\tya da",
+        "sezeryan\tsezaryen",
+        "mütevazi\tmütevazı",
     ))
-    private val dict = setOf(
+    private val dict = mutableSetOf(
         "herşey", "her", "şey", "şeyi", "herkes", "herkese", "herkeste", "yalnız", "yalnızca", "ambulans",
         "eşofman", "müsaade", "müsademe", "ya", "da", "yada", "adam", "adamı", "ada", "biliyor", "gelir",
         "yapacak", "normal", "iyi", "eli", "elimi", "güzel", "gor",
+        "sezaryen", "sezaryenle", "sezaryenden", "mütevazı", "mütevazısın",
     )
     private val lm = mutableSetOf<String>()
     private val personal = mutableSetOf<String>()
@@ -134,6 +137,22 @@ class SpellingRuleSourceTest {
         assertEquals(1, MisspellingList.parse(sequenceOf("sezeryan\tsezaryen")).size)
         assertTrue(MisspellingList.sameSuffixClass("herşey", "her şey"))
         assertFalse(MisspellingList.sameSuffixClass("vejeteryan", "vejetaryen"))
+    }
+
+    @Test
+    fun exactEntryWithChangedHarmonyReharmonizesTheSuffix() {
+        val s = source()
+        assertEquals("sezaryen", s.fix("sezeryan"))
+        assertEquals("sezaryenle", s.fix("sezeryanla")) // "sezaryenla" değil
+        assertEquals("Sezaryenden", s.fix("Sezeryandan"))
+        assertEquals("mütevazısın", s.fix("mütevazisin"))
+        // çekim bilinmiyorsa: yanlış kök aynen yazıldıysa ve yazılan hiçbir yerde yoksa yine düzeltilir
+        assertEquals("sezaryenlerimizden", s.fix("sezeryanlarımızdan"))
+        val veg = SpellingRuleSource(MisspellingList.parse(sequenceOf("vejeteryan\tvejetaryen")), dictKnown = { false })
+        assertEquals("vejetaryenim", veg.correction(Query(emptyList(), "vejeteryanım"))?.word)
+        // yazılan bilinen bir kelimeyse dokunulmaz
+        dict += "sezeryanlı"; assertNull(source().fix("sezeryanlı")); dict -= "sezeryanlı"
+        assertEquals("sezaryenle", s.replacement("sezeryanla"))
     }
 
     @Test

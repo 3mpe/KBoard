@@ -501,6 +501,12 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
 
     override fun unlearnFromUserHistory(word: String, ngramContext: NgramContext,
                     timeStampInSeconds: Long, event: DictionaryFacilitator.UnlearnEvent) {
+        // KBOARD: iki kelimelik öneri ("dedim ki", "her şey") kelime kelime öğrenildi (addToUserHistory); geri alınca da öyle
+        val parts = word.splitOnWhitespace().filter { it.isNotEmpty() }
+        if (parts.size > 1) {
+            parts.forEach { unlearnFromUserHistory(it, ngramContext, timeStampInSeconds, event) }
+            return
+        }
         val job = synchronized(wordsWaitingForHistory) { wordsWaitingForHistory.remove(word) } ?: return
         job.cancel()
         // KBOARD: kelime son 25 saniyede yazılmıştı (geçmişe eklenmesi bekliyordu): kişisel modelden de geri al

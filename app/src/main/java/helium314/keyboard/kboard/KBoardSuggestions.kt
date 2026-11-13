@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package helium314.keyboard.kboard
 
+import android.util.Log
 import helium314.keyboard.latin.NgramContext
 import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.dictionary.Dictionary
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong
  * hem yazarken hem sonraki kelime tahmininde çağrılır (bkz. docs/PLAN.md §3).
  */
 object KBoardSuggestions {
+    private const val TAG = "KBoardSuggestions"
     const val TYPE_KBOARD = "kboard"
 
     /**
@@ -211,6 +213,8 @@ object KBoardSuggestions {
         personal = p
         // Aksan düzeltici belirsiz kelimede bağlama göre dil modeline danışır ("uc" → üç)
         deasc?.contextScorer = lm
+        // Ayrı soru eki önceki kelimenin düzeltilmiş biçimine uyar ("orjinal mi" → mi kalır)
+        deasc?.previousWordFix = { rules.replacement(it) }
         // Ek zinciri: kök kütlesi ve bilinen biçim için ham dil modeli (kişisel kaynaktan bağımsız)
         val sfx = suffix
         sfx?.lm = lm
@@ -280,9 +284,12 @@ object KBoardSuggestions {
         val words = ngramContext?.let { contextWords(it) } ?: emptyList()
         val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
         return when (val ac = autoCorrection(typedWord, locale, words, sentenceStart)) {
-            // Ayrık bağlaç önerisi ("dedim ki") yalnız öneridir: HeliBoard ilk öneriyi puanına bakıp
-            // otomatik düzeltme yapabilir; ilk öneri o ise düzeltme olmaz.
-            AutoCorrection.NoOpinion -> if (base.second && suggestions.firstOrNull()?.let { isSplitSuggestion(it) } == true) {
+            // Motorun düzeltmeye uygun işaretlemediği adaylar (ayrık bağlaç "dedim ki", yazım hatası, ek
+            // zinciri, tamamlama) yalnız öneridir. HeliBoard ilk öneriyi bugün bu işarete bakarak düzeltir
+            // (AutoCorrectionUtils); başka bir yoldan düzeltmeye karar verse de ilk öneri böyle bir adaysa
+            // düzeltme olmaz.
+            AutoCorrection.NoOpinion -> if (base.second && suggestions.firstOrNull()?.let { isUnflaggedKBoard(it) } == true) {
+                if (helium314.keyboard.latin.BuildConfig.DEBUG) Log.w(TAG, "işaretsiz KBoard önerisi otomatik düzeltmeye gidiyordu, engellendi")
                 base.first to false
             } else base
             AutoCorrection.Keep -> base.first to false
@@ -311,8 +318,11 @@ object KBoardSuggestions {
     fun isRevertiblePick(info: SuggestedWordInfo): Boolean = isSplitSuggestion(info)
 
     /** Motorun ayrık bağlaç önerisi mi (KBoard kaynağı, boşluklu, otomatik düzeltmeye uygun değil)? */
-    private fun isSplitSuggestion(info: SuggestedWordInfo): Boolean =
-        info.sourceDict.mDictType == TYPE_KBOARD && !info.isAppropriateForAutoCorrection && ' ' in info.word
+    private fun isSplitSuggestion(info: SuggestedWordInfo): Boolean = isUnflaggedKBoard(info) && ' ' in info.word
+
+    /** Motorun yalnız öneri olarak verdiği aday mı (KBoard kaynağı, otomatik düzeltmeye uygun değil)? */
+    private fun isUnflaggedKBoard(info: SuggestedWordInfo): Boolean =
+        info.sourceDict.mDictType == TYPE_KBOARD && !info.isAppropriateForAutoCorrection
 
     private val calls = AtomicLong()
 
