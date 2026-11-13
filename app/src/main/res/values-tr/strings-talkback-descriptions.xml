@@ -23,7 +23,7 @@
     <string name="spoken_description_settings">"Ayarlar"</string>
     <string name="spoken_description_tab">"Sekme"</string>
     <string name="spoken_description_space">"Boşluk çubuğu"</string>
-    <string name="spoken_description_mic">"Ses girişi"</string>
+    <string name="spoken_description_mic">"Sesle yaz (başka uygulama)"</string>
     <string name="spoken_description_emoji">"Emoji"</string>
     <string name="spoken_description_return">"Enter"</string>
     <string name="spoken_description_search">"Arama"</string>

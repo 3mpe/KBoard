@@ -4,6 +4,11 @@ Türkçe için en iyi otomatik tamamlama, aksan düzeltme ve sonraki kelime tahm
 HeliBoard tabanlı, **yalnızca Türkçe** ve tamamen çevrimdışı bir Android klavyesi.
 
 - Gizlilik: internet izni yok, tüm işlem cihazda.
+- Sesle yazma: öneri şeridinin sağındaki mikrofon, telefonda kurulu sesle yazma uygulamasına (ör. Google)
+  geçer. KBoard sesi kendisi dinlemez, mikrofon ya da internet izni yoktur. Sesi o uygulama işler; kendi
+  izinleri ve internet kullanımı o uygulamanın ayarlarına bağlıdır. İlk dokunuşta bu kısa bir bildirimle
+  söylenir, ikinci dokunuşta geçilir. Parola ve e-posta alanlarında ve kurulu sesle yazma uygulaması yoksa
+  mikrofon görünmez; araç çubuğu ayarlarından sabitlemesi kaldırılabilir.
 - Taban: [HeliBoard](https://github.com/HeliBorg/HeliBoard) forku (GPL-3.0). Upstream'e katkı gönderilmez.
 - Durum: **Faz 0, ölçüm altyapısı.** HeliBoard kodu Faz 1'de depoya alınacak.
 

@@ -139,6 +139,7 @@
     <!-- KBOARD -->
     <string name="kboard_deasciify">Turkish accent correction</string>
     <string name="kboard_deasciify_summary">Suggest and auto-correct Turkish letters typed without accents (cok → çok)</string>
+    <string name="kboard_voice_notice">Voice typing switches to another app (e.g. Google). Tap again to switch.</string>
     <string name="kboard_clear_personal">Clear learned words</string>
     <string name="kboard_clear_personal_summary">Forget the words and word pairs learned from your typing. They are stored only on this device.</string>
     <string name="kboard_clear_personal_message">Delete everything the keyboard learned from your typing? This cannot be undone.</string>
@@ -392,7 +393,7 @@
     <string name="cut" tools:keep="@string/cut" translatable="false">@android:string/cut</string>
     <string name="clipboard" tools:keep="@string/clipboard">Clipboard</string>
     <string name="clear_clipboard" tools:keep="@string/clear_clipboard">Clear clipboard</string>
-    <string name="voice" tools:keep="@string/voice">Voice input</string>
+    <string name="voice" tools:keep="@string/voice">Voice typing (other app)</string>
     <string name="numpad" tools:keep="@string/numpad" translatable="false">@string/layout_numpad</string>
     <string name="dpad" tools:keep="@string/dpad" translatable="false">@string/layout_dpad</string>
     <string name="settings" tools:keep="@string/settings">Settings</string>

@@ -18,7 +18,10 @@ class TestFieldActivity : Activity() {
         super.onCreate(savedInstanceState)
         val pad = (16 * resources.displayMetrics.density).toInt()
         val field = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
+            // `-e alan sifre`: parola alanı (mikrofon gizli olmalı)
+            inputType = if (intent.getStringExtra("alan") == "sifre")
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
                 InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             hint = "Mesaj yaz"
             textSize = 20f

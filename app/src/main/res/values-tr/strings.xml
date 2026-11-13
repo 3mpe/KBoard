@@ -298,7 +298,7 @@
     <string name="select_color_key_background">Tuş arka planı</string>
     <string name="suggest_clipboard_content_summary">Yakın zamanda kopyalanan pano içeriğini öneri olarak göster</string>
     <string name="suggest_clipboard_content">Pano içeriğini öner</string>
-    <string name="voice" tools:keep="@string/voice">Ses girişi</string>
+    <string name="voice" tools:keep="@string/voice">Sesle yaz (başka uygulama)</string>
     <string name="show_horizontal_space_swipe">Yatay boşluk çubuğu kaydırma hareketi</string>
     <string name="var_toolbar_direction_summary">Sağdan sola klavye alt türü seçildiğinde yönü ters çevir</string>
     <string name="var_toolbar_direction">Değişken araç çubuğu yönü</string>
@@ -562,6 +562,7 @@
     <!-- KBOARD -->
     <string name="kboard_deasciify">Türkçe aksan düzeltme</string>
     <string name="kboard_deasciify_summary">Aksansız yazılan Türkçe harfleri öner ve otomatik düzelt (cok → çok)</string>
+    <string name="kboard_voice_notice">Sesle yazma başka bir uygulamaya geçer (ör. Google). Geçmek için tekrar dokun.</string>
     <string name="kboard_clear_personal">Öğrenilenleri sil</string>
     <string name="kboard_clear_personal_summary">Yazdıklarınızdan öğrenilen kelimeleri ve kelime çiftlerini unut. Bunlar yalnız bu cihazda tutulur.</string>
     <string name="kboard_clear_personal_message">Klavyenin yazdıklarınızdan öğrendiği her şey silinsin mi? Bu geri alınamaz.</string>
