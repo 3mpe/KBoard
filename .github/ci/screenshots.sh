@@ -21,26 +21,18 @@ log "kurulu klavyeler:"; adb shell ime list -a -s
 gboard=$(adb shell ime list -a -s | tr -d '\r' | grep -m1 "com.google.android.inputmethod.latin/" || true)
 log "Gboard: ${gboard:-yok}"
 
-# Metin alanı: yeni kişi formu, ilk düzenlenebilir alana dokunulur.
+# Metin alanı: debug APK'daki düz metin alanı (otomatik düzeltme açık, mesaj kutusu gibi). Kişi
+# formundaki "Ad" alanı ad türünde (0x2061) olduğundan klavyeler orada düzeltme yapmıyordu.
+test_activity="$pkg/helium314.keyboard.kboard.TestFieldActivity"
 open_field() {
-  adb shell am force-stop com.google.android.contacts >/dev/null 2>&1
-  adb shell am force-stop com.android.contacts >/dev/null 2>&1
-  adb shell am start -W -a android.intent.action.INSERT -t vnd.android.cursor.dir/contact >/dev/null
-  sleep 4
+  adb shell am force-stop "$pkg" >/dev/null 2>&1 # deneme alanını kapat (klavye de yeniden başlar)
+  adb shell ime set "${current_ime:-$kboard}" >/dev/null 2>&1
   adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 # "yanıt vermiyor" kutusu
-  b=""
-  for i in 1 2 3; do
-    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-    b=$(adb shell cat /sdcard/ui.xml 2>/dev/null | tr '>' '\n' | grep -m1 'class="android.widget.EditText"' \
-        | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
-    [ -n "$b" ] && break
-    sleep 2
-  done
-  [ -n "$b" ] || b="137 803 933 952" # pixel_6, kişi formunun "Ad" alanı
-  log "metin alanı: $b"
-  set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
+  adb shell am start -W -n "$test_activity" >/dev/null
+  sleep 4
+  adb shell input tap 540 400 # alana dokun (pixel_6); klavye görünür olsun
   sleep 3
-  adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId" | head -2
+  adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId|inputType=0x[1-9a-f]" | head -3
 }
 
 type_word() { adb shell input text "$1"; }
@@ -62,12 +54,14 @@ capture_set() { # $1 = önek
 }
 
 if [ -n "$gboard" ]; then
+  current_ime="$gboard"
   adb shell ime set "$gboard"
   capture_set gboard
 fi
 
 adb shell ime enable "$kboard"
 adb shell ime set "$kboard"
+current_ime="$kboard"
 log "varsayılan: $(adb shell settings get secure default_input_method)"
 sleep 3 # aksan dizini arka planda yüklenir
 capture_set kboard
@@ -76,8 +70,8 @@ capture_set kboard
 adb shell content insert --uri content://user_dictionary/words --bind word:s:Kadıköy \
   --bind locale:s:tr --bind frequency:i:250 --bind appid:i:0 || log "UYARI: kişisel sözlüğe eklenemedi"
 sleep 3
-# Klavye sürecini öldür: kelimeler, sözlük yeniden kurulmadan da (süreç başında) motora gelmeli.
-adb shell am force-stop "$pkg"; sleep 5
+# open_field klavye sürecini de öldürür: kelimeler, sözlük yeniden kurulmadan (süreç başında)
+# motora gelmeli.
 adb shell cmd uimode night no; sleep 1
 open_field
 type_word "Kadikoy\\'d"; shot "kboard-07-kisisel-sozluk-ek" 3

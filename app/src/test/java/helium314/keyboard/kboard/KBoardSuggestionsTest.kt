@@ -163,4 +163,13 @@ class KBoardSuggestionsTest {
         KBoardSuggestions.setUserWords(Locale.ENGLISH, emptyList())
         assertTrue(KBoardSuggestions.getSuggestions(composed("Kadikoy'd"), NgramContext.BEGINNING_OF_SENTENCE, tr).isNotEmpty())
     }
+
+    @Test
+    fun morphAutoCorrectWithoutDeasciifier() {
+        KBoardSuggestions.setUserWords(tr, listOf("kış", "Kadıköy"))
+        // Aksan düzeltici yokken "kısa" geçerli mi bilinmez: "kışa"ya düzeltilmez
+        assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("kısa", tr))
+        // Kesmeli çekim yine düzeltilir
+        assertEquals(KBoardSuggestions.AutoCorrection.Replace("Kadıköy'de"), KBoardSuggestions.autoCorrection("Kadikoy'de", tr))
+    }
 }

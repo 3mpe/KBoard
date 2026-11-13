@@ -34,7 +34,11 @@ object KBoardSuggestions {
     private val USER_SOURCES = setOf(Dictionary.TYPE_USER, Dictionary.TYPE_CONTACTS, Dictionary.TYPE_USER_HISTORY)
 
     /** Kişisel sözlük kelimelerinin çekimleri (her zaman açık; sözlük boşken aday üretmez). */
-    private val userMorph = UserWordSuffixSource { deasciifier?.isKnown(it) == true }
+    // Aksan düzeltici yokken (kapalı ya da dizin henüz yüklenmedi) hangi kelimenin geçerli olduğu
+    // bilinmez: kesmesiz yazım ("kısa") düzeltilmez, kesmeli çekim ("Kadikoy'de") düzeltilir.
+    private val userMorph = UserWordSuffixSource { typed ->
+        deasciifier?.isKnown(typed) ?: typed.none { it == '\'' || it == '’' }
+    }
 
     @Volatile
     var engine: SuggestionEngine = SuggestionEngine(listOf(userMorph))
