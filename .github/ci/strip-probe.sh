@@ -3,6 +3,28 @@
 set -uo pipefail
 out=screenshots; mkdir -p "$out/probe"
 log() { echo "== $*"; }
+# "... isn't responding" kutusu (ilk koşuda Pixel Launcher ANR'ı klavyeyi örttü) varsa "Wait"e dokun.
+dismiss_anr() {
+  local xml b
+  adb shell uiautomator dump /sdcard/anr.xml >/dev/null 2>&1; xml=$(adb shell cat /sdcard/anr.xml 2>/dev/null | tr '>' '\n')
+  echo "$xml" | grep -qiE "isn.t responding|yanıt vermiyor" || return 0
+  b=$(echo "$xml" | grep -m1 -E 'text="(Wait|Bekle)"' | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
+  log "ANR kutusu kapatılıyor: $b"
+  if [ -n "$b" ]; then set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); else adb shell input keyevent BACK; fi
+  sleep 1
+}
+# Test alanını aç ve etkin klavyenin $1 olduğunu doğrula (ön koşul; sonucu örtmez).
+open_field() {
+  local n
+  for n in 1 2 3; do
+    adb shell ime enable "$1" >/dev/null 2>&1; adb shell ime set "$1" >/dev/null 2>&1
+    adb shell am start -W -n "$test_activity" >/dev/null; sleep 4; dismiss_anr
+    adb shell input tap 540 400; sleep 3; dismiss_anr
+    adb shell dumpsys input_method | grep -q "mCurMethodId=$1" && return 0
+    echo "   etkin klavye $1 değil, yeniden seçiliyor ($n)"
+  done
+  return 1
+}
 apk=$(ls app/build/outputs/apk/debug/*.apk | head -1); adb install -r "$apk" >/dev/null
 pkg=$(adb shell pm list packages | tr -d '\r' | sed 's/^package://' | grep -m1 kboard)
 kboard="$pkg/helium314.keyboard.latin.LatinIME"
@@ -12,13 +34,10 @@ gboard=$(adb shell ime list -a -s | tr -d '\r' | grep -m1 "com.google.android.in
 log "Gboard: ${gboard:-yok}"
 adb shell dumpsys package com.google.android.inputmethod.latin | grep -m2 -E "versionName|versionCode" || true
 test_activity="$pkg/helium314.keyboard.kboard.TestFieldActivity"
-adb shell uiautomator help 2>&1 | head -20 || true
 
 probe() { # $1 = ad, $2 = IME
-  adb shell ime enable "$2" >/dev/null 2>&1; adb shell ime set "$2"
-  adb shell am force-stop "$pkg"; adb shell am start -W -n "$test_activity" >/dev/null; sleep 4
-  adb shell input tap 540 400; sleep 3
-  adb shell input text "mer"; sleep 3
+  open_field "$2" || log "$1: klavye etkinleşmedi"
+  adb shell input text "mer"; sleep 3; dismiss_anr
   adb exec-out screencap -p > "$out/probe/$1.png"
   for mode in plain windows; do
     if [ $mode = windows ]; then adb shell uiautomator dump --windows /sdcard/p.xml > "$out/probe/$1-$mode.log" 2>&1
@@ -35,7 +54,6 @@ log "Gboard alt türleri:"; adb shell dumpsys input_method | grep -A3 "com.googl
 
 # --- #9 determinizm: KBoard'da ilk 5 uygun vaka, 3 koşu (otomatik büyük harf ve öğrenme kapalı) ---
 log "determinizm: ayarlar"
-adb shell ime set "$kboard"
 adb shell am force-stop "$pkg"
 pf=$(adb shell run-as "$pkg" ls /data/user_de/0/$pkg/shared_prefs/ 2>/dev/null | tr -d '\r' | grep -m1 "_preferences\.xml$")
 log "tercih dosyası: ${pf:-yok}"
@@ -46,11 +64,12 @@ if [ -n "$pf" ]; then
   done
   adb shell run-as "$pkg" cat "/data/user_de/0/$pkg/shared_prefs/$pf" | grep -E "auto_cap|use_personalized_dicts"
 fi
-adb shell am start -W -n "$test_activity" >/dev/null; sleep 5
-adb shell input tap 540 400; sleep 3
+open_field "$kboard" || log "determinizm: KBoard etkinleşmedi"
 adb shell dumpsys input_method | grep -E "mCurMethodId" | head -1
 mkdir -p "$out/determinizm"
 ( cd eval && timeout 1500 python3 -m kboard_eval drive testset/seed-v0.jsonl \
     -k keymaps/kboard-pixel6-emulator.json -o "../$out/determinizm/kboard.jsonl" --limit 5 --runs 3 \
     --skip-user-words ) 2>&1 | tee "$out/determinizm/drive.log"
-echo "çıkış: ${PIPESTATUS[0]}" | tee -a "$out/determinizm/drive.log"
+rc=${PIPESTATUS[0]}
+echo "çıkış: $rc" | tee -a "$out/determinizm/drive.log"
+exit $rc
