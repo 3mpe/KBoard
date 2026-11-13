@@ -24,6 +24,9 @@ import kotlin.concurrent.thread
  *
  * Dil modeli (`assets/kboard/kboard-tr.kbn`, ~0,9 MB, bellekte ~2,4 MB) `data/corpus/`'tan üretilir
  * (engine/build.gradle.kts: buildNgramModel). Aksan düzeltici ayarından bağımsız, hep yüklenir.
+ *
+ * Kişisel öğrenme ([KBoardPersonal]) HeliBoard'un kişiselleştirme ayarını izler
+ * (`Settings.PREF_KEY_USE_PERSONALIZED_DICTS`).
  */
 object KBoardEngineLoader {
     private const val TAG = "KBoardEngineLoader"
@@ -40,15 +43,21 @@ object KBoardEngineLoader {
         val app = context.applicationContext
         val prefs = app.prefs()
         loadDenylist(app)
+        KBoardPersonal.init(app)
+        KBoardSuggestions.setPersonalEnabled(personalization(prefs))
         apply(app, prefs)
         // Dil modeli (~0,5 s) aksan düzelticiyi ve uygulama açılışını bekletmesin.
         thread(name = "kboard-ngram") { loadNgram(app) }
         val l = SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
             if (key == Settings.PREF_KBOARD_DEASCIIFY) thread(name = "kboard-engine") { apply(app, p) }
+            if (key == Settings.PREF_KEY_USE_PERSONALIZED_DICTS) KBoardSuggestions.setPersonalEnabled(personalization(p))
         }
         listener = l
         prefs.registerOnSharedPreferenceChangeListener(l)
     }
+
+    private fun personalization(prefs: SharedPreferences) =
+        prefs.getBoolean(Settings.PREF_KEY_USE_PERSONALIZED_DICTS, Defaults.PREF_KEY_USE_PERSONALIZED_DICTS)
 
     /** Hiçbir kaynağın önermeyeceği kelimeler (küfür, OCR hatası, konuşma dili kısaltması). */
     private fun loadDenylist(context: Context) {

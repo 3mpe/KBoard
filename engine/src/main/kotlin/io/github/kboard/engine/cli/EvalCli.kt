@@ -9,6 +9,8 @@ import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramModel
 import io.github.kboard.engine.ngram.NgramSource
+import io.github.kboard.engine.personal.PersonalModel
+import io.github.kboard.engine.personal.PersonalSource
 import io.github.kboard.engine.typo.TypoSource
 import java.io.File
 import kotlinx.serialization.json.Json
@@ -26,8 +28,10 @@ import kotlinx.serialization.json.jsonPrimitive
  *   {"op":"predict","context":[...],"prefix":"..."} → {"suggestions":[...],"autocorrect":...}
  *   {"op":"add_user_words","words":[...]}            → {"ok":true}
  *   {"op":"reset_user_words"}                        → {"ok":true}
+ *   {"op":"learn","context":[...],"word":"..."}      → {"ok":true}  (kişisel model; `--personal` yoksa yok sayılır)
+ *   {"op":"reset_personal"}                          → {"ok":true}
  */
-class EvalServer(private val engine: SuggestionEngine) {
+class EvalServer(private val engine: SuggestionEngine, private val personal: PersonalModel? = null) {
     private val userWords = linkedSetOf<String>()
 
     fun handle(line: String): String {
@@ -56,6 +60,17 @@ class EvalServer(private val engine: SuggestionEngine) {
                 engine.setUserWords(userWords)
                 OK
             }
+            "learn" -> {
+                val context = req["context"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
+                val word = req["word"]?.jsonPrimitive?.content ?: return error("learn: word gerekli")
+                // predict ile aynı varsayım: bağlam boşsa cümle başı
+                personal?.learn(context.lastOrNull() ?: PersonalModel.BOS, word, sentenceStart = context.isEmpty())
+                OK
+            }
+            "reset_personal" -> {
+                personal?.clear()
+                OK
+            }
             else -> error("bilinmeyen op")
         }
     }
@@ -77,6 +92,10 @@ class EvalServer(private val engine: SuggestionEngine) {
  *   --no-user-morph           kişisel sözlük çekimlerini (UserWordSuffixSource) kapatır
  *   --no-typo                 yazım hatası önerilerini (TypoSource, --deasciify dizinini kullanır) kapatır
  *   --typo-autocorrect        TypoSource oto. düzeltmesini açar (varsayılan kapalı; yalnızca ölçüm için)
+ *   --personal                kişisel model (PersonalSource, dil modelini sarar); `learn` ile öğrenir
+ *   --personal-params lmax,K,l0,kappa[,l0next]  karışım parametreleri (PersonalSource.Config)
+ *   --personal-warm <metin>   açılışta metin dosyasındaki bütün kelimeleri öğrenir (dolu depo ölçümü;
+ *                             öğrenme, kaydetme ve yükleme sürelerini stderr'e yazar)
  * UserWordSuffixSource varsayılan olarak hep açıktır; kişisel sözlük boşken aday döndürmez. Bu
  * yüzden seçeneksiz ve kullanıcı kelimesiz çalıştırma Faz 1.7 davranışıdır: öneri yok.
  */
@@ -109,22 +128,77 @@ fun main(args: Array<String>) {
         ngramSource = NgramSource(model, config).also { sources += it }
         if ("--no-context-accent" !in args) deasciify?.contextScorer = ngramSource
     }
+    val denylist = argValue(args, "--denylist")?.let { p -> File(p).useLines { Denylist.parse(it.toList().asSequence()) } }
+        ?: Denylist.EMPTY
+    var personal: PersonalModel? = null
+    var personalSource: PersonalSource? = null
+    if ("--personal" in args) {
+        val model = PersonalModel()
+        var config = PersonalSource.Config()
+        argValue(args, "--personal-params")?.split(',')?.map { it.toDouble() }?.let { p ->
+            config = config.copy(lambdaMax = p[0], lambdaK = p[1], unigramLambda = p[2], backoff = p[3],
+                nextUnigramLambda = p.getOrElse(4) { p[2] })
+        }
+        val lm = ngramSource
+        val known: (String) -> Boolean = { w -> lm?.isKnown(w) == true || deasciify?.isKnown(w) == true }
+        val ps = PersonalSource(model, lm, denylist, known, config)
+        // Dil modelinin yerini alır (onu sarar); aynı sırada
+        val at = if (lm == null) -1 else sources.indexOf<CandidateSource>(lm)
+        if (at >= 0) sources[at] = ps else sources += ps
+        personal = model
+        personalSource = ps
+        argValue(args, "--personal-warm")?.let { warm(model, File(it)) }
+    }
     if (index != null && "--no-typo" !in args) {
         val lm = ngramSource
-        // Dil modelinin önerilebilir sözcükleri bilinen kelimedir: hiç yazım hatası sayılmaz
-        val lmKnown: (String) -> Boolean = { w -> lm?.isKnown(w) == true }
+        val ps = personalSource
+        // Dil modelinin önerilebilir sözcükleri ve en az iki kez yazılmış kişisel kelimeler bilinen
+        // kelimedir: hiç yazım hatası sayılmaz
+        val lmKnown: (String) -> Boolean = { w -> lm?.isKnown(w) == true || ps?.isKnown(w) == true }
         sources += TypoSource(index, TypoSource.Config(autocorrect = "--typo-autocorrect" in args), lmKnown)
     }
     if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
-    val denylist = argValue(args, "--denylist")?.let { p -> File(p).useLines { Denylist.parse(it.toList().asSequence()) } }
-        ?: Denylist.EMPTY
-    val server = EvalServer(SuggestionEngine(sources, denylist = denylist))
+    val server = EvalServer(SuggestionEngine(sources, denylist = denylist), personal)
     val out = System.out.bufferedWriter(Charsets.UTF_8)
     System.`in`.bufferedReader(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.forEach {
         out.write(server.handle(it))
         out.newLine()
         out.flush()
     }
+}
+
+/** Dolu depo ölçümü: metindeki kelimeleri sırayla öğrenir, kaydedip yeniden yükler; süreleri yazar. */
+private fun warm(model: PersonalModel, file: File) {
+    val word = Regex("[\\p{L}\\p{N}]+(?:['’][\\p{L}\\p{N}]+)*")
+    var n = 0
+    var learnNs = 0L
+    var maxNs = 0L
+    val samples = ArrayList<Long>()
+    file.forEachLine { line ->
+        var prev: String = PersonalModel.BOS
+        for (m in word.findAll(line)) {
+            val t0 = System.nanoTime()
+            val ok = model.learn(prev, m.value, sentenceStart = prev == PersonalModel.BOS)
+            val dt = System.nanoTime() - t0
+            if (ok) {
+                learnNs += dt; maxNs = maxOf(maxNs, dt); n++
+                if (n % 7 == 0) samples += dt
+                prev = m.value
+            }
+        }
+    }
+    val bytes = model.toBytes()
+    val t0 = System.nanoTime()
+    var loaded: PersonalModel? = null
+    repeat(5) { loaded = PersonalModel.read(bytes.inputStream()) }
+    val loadMs = (System.nanoTime() - t0) / 5 / 1e6
+    model.replaceWith(loaded!!)
+    samples.sort()
+    val p99 = if (samples.isEmpty()) 0L else samples[(samples.size * 99 / 100).coerceAtMost(samples.size - 1)]
+    System.err.println(
+        "kişisel depo: $n kelime öğrenildi, ortalama %.4f ms, p99 %.4f ms, en çok %.2f ms; %d kelime, %d ikili; %d bayt; yükleme %.1f ms"
+            .format(learnNs / 1e6 / maxOf(1, n), p99 / 1e6, maxNs / 1e6, model.unigramCount, model.bigramCount, bytes.size, loadMs)
+    )
 }
 
 private fun argValue(args: Array<String>, name: String): String? {

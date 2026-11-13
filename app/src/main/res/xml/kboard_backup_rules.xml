@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- KBOARD: kişisel öğrenme deposu (files/kboard/personal-tr.bin) Android yedeğine girmez (API 23-30).
+     Yalnız dışlama: geri kalan her şey önceki gibi yedeklenir. Uygulama cihaz korumalı depoyu
+     kullanır (defaultToDeviceProtectedStorage), iki alan da dışlanır. -->
+<full-backup-content>
+    <exclude domain="file" path="kboard" />
+    <exclude domain="device_file" path="kboard" />
+</full-backup-content>

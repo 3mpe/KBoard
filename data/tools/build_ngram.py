@@ -75,7 +75,7 @@ def load_exclusions(paths: list[Path]) -> tuple[set[tuple[str, ...]], list[str]]
     short: list[str] = []
     for p in paths:
         for line in p.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
+            if not line.strip() or line.lstrip().startswith("//"):  # testset.py gibi: yorum satırı
                 continue
             obj = json.loads(line)
             for field in ("text", "input"):

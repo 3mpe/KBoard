@@ -37,14 +37,21 @@ class NgramSource(
 
     override val name = "ngram"
 
-    override fun candidates(query: Query, limit: Int): List<Candidate> {
+    override fun candidates(query: Query, limit: Int): List<Candidate> =
+        scored(query, limit).map { Candidate(it.word, score(it.logProb.toDouble(), query.isNextWord), Source.NGRAM) }
+
+    /** Bir LM adayı: gösterim biçimi (büyük/küçük harf uygulanmış), küçük harfli kelime ve log10 P(w | bağlam). */
+    class Scored(val word: String, val lower: String, val logProb: Float)
+
+    /** [candidates] ile aynı adaylar, skora çevrilmeden (kişisel model bunları karıştırır). */
+    fun scored(query: Query, limit: Int): List<Scored> {
         if (limit <= 0) return emptyList()
         val (u, v) = model.context(query.context, query.sentenceStart)
         val typed = query.prefix
         if (typed.isEmpty()) {
             val succ = model.successors(u, v)
             return top(succ.asSequence(), limit, u, v).map { (id, lp) ->
-                Candidate(sentenceCase(query, model.display(id)), clamp(config.nextOffset + config.nextSlope * lp), Source.NGRAM)
+                Scored(sentenceCase(query, model.display(id)), model.word(id), lp)
             }
         }
         if (typed.any { it == '\'' || it == '’' }) return emptyList()
@@ -53,8 +60,23 @@ class NgramSource(
         val ids = model.withPrefix(key, config.prefixCap).asSequence()
             .filter { mustMatch == null || DeasciifySource.compatible(model.word(it), mustMatch) }
         return top(ids, limit, u, v).map { (id, lp) ->
-            Candidate(DeasciifySource.applyCase(typed, model.display(id)), clamp(config.offset + config.slope * lp), Source.NGRAM)
+            Scored(DeasciifySource.applyCase(typed, model.display(id)), model.word(id), lp)
         }
+    }
+
+    /** log10 P → aday skoru: `clamp(offset + slope · log10 P)` (sonraki kelime için ayrı eğim). */
+    fun score(logProb: Double, nextWord: Boolean): Double =
+        if (nextWord) clamp(config.nextOffset + config.nextSlope * logProb) else clamp(config.offset + config.slope * logProb)
+
+    /** Kelimenin modeldeki gösterim biçimi ("ankara" → "Ankara"); yoksa null. */
+    fun display(word: String): String? = model.id(word).let { if (it >= 0 && model.suggestable(it)) model.display(it) else null }
+
+    /** log10 P(w | sorgunun bağlamı), cümle başı bilgisiyle. Kelime modelde yoksa ya da önerilemezse null. */
+    fun logProb(word: String, query: Query): Float? {
+        val id = model.id(word)
+        if (id < 0 || !model.suggestable(id)) return null
+        val (u, v) = model.context(query.context, query.sentenceStart)
+        return model.logProb(id, u, v)
     }
 
     /** Kelime modelde var ve önerilebilir mi (yazım hatası düzeltmesi bunu bilinen kelime sayar). */
@@ -87,11 +109,13 @@ class NgramSource(
 
     private fun clamp(s: Double) = s.coerceIn(0.0, config.maxScore)
 
-    /** Cümle başında (bağlam boş ve gerçekten cümle başı) öneri büyük harfle başlar. */
-    private fun sentenceCase(query: Query, word: String): String =
-        if (query.context.isEmpty() && query.sentenceStart && word.isNotEmpty() && word[0].isLowerCase()) {
-            word.substring(0, 1).uppercase(TurkishText.TR) + word.substring(1)
-        } else {
-            word
-        }
+    companion object {
+        /** Cümle başında (bağlam boş ve gerçekten cümle başı) öneri büyük harfle başlar. */
+        fun sentenceCase(query: Query, word: String): String =
+            if (query.context.isEmpty() && query.sentenceStart && word.isNotEmpty() && word[0].isLowerCase()) {
+                word.substring(0, 1).uppercase(TurkishText.TR) + word.substring(1)
+            } else {
+                word
+            }
+    }
 }

@@ -139,6 +139,10 @@
     <!-- KBOARD -->
     <string name="kboard_deasciify">Turkish accent correction</string>
     <string name="kboard_deasciify_summary">Suggest and auto-correct Turkish letters typed without accents (cok → çok)</string>
+    <string name="kboard_clear_personal">Clear learned words</string>
+    <string name="kboard_clear_personal_summary">Forget the words and word pairs learned from your typing. They are stored only on this device.</string>
+    <string name="kboard_clear_personal_message">Delete everything the keyboard learned from your typing? This cannot be undone.</string>
+    <string name="kboard_clear_personal_button">Delete</string>
     <!-- Description for auto correction -->
     <string name="auto_correction_summary">Spacebar and punctuation automatically correct mistyped words</string>
     <!-- Option to enable auto correction for many fields that do not request auto correction -->

@@ -7,10 +7,10 @@ import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .turkish import nfc, tokenize
+from .turkish import nfc, normalize, tokenize
 
 REQUIRED = ("id", "text", "category", "source", "license")
-KNOWN = set(REQUIRED) | {"input", "tags", "user_words", "note"}
+KNOWN = set(REQUIRED) | {"input", "tags", "user_words", "note", "user", "new_words"}
 
 
 @dataclass
@@ -24,6 +24,12 @@ class Case:
     tags: list[str] = field(default_factory=list)
     user_words: list[str] = field(default_factory=list)
     note: str | None = None
+    # Kişisel öğrenme seti (kisisel-v0): vakanın ait olduğu sentetik kullanıcı. Aynı kullanıcının
+    # vakaları dosyadaki sırayla tek bir yazma akışıdır; dev/test ayrımı kullanıcıya göre yapılır.
+    user: str | None = None
+    # Sözlükte ve dil modelinde olmayan (kullanıcıya özgü) kelimeler; "iki kullanımdan sonra yeni
+    # kelime" metriği bunlarla ölçülür.
+    new_words: list[str] = field(default_factory=list)
 
     @property
     def typed_text(self) -> str:
@@ -52,16 +58,22 @@ def parse_case(obj: dict, where: str) -> tuple[Case | None, list[str]]:
     unknown = set(obj) - KNOWN
     if unknown:
         errors.append(f"{where}: bilinmeyen alan(lar): {', '.join(sorted(unknown))}")
-    for key in ("tags", "user_words"):
+    for key in ("tags", "user_words", "new_words"):
         if key in obj and not (isinstance(obj[key], list) and all(isinstance(x, str) for x in obj[key])):
             errors.append(f"{where}: '{key}' metin listesi olmalı")
     if "input" in obj and not isinstance(obj["input"], str):
         errors.append(f"{where}: 'input' metin olmalı")
+    if "user" in obj and not (isinstance(obj["user"], str) and obj["user"].strip()):
+        errors.append(f"{where}: 'user' boş olmayan metin olmalı")
     if errors:
         return None, errors
     case = Case(**{k: obj[k] for k in obj if k in KNOWN})
     if not case.target_words:
         errors.append(f"{where}: 'text' içinde kelime yok")
+    targets = {normalize(w) for w in case.target_words}
+    for w in case.new_words:
+        if normalize(w) not in targets:
+            errors.append(f"{where}: new_words içindeki '{w}' metinde yok")
     if len(case.typed_words) != len(case.target_words):
         errors.append(
             f"{where}: 'input' ({len(case.typed_words)} kelime) ile 'text' ({len(case.target_words)} kelime) hizalı değil"
@@ -83,6 +95,7 @@ def load_with_errors(paths: list[Path] | Path) -> tuple[list[Case], list[str]]:
     cases: list[Case] = []
     errors: list[str] = []
     seen: dict[str, str] = {}
+    users: set[str] = set()
     for path in paths:
         path = Path(path)
         with path.open(encoding="utf-8") as fh:
@@ -103,6 +116,10 @@ def load_with_errors(paths: list[Path] | Path) -> tuple[list[Case], list[str]]:
                     errors.append(f"{where}: '{case.id}' kimliği tekrar ediyor (ilk: {seen[case.id]})")
                     continue
                 seen[case.id] = where
+                if case.user and cases and cases[-1].user != case.user and case.user in users:
+                    errors.append(f"{where}: '{case.user}' kullanıcısının vakaları ardışık değil (akış bölünüyor)")
+                if case.user:
+                    users.add(case.user)
                 cases.append(case)
     return cases, errors
 
@@ -115,7 +132,12 @@ def split_of(case_id: str) -> str:
     return "dev" if zlib.crc32(case_id.encode("utf-8")) % 2 == 0 else "test"
 
 
+def case_split(case: Case) -> str:
+    """Vakanın yarısı: kullanıcısı varsa kullanıcı kimliğine göre (bir kullanıcının akışı bölünmez)."""
+    return split_of(case.user if case.user else case.id)
+
+
 def filter_split(cases: list[Case], split: str) -> list[Case]:
     if split == "all":
         return cases
-    return [c for c in cases if split_of(c.id) == split]
+    return [c for c in cases if case_split(c) == split]

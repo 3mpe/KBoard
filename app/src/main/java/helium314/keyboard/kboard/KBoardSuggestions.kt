@@ -14,6 +14,8 @@ import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramSource
+import io.github.kboard.engine.personal.PersonalModel
+import io.github.kboard.engine.personal.PersonalSource
 import io.github.kboard.engine.typo.TypoSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -65,8 +67,33 @@ object KBoardSuggestions {
     @Volatile
     private var typo: TypoSource? = null
 
-    /** Dil modelinin önerilebilir kelimeleri bilinen kelimedir; yazım hatası sayılmaz. */
-    internal fun isLmKnown(word: String): Boolean = ngram?.isKnown(word) == true
+    /**
+     * Kişisel öğrenme (HeliBoard'un kişiselleştirme ayarı) açık mı. Açıkken dil modeli
+     * [PersonalSource] ile sarılır: öğrenilen kelime ve ikililer önerilere karışır.
+     */
+    @Volatile
+    private var personalEnabled = false
+
+    @Volatile
+    private var personalModel: PersonalModel = KBoardPersonal.model
+
+    /** Etkin kişisel kaynak (kişiselleştirme kapalıyken null). */
+    @Volatile
+    private var personal: PersonalSource? = null
+
+    /**
+     * Dil modelinin önerilebilir kelimeleri ve en az iki kez yazılmış kişisel kelimeler bilinen
+     * kelimedir; yazım hatası sayılmaz.
+     */
+    internal fun isLmKnown(word: String): Boolean = ngram?.isKnown(word) == true || personal?.isKnown(word) == true
+
+    /** Kişisel öğrenmeyi açar/kapatır (kişiselleştirme ayarı); [model] yalnız testler için. */
+    @Synchronized
+    fun setPersonalEnabled(enabled: Boolean, model: PersonalModel = KBoardPersonal.model) {
+        personalEnabled = enabled
+        personalModel = model
+        rebuild()
+    }
 
     /** Yazım hatası kaynağını bağlar ya da (null) kaldırır; aksan düzeltici dizinini kullanır. */
     @Synchronized
@@ -97,9 +124,16 @@ object KBoardSuggestions {
     }
 
     private fun rebuild() {
+        val lm = ngram
+        val deasc = deasciifier
+        // Kişisel kaynak dil modelinin yerini alır (onu sarar); dil modeli henüz yüklenmediyse tek başına çalışır.
+        val p = if (personalEnabled) {
+            PersonalSource(personalModel, lm, denylist, { w -> lm?.isKnown(w) == true || deasc?.isKnown(w) == true })
+        } else null
+        personal = p
         // Aksan düzeltici belirsiz kelimede bağlama göre dil modeline danışır ("uc" → üç)
-        deasciifier?.contextScorer = ngram
-        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, typo, userMorph), denylist = denylist)
+        deasc?.contextScorer = lm
+        engine = SuggestionEngine(listOfNotNull(deasc, p ?: lm, typo, userMorph), denylist = denylist)
             .also { it.setUserWords(userWords) }
     }
 

@@ -14,7 +14,8 @@ data class Query(
     val isNextWord: Boolean get() = prefix.isEmpty()
 }
 
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, OTHER }
+/** [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource). */
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası
@@ -28,7 +29,12 @@ data class Candidate(
     val autocorrectable: Boolean = false,
 )
 
-/** Aday üreten tek bir kaynak (deasciifier, morfoloji, n-gram...). Thread-safe olmalı. */
+/**
+ * Aday üreten tek bir kaynak (deasciifier, morfoloji, n-gram...). Thread-safe olmalı.
+ *
+ * Motor bütün kaynakların adaylarını skora göre yeniden sıralar: bir kaynak döndürdüğü listenin
+ * sırasıyla değil, yalnız skorlarla sıralamayı etkileyebilir.
+ */
 interface CandidateSource {
     val name: String
     fun candidates(query: Query, limit: Int): List<Candidate>

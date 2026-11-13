@@ -31,6 +31,11 @@ class Predictor(Protocol):
 
     def reset_user_words(self) -> None: ...
 
+    # Kişisel öğrenme (simulate --online): metne geçmiş bir kelimeyi öğret / öğrenilenleri sil.
+    def learn(self, context: list[str], word: str) -> None: ...
+
+    def reset_personal(self) -> None: ...
+
 
 class FrequencyPredictor:
     """Boru hattını sınamak için basit taban: kelime listesi + önek eşleşmesi.
@@ -81,6 +86,12 @@ class FrequencyPredictor:
             self._user.clear()
             self._rebuild()
 
+    def learn(self, context: list[str], word: str) -> None:
+        pass  # taban öngörücü öğrenmez
+
+    def reset_personal(self) -> None:
+        pass
+
     def predict(self, context: list[str], prefix: str) -> Prediction:
         p = normalize(prefix)
         pa = fold(prefix)
@@ -103,6 +114,7 @@ class SubprocessPredictor:
 
     İstek:  {"op": "predict", "context": [...], "prefix": "..."}
             {"op": "add_user_words", "words": [...]}   {"op": "reset_user_words"}
+            {"op": "learn", "context": [...], "word": "..."}   {"op": "reset_personal"}
     Yanıt:  {"suggestions": [...], "autocorrect": "..." | null}   (diğer işlemler için {"ok": true})
     """
 
@@ -129,6 +141,12 @@ class SubprocessPredictor:
 
     def reset_user_words(self) -> None:
         self._call({"op": "reset_user_words"})
+
+    def learn(self, context: list[str], word: str) -> None:
+        self._call({"op": "learn", "context": context, "word": word})
+
+    def reset_personal(self) -> None:
+        self._call({"op": "reset_personal"})
 
     def close(self) -> None:
         if self._proc.stdin:

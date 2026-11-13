@@ -6,13 +6,14 @@ import unittest
 from pathlib import Path
 
 from kboard_eval import metrics, testset, trace
-from kboard_eval.predictors import FrequencyPredictor, SubprocessPredictor
+from kboard_eval.predictors import FrequencyPredictor, Prediction, SubprocessPredictor
 from kboard_eval.simulate import simulate
 from kboard_eval.testset import Case
 from kboard_eval.trace import Event
 from kboard_eval.turkish import asciify, is_deasciify_pair, is_typo_pair, tokenize, tr_lower
 
 SEED = Path(__file__).resolve().parents[1] / "testset" / "seed-v0.jsonl"
+KISISEL = Path(__file__).resolve().parents[1] / "testset" / "kisisel-v0.jsonl"
 
 
 def case(**kw):
@@ -240,6 +241,114 @@ class EndToEndTest(unittest.TestCase):
                 self.assertEqual(pred.predict([], "ab").suggestions, ["abx"])
             finally:
                 pred.close()
+
+
+class RecordingPredictor:
+    """Kişisel öğrenmeyi sınamak için: çağrıları kaydeder; öğrendiği ikilileri sonraki kelime olarak önerir."""
+
+    name = "rec"
+
+    def __init__(self):
+        self.calls = []
+        self.pairs = {}
+
+    def predict(self, context, prefix):
+        prev = context[-1] if context else "<s>"
+        nxt = self.pairs.get(prev)
+        return Prediction([nxt] if nxt and nxt.startswith(prefix) else [], None)
+
+    def add_user_words(self, words):
+        pass
+
+    def reset_user_words(self):
+        pass
+
+    def learn(self, context, word):
+        self.calls.append(("learn", tuple(context), word))
+        self.pairs[context[-1] if context else "<s>"] = word
+
+    def reset_personal(self):
+        self.calls.append(("reset",))
+        self.pairs.clear()
+
+
+class PersonalEvalTest(unittest.TestCase):
+    def cases(self):
+        return [
+            case(id="a1", text="Selam Ecoş nasılsın", user="u1", new_words=["Ecoş"]),
+            case(id="a2", text="Selam Ecoş geldim", user="u1", new_words=["Ecoş"]),
+            case(id="a3", text="Ecoş geldim", user="u1", new_words=["Ecoş"]),
+            case(id="b1", text="Selam Ecoş", user="u2", new_words=["Ecoş"]),
+        ]
+
+    def test_new_fields_and_user_split(self):
+        line = json.dumps({"id": "k1", "text": "Selam Ecoş", "category": "kisisel", "source": "t",
+                           "license": "CC0-1.0", "user": "deniz-ogrenci", "new_words": ["Ecoş"]}, ensure_ascii=False)
+        bad = json.dumps({"id": "k2", "text": "Selam", "category": "kisisel", "source": "t",
+                          "license": "CC0-1.0", "user": "u", "new_words": ["Ecoş"]}, ensure_ascii=False)
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "t.jsonl"
+            p.write_text("// yorum\n" + line + "\n" + bad + "\n", encoding="utf-8")
+            cases, errors = testset.load_with_errors(p)
+        self.assertEqual(cases[0].user, "deniz-ogrenci")
+        self.assertEqual(testset.case_split(cases[0]), testset.split_of("deniz-ogrenci"))
+        self.assertTrue(any("new_words" in e for e in errors))
+
+    def test_user_streams_must_be_contiguous(self):
+        rows = [dict(id=f"x{i}", text="selam", category="k", source="t", license="l", user=u)
+                for i, u in enumerate(["u1", "u2", "u1"])]
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "t.jsonl"
+            p.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+            _, errors = testset.load_with_errors(p)
+        self.assertTrue(any("ardışık" in e for e in errors))
+
+    def test_online_learns_after_each_case_and_resets_per_user(self):
+        pred = RecordingPredictor()
+        events = list(simulate(self.cases(), pred, online=True))
+        resets = [i for i, c in enumerate(pred.calls) if c == ("reset",)]
+        self.assertEqual(len(resets), 2)  # başta + kullanıcı değişince
+        self.assertEqual(pred.calls[1], ("learn", (), "Selam"))
+        self.assertEqual(pred.calls[2], ("learn", ("Selam",), "Ecoş"))
+        # a2'nin ikinci kelimesi: a1'den öğrenilen "Selam → Ecoş" önerilir
+        at0 = {(e.case_id, e.word_index): e.suggestions for e in events if not e.commit and e.typed == ""}
+        self.assertEqual(at0[("a2", 1)], ["Ecoş"])
+        self.assertEqual(at0[("b1", 1)], [])  # yeni kullanıcı: sıfırlandı
+        # öğrenme kapalıyken hiçbir learn çağrısı yok
+        pred2 = RecordingPredictor()
+        list(simulate(self.cases(), pred2))
+        self.assertEqual(pred2.calls, [])
+
+    def test_labels_and_personal_buckets(self):
+        cs = self.cases()
+        labels = metrics.personal_labels(cs)
+        self.assertFalse(labels[("a1", 1)].repeated)
+        self.assertTrue(labels[("a2", 0)].repeated)  # <s> → Selam
+        self.assertTrue(labels[("a2", 1)].repeated)  # Selam → Ecoş
+        self.assertFalse(labels[("a3", 0)].repeated)  # <s> → Ecoş ilk kez
+        self.assertFalse(labels[("b1", 1)].repeated)  # başka kullanıcı
+        self.assertFalse(labels[("a2", 1)].new_after_two)
+        self.assertTrue(labels[("a3", 0)].new_after_two)  # Ecoş önceki mesajlarda 2 kez
+        events = list(simulate(cs, RecordingPredictor(), online=True))
+        r = metrics.score(cs, events)
+        self.assertEqual(r["personal"]["tekrar"]["top3_at_k"]["0"]["value"], 1.0)
+        self.assertEqual(r["personal"]["new_word_after_two_top3_by_2"]["total"], 1)
+        self.assertIn("kişisel: tekrar", metrics.to_markdown(r))
+        ci = metrics.bootstrap(cs, events, n=10)
+        self.assertIn("Tekrar İlk-3 @0", ci)
+        # kullanıcısız sette kişisel kırılım yok
+        self.assertNotIn("personal", metrics.score([case()], []))
+
+    def test_kisisel_set_is_valid_and_split_by_user(self):
+        cases, errors = testset.load_with_errors(KISISEL)
+        self.assertEqual(errors, [])
+        users = {c.user for c in cases}
+        self.assertGreaterEqual(len(users), 6)
+        dev = {c.user for c in testset.filter_split(cases, "dev")}
+        test = {c.user for c in testset.filter_split(cases, "test")}
+        self.assertFalse(dev & test)
+        self.assertEqual(dev | test, users)
+        self.assertGreaterEqual(min(len(dev), len(test)), 3)
 
 
 if __name__ == "__main__":

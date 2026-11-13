@@ -58,6 +58,19 @@ jobs:
             --deasciify engine/build/kboard/deasciify-tr.kbd \
             --run varsayilan= --run typo-otomatik=--typo-autocorrect --context \
             --gate varsayilan=0.003 --gate varsayilan+ctx=0.003 --json eval/out/corpus-false-ac.json
+      - name: Kişisel öğrenme ölçümü (kisisel-v0 test kullanıcıları + seed-v0, öğrenme açık/kapalı)
+        working-directory: eval
+        run: |
+          engine="../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn --denylist ../data/ngram-denylist.txt --personal"
+          python -m kboard_eval simulate testset/kisisel-v0.jsonl -o out/kisisel-kapali.jsonl --predictor subprocess --command "$engine"
+          python -m kboard_eval simulate testset/kisisel-v0.jsonl -o out/kisisel-acik.jsonl --online --predictor subprocess --command "$engine"
+          python -m kboard_eval simulate testset/seed-v0.jsonl -o out/seed-acik.jsonl --online --predictor subprocess --command "$engine"
+          python -m kboard_eval score testset/kisisel-v0.jsonl -t out/kisisel-kapali.jsonl --split test --json out/kisisel-kapali.json --markdown out/kisisel-kapali.md --title "kisisel-v0 test, öğrenme kapalı"
+          python -m kboard_eval score testset/kisisel-v0.jsonl -t out/kisisel-acik.jsonl --split test --json out/kisisel-acik.json --markdown out/kisisel-acik.md --title "kisisel-v0 test, öğrenme açık"
+          python -m kboard_eval score testset/seed-v0.jsonl -t out/seed-acik.jsonl --json out/seed-acik.json --markdown out/seed-acik.md --title "seed-v0, öğrenme açık"
+          cat out/kisisel-kapali.md out/kisisel-acik.md out/seed-acik.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Kişisel öğrenme eşikleri
+        run: python .github/ci/personal-gate.py --personal eval/out/kisisel-kapali.json eval/out/kisisel-acik.json --seed eval/out/engine.json eval/out/seed-acik.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -65,6 +78,8 @@ jobs:
           path: |
             eval/out/engine.*
             eval/out/corpus-false-ac.json
+            eval/out/kisisel-*
+            eval/out/seed-acik.*
 
   android:
     name: Debug APK + izin kontrolü

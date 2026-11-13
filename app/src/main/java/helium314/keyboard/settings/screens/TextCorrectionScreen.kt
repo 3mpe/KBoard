@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import helium314.keyboard.kboard.KBoardPersonal // KBOARD
 import helium314.keyboard.keyboard.KeyboardSwitcher
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.permissions.PermissionsUtil
@@ -86,6 +87,8 @@ fun TextCorrectionScreen(
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_SUGGEST_EMOJIS else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_INLINE_EMOJI_SEARCH else null,
         Settings.PREF_KEY_USE_PERSONALIZED_DICTS,
+        if (prefs.getBoolean(Settings.PREF_KEY_USE_PERSONALIZED_DICTS, Defaults.PREF_KEY_USE_PERSONALIZED_DICTS))
+            SettingsWithoutKey.KBOARD_CLEAR_PERSONAL else null, // KBOARD
         Settings.PREF_BIGRAM_PREDICTIONS,
         Settings.PREF_SUGGEST_PUNCTUATION,
         if (prefs.getBoolean(Settings.PREF_SUGGEST_PUNCTUATION, Defaults.PREF_SUGGEST_PUNCTUATION))
@@ -224,6 +227,24 @@ fun createCorrectionSettings(context: Context) = listOf(
             )
         }
 
+    },
+    Setting(context, SettingsWithoutKey.KBOARD_CLEAR_PERSONAL, // KBOARD: kişisel öğrenmeyi sil
+        R.string.kboard_clear_personal, R.string.kboard_clear_personal_summary
+    ) { setting ->
+        var showConfirmDialog by rememberSaveable { mutableStateOf(false) }
+        Preference(
+            name = setting.title,
+            description = setting.description,
+            onClick = { showConfirmDialog = true },
+        )
+        if (showConfirmDialog) {
+            ConfirmationDialog(
+                onDismissRequest = { showConfirmDialog = false },
+                onConfirmed = { KBoardPersonal.clear() },
+                confirmButtonText = stringResource(R.string.kboard_clear_personal_button),
+                content = { Text(stringResource(R.string.kboard_clear_personal_message)) }
+            )
+        }
     },
     Setting(context, Settings.PREF_BIGRAM_PREDICTIONS,
         R.string.bigram_prediction, R.string.bigram_prediction_summary

@@ -44,7 +44,7 @@ def _cmd_simulate(args) -> int:
     cases = testset.load(args.testset)
     predictor = _make_predictor(args)
     try:
-        trace.write(simulate(cases, predictor), args.output)
+        trace.write(simulate(cases, predictor, online=args.online), args.output)
     finally:
         if hasattr(predictor, "close"):
             predictor.close()
@@ -133,6 +133,8 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--predictor", choices=["freq", "subprocess"], default="freq")
     s.add_argument("--wordlist", type=Path, help="freq: kelime[<TAB>frekans] listesi")
     s.add_argument("--command", help="subprocess: çalıştırılacak motor komutu")
+    s.add_argument("--online", action="store_true",
+                   help="kişisel öğrenme: her vakadan sonra hedef kelimeleri öğret; kullanıcı değişince sıfırla")
     s.set_defaults(func=_cmd_simulate)
 
     d = sub.add_parser("drive", help="gerçek klavyede adb ile yaz, iz üret")

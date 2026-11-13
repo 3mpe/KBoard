@@ -61,14 +61,17 @@ val buildNgramModel by tasks.registering(Exec::class) {
     val corpus = file("../data/corpus/commonvoice-tr.txt")
     val sohbet = file("../data/sohbet/sohbet-v1.txt")
     val testset = file("../eval/testset/seed-v0.jsonl")
+    // Kişisel öğrenme seti de (Faz 7) dil modeline sızmasın
+    val personalSet = file("../eval/testset/kisisel-v0.jsonl")
     val denylist = file("../data/ngram-denylist.txt")
     val out = kboardDir.map { it.file("kboard-tr.kbn") }
-    inputs.files(script, corpus, sohbet, testset, denylist)
+    inputs.files(script, corpus, sohbet, testset, personalSet, denylist)
     outputs.file(out)
     commandLine(
         "python3", script.path, "--corpus", "cv=${corpus.path}",
         // Sohbet korpusu küçük (2 801 mesaj); dev yarısında 3 kat ağırlık en iyisi (2 ve 4 eşit/yakın)
-        "--corpus", "sohbet=${sohbet.path}:3", "--exclude-jsonl", testset.path, "--denylist", denylist.path,
+        "--corpus", "sohbet=${sohbet.path}:3", "--exclude-jsonl", testset.path,
+        "--exclude-jsonl", personalSet.path, "--denylist", denylist.path,
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
     )
 }
