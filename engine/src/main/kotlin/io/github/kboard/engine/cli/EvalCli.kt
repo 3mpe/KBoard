@@ -13,6 +13,8 @@ import io.github.kboard.engine.ngram.NgramModel
 import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.personal.PersonalModel
 import io.github.kboard.engine.personal.PersonalSource
+import io.github.kboard.engine.rules.MisspellingList
+import io.github.kboard.engine.rules.SpellingRuleSource
 import io.github.kboard.engine.typo.TypoSource
 import java.io.File
 import kotlinx.serialization.json.Json
@@ -32,8 +34,13 @@ import kotlinx.serialization.json.jsonPrimitive
  *   {"op":"reset_user_words"}                        → {"ok":true}
  *   {"op":"learn","context":[...],"word":"..."}      → {"ok":true}  (kişisel model; `--personal` yoksa yok sayılır)
  *   {"op":"reset_personal"}                          → {"ok":true}
+ *   {"op":"revert","typed":"...","committed":"..."}  → {"ok":true}  (düzeltme geri alındı; yazım kuralı)
  */
-class EvalServer(private val engine: SuggestionEngine, private val personal: PersonalModel? = null) {
+class EvalServer(
+    private val engine: SuggestionEngine,
+    private val personal: PersonalModel? = null,
+    private val rules: SpellingRuleSource? = null,
+) {
     private val userWords = linkedSetOf<String>()
 
     fun handle(line: String): String {
@@ -71,6 +78,13 @@ class EvalServer(private val engine: SuggestionEngine, private val personal: Per
             }
             "reset_personal" -> {
                 personal?.clear()
+                rules?.clearReverts()
+                OK
+            }
+            "revert" -> {
+                val typed = req["typed"]?.jsonPrimitive?.content ?: return error("revert: typed gerekli")
+                val committed = req["committed"]?.jsonPrimitive?.content ?: return error("revert: committed gerekli")
+                rules?.noteRevert(typed, committed)
                 OK
             }
             else -> error("bilinmeyen op")
@@ -99,6 +113,10 @@ class EvalServer(private val engine: SuggestionEngine, private val personal: Per
  *   --typo-autocorrect        TypoSource oto. düzeltmesini açar (varsayılan kapalı; yalnızca ölçüm için)
  *   --personal                kişisel model (PersonalSource, dil modelini sarar); `learn` ile öğrenir
  *   --personal-params lmax,K,l0,kappa[,l0next]  karışım parametreleri (PersonalSource.Config)
+ *   --no-rules                yazım kurallarını (SpellingRuleSource: yanlış yazım listesi, bitişik
+ *                             soru eki) kapatır; varsayılan olarak --deasciify ile açıktır
+ *   --no-rule-list / --no-rule-particle  kurallardan yalnız birini kapatır (ölçüm için)
+ *   --rules <liste.tsv>       motorla gelen liste yerine bu yanlış yazım listesi
  *   --personal-warm <metin>   açılışta metin dosyasındaki bütün kelimeleri öğrenir (dolu depo ölçümü;
  *                             öğrenme, kaydetme ve yükleme sürelerini stderr'e yazar)
  * UserWordSuffixSource varsayılan olarak hep açıktır; kişisel sözlük boşken aday döndürmez. Bu
@@ -162,6 +180,27 @@ fun main(args: Array<String>) {
         val lmKnown: (String) -> Boolean = { w -> lm?.isKnown(w) == true || ps?.isKnown(w) == true }
         sources += TypoSource(index, TypoSource.Config(autocorrect = "--typo-autocorrect" in args), lmKnown)
     }
+    var rules: SpellingRuleSource? = null
+    if (deasciify != null && "--no-rules" !in args) {
+        val d = deasciify
+        val lm = ngramSource
+        val ps = personalSource
+        val list = argValue(args, "--rules")?.let { p -> File(p).useLines { MisspellingList.parse(it.toList().asSequence()) } }
+            ?: MisspellingList.default()
+        rules = SpellingRuleSource(
+            list,
+            dictKnown = { d.isKnown(it) },
+            dictFold = { d.hasFoldForm(it) || lm?.containsFold(it) == true },
+            lmKnown = { lm?.contains(it) == true },
+            personalKnown = { ps?.isKnown(it) == true },
+            userWord = { d.isUserWord(it) },
+            deasciify = { d.autocorrection(it) },
+            config = SpellingRuleSource.Config(
+                misspellings = "--no-rule-list" !in args,
+                questionParticle = "--no-rule-particle" !in args,
+            ),
+        ).also { sources += it }
+    }
     val suffixPath = argValue(args, "--suffix") ?: System.getenv("KBOARD_SUFFIX")
     if (index != null && suffixPath != null) {
         val model = File(suffixPath).inputStream().buffered().use { SuffixChainModel.read(it) }
@@ -184,7 +223,7 @@ fun main(args: Array<String>) {
         sources += SuffixChainSource(index, model, config).also { it.lm = ngramSource }
     }
     if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
-    val server = EvalServer(SuggestionEngine(sources, denylist = denylist), personal)
+    val server = EvalServer(SuggestionEngine(sources, denylist = denylist), personal, rules)
     val out = System.out.bufferedWriter(Charsets.UTF_8)
     System.`in`.bufferedReader(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.forEach {
         out.write(server.handle(it))

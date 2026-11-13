@@ -5,10 +5,13 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 | Kaynak | Kullanım | Lisans | Durum |
 |---|---|---|---|
 | [aosp-dictionaries `main_tr.dict`](https://codeberg.org/Helium314/aosp-dictionaries) | Ana sözlük (HeliBoard'da gömülü) | depodaki lisansa bakılacak | doğrulanacak |
+| `data/korpus-yanlislari.tsv` | Gözden geçirilmiş korpus yanlışları (6 satır; korpus yanlış oto. düzeltme kapısında hariç tutulur, `data/tools/corpus_false_ac.py --compare`) | CC0-1.0 | elle yazıldı (2026-11-13); karar: `docs/reports/faz-kural.md`, "Korpus" |
 | `data/deasciify-koruma.txt` | Aksansız yazımı da geçerli kelimeler (oto. düzeltme koruması) | CC0-1.0 | elle yazıldı |
+| `engine/src/main/resources/io/github/kboard/engine/rules/yazim-yanlislari-tr.tsv` | Yanlış yazım listesi (137 kayıt; yazım kuralı otomatik düzeltmesi, `rules/SpellingRuleSource`) | CC0-1.0 | elle derlendi (2026-11-13, yapay zekâ ile); yayımlanmış bir liste kopyalanmadı, doğru biçimler TDK Yazım Kılavuzu kurallarına göre. Ayrıntı: `docs/reports/faz-kural.md` |
 | `data/sohbet/sohbet-v1.txt` | Sohbet dili korpusu (sonraki kelime modeli, 2 801 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, insan gözden geçirdi (karar: aşağıda "Sentetik sohbet metni") |
 | [Zemberek-NLP](https://github.com/ahmetaa/zemberek-nlp) 0.17.1 | Ön hesaplama ve ölçüm (masaüstü, `tools/zemberek-spike`) | Apache-2.0 | doğrulandı (depodaki LICENSE) |
 | `eval/testset/seed-v0.jsonl` | Test seti | CC0-1.0 | elle yazıldı |
+| `eval/testset/kural-v0.jsonl` | Yazım kuralları test seti (196 vaka; yanlış yazım listesi, bitişik soru eki, tuzaklar, de/da/ki) | CC0-1.0 | yapay zekâ ile üretildi (Claude), seed-v0 ve kisisel-v0 okunmadan; insan gözden geçirmedi; dil modeline sızıntı süzgeciyle girmez |
 | `eval/testset/kisisel-v0.jsonl` | Kişisel öğrenme test seti (8 sentetik kullanıcı × 40 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, seed-v0 okunmadan; dil modeline sızıntı süzgeciyle girmez (bkz. "Sentetik sohbet metni") |
 | [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
 | `data/suffix/chains-tr.tsv` | Ek zinciri modeli: kök sınıfı (N, P, V) başına soyut ek zincirleri ve sayıları (`data/tools/build_suffix_chains.py`; Common Voice + sohbet korpusu, ağırlık 1/3, seed-v0 ve kisisel-v0 sızıntı süzgeci; Zemberek 0.17.1 ile masaüstünde çözümlendi) | CC0-1.0 | türetildi; yalnız sayımlar, metin içermez. Kaynak korpuslar CC0 |

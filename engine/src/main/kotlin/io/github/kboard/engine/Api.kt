@@ -14,8 +14,12 @@ data class Query(
     val isNextWord: Boolean get() = prefix.isEmpty()
 }
 
-/** [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource). */
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, OTHER }
+/**
+ * [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource).
+ * [RULE]: yanlış yazım listesi düzeltmesi; [RULE_PARTICLE]: bitişik soru eki düzeltmesi
+ * (rules/SpellingRuleSource). Uygulama ikisinin istisnalarını ayrı uygular.
+ */
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, RULE, RULE_PARTICLE, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası
@@ -49,6 +53,25 @@ interface GapFillSource : CandidateSource {
     val maxInTop: Int get() = 1
 }
 
+/**
+ * Yazım kuralı düzeltmesi (yanlış yazım listesi, bitişik soru eki). Motor, yazılan kelime için
+ * kuralın verdiği düzeltmeyi diğer bütün kaynakların önüne koyar ve otomatik düzeltme yapar:
+ * kural bilinen kelimeyi de düzeltir ("herşey" → "her şey"). Kullanıcı istisnalarını (kişisel
+ * sözlük, kişisel modelde 2+ kullanım, geri alınmış düzeltme) kural kendisi uygular.
+ * Düzeltme birden çok kelime olabilir (boşluk içerir).
+ */
+interface RuleCorrector {
+    /** Yazılanın düzeltmesi (kaynağı [Source.RULE] ya da [Source.RULE_PARTICLE]); yoksa null. */
+    fun correction(query: Query): Candidate?
+
+    /**
+     * [word] listede bir yanlışsa ("birşey", "herşeyi") yerine önerilecek doğru biçim; değilse null.
+     * Motor, başka kaynakların önerdiği yanlış biçimleri bununla değiştirir (yazılanın kendisi ve
+     * kişisel sözlük adayları hariç).
+     */
+    fun replacement(word: String): String? = null
+}
+
 /** Kaynaklardan gelen adayları birleştirip sıralar. */
 fun interface Ranker {
     fun rank(query: Query, candidates: List<Candidate>, limit: Int): List<Candidate>
@@ -63,4 +86,6 @@ data class Suggestions(
     val candidates: List<Candidate>,
     /** Boşlukta yazılanın yerine geçecek kelime; null = yazıldığı gibi kalsın. */
     val autocorrect: String?,
+    /** [autocorrect]'u veren kaynak (ör. [Source.RULE]); uygulama istisnaları buna göre seçer. */
+    val autocorrectSource: Source? = null,
 )

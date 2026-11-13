@@ -584,6 +584,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         // KBOARD: Türkçe öneri motorundan (engine/) gelen adaylar
         KBoardSuggestions.getSuggestions(composedData, ngramContext, dictGroup.locale, suggestions.toList())
             .filterNotTo(suggestions) { isBlacklisted(it.word) }
+        KBoardSuggestions.replaceMisspellings(composedData.mTypedWord, suggestions, dictGroup.locale) // KBOARD: "birşey" önerilmez
         return suggestions
     }
 

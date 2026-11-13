@@ -8,6 +8,9 @@ Saf Kotlin/JVM öneri motoru (Android bağımlılığı yok). Arayüzler: `Query
 - Faz 2 prototipi: `deasciify/DeasciifySource` (sözlük tabanlı aksan geri getirme + önek tamamlama).
   CLI'da `--deasciify <dizin.kbd>` ile açılır; dizinin üretimi `data/KAYNAKLAR.md`'de, sonuçlar
   [docs/reports/faz2-deasciifier-prototip.md](../docs/reports/faz2-deasciifier-prototip.md).
+- Yazım kuralları (kural PR A): `rules/SpellingRuleSource` (yanlış yazım listesi
+  `rules/yazim-yanlislari-tr.tsv`, bitişik uzun soru eki). CLI'da `--deasciify` ile açık, `--no-rules`
+  kapatır; rapor [docs/reports/faz-kural.md](../docs/reports/faz-kural.md).
 
 ## Masaüstünde çalıştırma
 

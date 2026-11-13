@@ -1913,6 +1913,8 @@ public final class InputLogic {
         mConnection.deleteTextBeforeCursor(deleteLength);
         if (!TextUtils.isEmpty(committedWord)) {
             unlearnWord(committedWordString, inputTransaction.getSettingsValues(), DictionaryFacilitator.UnlearnEvent.REVERT);
+            // KBOARD: geri alınan yazım kuralı düzeltmesi ("herşey" → "her şey") bir daha yapılmasın
+            helium314.keyboard.kboard.KBoardSuggestions.noteRevert(originallyTypedWord.toString(), committedWordString);
         }
         final String stringToCommit = originallyTypedWord +
                 (usePhantomSpace ? "" : separatorString);

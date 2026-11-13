@@ -58,13 +58,25 @@ jobs:
           python -m kboard_eval simulate testset/seed-v0.jsonl -o out/engine-ek-yok.jsonl --predictor subprocess \
             --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn --denylist ../data/ngram-denylist.txt"
           python ../.github/ci/suffix-events.py testset/seed-v0.jsonl out/engine-ek-yok.jsonl out/engine.jsonl | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Yazım kuralları (kural-v0; tuzakta 0 düzeltme, kesinlik ve duyarlılık eşikleri)
+        working-directory: eval
+        run: |
+          set -o pipefail
+          python -m kboard_eval simulate testset/kural-v0.jsonl -o out/kural.jsonl --predictor subprocess \
+            --command "../engine/build/install/engine/bin/engine --deasciify ../engine/build/kboard/deasciify-tr.kbd --ngram ../engine/build/kboard/kboard-tr.kbn --denylist ../data/ngram-denylist.txt --suffix ../engine/build/kboard/suffix-tr.kbs"
+          python -m kboard_eval score testset/kural-v0.jsonl -t out/kural.jsonl --json out/kural.json --markdown out/kural.md --title "kural-v0 (yazım kuralları)"
+          cat out/kural.md >> "$GITHUB_STEP_SUMMARY"
+          python ../.github/ci/kural-gate.py out/kural.json --trace out/kural.jsonl --testset testset/kural-v0.jsonl | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Korpusta yanlış oto. düzeltme (her 10. satır ayrılır, dil modeli onsuz derlenir)
         run: |
           python data/tools/corpus_false_ac.py --engine engine/build/install/engine/bin/engine \
             --deasciify engine/build/kboard/deasciify-tr.kbd \
             --run "varsayilan=--suffix engine/build/kboard/suffix-tr.kbs" \
+            --run "kuralsiz=--no-rules --suffix engine/build/kboard/suffix-tr.kbs" \
             --run "typo-otomatik=--typo-autocorrect --suffix engine/build/kboard/suffix-tr.kbs" --context \
-            --gate varsayilan=0.003 --gate varsayilan+ctx=0.003 --json eval/out/corpus-false-ac.json
+            --gate varsayilan=0.003 --gate varsayilan+ctx=0.003 \
+            --compare varsayilan:kuralsiz=0.0001 --compare varsayilan+ctx:kuralsiz+ctx=0.0001 \
+            --json eval/out/corpus-false-ac.json
       - name: Kişisel öğrenme ölçümü (kisisel-v0 test kullanıcıları + seed-v0, öğrenme açık/kapalı)
         working-directory: eval
         run: |
@@ -85,6 +97,7 @@ jobs:
           path: |
             eval/out/engine.*
             eval/out/corpus-false-ac.json
+            eval/out/kural.*
             eval/out/kisisel-*
             eval/out/seed-acik.*
 

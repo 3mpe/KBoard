@@ -45,6 +45,7 @@ class KBoardSuggestionsTest {
     @After
     fun reset() {
         KBoardSuggestions.setUserWords(tr, emptyList())
+        KBoardSuggestions.clearReverts()
         KBoardSuggestions.setDeasciifier(null)
     }
 
@@ -115,6 +116,53 @@ class KBoardSuggestionsTest {
         // Bağlam verilmezse eski davranış: mi'ye dokunulmaz
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("mi", mutableListOf(info("mi")), tr, true, heli))
         KBoardSuggestions.setDeasciifier(null)
+    }
+
+    @Test
+    fun spellingRuleCommitsTwoWordsAndRespectsRevert() {
+        KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("herşey", 109), DeasciifyIndex.Companion.Entry("her", 200),
+            DeasciifyIndex.Companion.Entry("şey", 200),
+        ))))
+        val heli = false to false
+        val list = mutableListOf(info("herşey"))
+        // Sözlükte olsa da yanlış yazım listesi düzeltir; düzeltme boşluklu tek metin
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("herşey", list, tr, true, heli))
+        assertEquals("her şey", list[0].word)
+        assertTrue(list[0].isAppropriateForAutoCorrection)
+        assertEquals(KBoardSuggestions.AutoCorrection.Replace("Her şey", listRule = true), KBoardSuggestions.autoCorrection("Herşey", tr))
+        // Kişisel sözlükten gelen kelimeye dokunulmaz
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("herşey", mutableListOf(info("herşey")), tr, true, heli,
+            typedWordSourceType = Dictionary.TYPE_USER))
+        // Kullanıcı geçmişindeki yanlış yazım yine düzeltilir (aksan düzeltmesinden farklı olarak)
+        val fromHistory = mutableListOf(info("herşey"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("herşey", fromHistory, tr, true, heli,
+            typedWordSourceType = Dictionary.TYPE_USER_HISTORY))
+        assertEquals("her şey", fromHistory[0].word)
+        // Geri alınan düzeltme bir daha yapılmaz
+        KBoardSuggestions.noteRevert("herşey", "her şey")
+        assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("herşey", tr))
+        KBoardSuggestions.setDeasciifier(null)
+    }
+
+    @Test
+    fun listedMisspellingIsNotOfferedFromNativeSuggestions() {
+        KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("herşey", 109), DeasciifyIndex.Companion.Entry("her", 200),
+            DeasciifyIndex.Companion.Entry("şey", 200), DeasciifyIndex.Companion.Entry("herkes", 150),
+        ))))
+        val list = mutableListOf(info("herşey"), info("herkes"))
+        KBoardSuggestions.replaceMisspellings("herş", list, tr)
+        assertEquals(listOf("her şey", "herkes"), list.map { it.word })
+        assertFalse(list[0].isAppropriateForAutoCorrection)
+        // Doğrusu zaten listedeyse yanlışı çıkar
+        val dup = mutableListOf(info("her şey"), info("herşey"))
+        KBoardSuggestions.replaceMisspellings("her", dup, tr)
+        assertEquals(listOf("her şey"), dup.map { it.word })
+        // Yazılan kelimenin kendisi kalır
+        val typed = mutableListOf(info("herşey"))
+        KBoardSuggestions.replaceMisspellings("herşey", typed, tr)
+        assertEquals(listOf("herşey"), typed.map { it.word })
     }
 
     @Test

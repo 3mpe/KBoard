@@ -18,21 +18,41 @@ class SuggestionEngine(
 ) {
     private val baseSources = sources.filter { it !is GapFillSource }
     private val gapSources = sources.filterIsInstance<GapFillSource>()
+    private val rules = sources.filterIsInstance<RuleCorrector>()
 
     fun suggest(query: Query, limit: Int = DEFAULT_LIMIT): Suggestions {
         if (sources.isEmpty()) return EMPTY
         val base = allowed(query, baseSources.flatMap { it.candidates(query, limit) })
         var ranked = ranker.rank(query, base, limit)
         if (gapSources.isNotEmpty()) ranked = nonIncreasing(mergeGapFill(query, ranked, base, limit))
-        val autocorrect = if (query.isNextWord) null else ranked.firstOrNull {
+        if (!query.isNextWord && rules.isNotEmpty()) {
+            val rule = rules.firstNotNullOfOrNull { it.correction(query) }
+            if (rule != null && !TurkishText.sameWord(rule.word, query.prefix)) {
+                val key = TurkishText.lower(rule.word)
+                // Sıra ve puan birlikte: kuralın düzeltmesi ilk yuvada, puanlar artmayan
+                ranked = nonIncreasing((listOf(rule.copy(score = 1.0, autocorrectable = true)) +
+                    ranked.filter { TurkishText.lower(it.word) != key }).take(limit))
+                return Suggestions(ranked, rule.word, rule.source)
+            }
+        }
+        val ac = if (query.isNextWord) null else ranked.firstOrNull {
             it.autocorrectable && !TurkishText.sameWord(it.word, query.prefix)
-        }?.word
-        return Suggestions(ranked, autocorrect)
+        }
+        return Suggestions(ranked, ac?.word, ac?.source)
     }
 
-    private fun allowed(query: Query, c: List<Candidate>): List<Candidate> =
-        if (denylist.isEmpty) c
+    private fun allowed(query: Query, c: List<Candidate>): List<Candidate> {
+        val kept = if (denylist.isEmpty) c
         else c.filter { it.source == Source.USER || it.source == Source.PERSONAL || TurkishText.sameWord(it.word, query.prefix) || !denylist.blocks(it.word) }
+        if (rules.isEmpty()) return kept
+        // Listedeki yanlış biçimler ("birşey") hiçbir kaynaktan önerilmez; yerine doğru biçim
+        // ("bir şey") gelir. Yazılanın kendisi ve kişisel sözlük adayları muaf.
+        return kept.map { cand ->
+            if (cand.source == Source.USER || TurkishText.sameWord(cand.word, query.prefix)) return@map cand
+            val rep = rules.firstNotNullOfOrNull { it.replacement(cand.word) } ?: return@map cand
+            cand.copy(word = rep, autocorrectable = false)
+        }
+    }
 
     /**
      * Boşluk dolduran kaynakların ([GapFillSource]) adayları temel sıralamayla puana göre

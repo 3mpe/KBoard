@@ -7,7 +7,7 @@ import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .turkish import nfc, normalize, tokenize
+from .turkish import fold, nfc, normalize, tokenize
 
 REQUIRED = ("id", "text", "category", "source", "license")
 KNOWN = set(REQUIRED) | {"input", "tags", "user_words", "note", "user", "new_words"}
@@ -43,6 +43,61 @@ class Case:
     def typed_words(self) -> list[str]:
         return tokenize(self.typed_text)
 
+    @property
+    def aligned_targets(self) -> list[str]:
+        """Yazılan her kelimenin hedefi. Yazılan bir kelimenin hedefi iki kelime olabilir
+        ("herşey" → "her şey"); o zaman hedef boşlukla birleşik tek metindir. Kelime sayıları
+        eşitse `target_words` ile aynıdır."""
+        return align(self.typed_words, self.target_words) or self.target_words
+
+
+MAX_SPAN = 2  # yazılan bir kelimenin karşılığı en çok bu kadar hedef kelime
+
+
+def _edit(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def align(typed: list[str], targets: list[str]) -> list[str] | None:
+    """Yazılan kelimeleri hedef kelimelere hizalar: her yazılan kelime 1..MAX_SPAN ardışık hedef
+    kelimeye karşılık gelir; toplam (katlanmış, boşluksuz) düzenleme uzaklığı en küçük olan seçilir.
+    Hizalanamıyorsa (yazılan daha uzun ya da fark MAX_SPAN'ı aşıyor) None."""
+    n, m = len(typed), len(targets)
+    if n == m:
+        return list(targets)
+    if n == 0 or n > m or m > n * MAX_SPAN:
+        return None
+    INF = float("inf")
+    # best[i][j]: ilk i yazılan kelime ilk j hedef kelimeye hizalandığında en küçük maliyet
+    best = [[INF] * (m + 1) for _ in range(n + 1)]
+    back = [[0] * (m + 1) for _ in range(n + 1)]
+    best[0][0] = 0
+    for i in range(1, n + 1):
+        t = fold(typed[i - 1])
+        for j in range(1, m + 1):
+            for k in range(1, MAX_SPAN + 1):
+                if j - k < 0 or best[i - 1][j - k] == INF:
+                    continue
+                # Birleşik hedef küçük bir ceza alır: eşit maliyette tek kelime tercih edilir
+                c = best[i - 1][j - k] + _edit(t, fold("".join(targets[j - k:j]))) + (0.5 if k > 1 else 0)
+                if c < best[i][j]:
+                    best[i][j], back[i][j] = c, k
+    if best[n][m] == INF:
+        return None
+    out: list[str] = []
+    j = m
+    for i in range(n, 0, -1):
+        k = back[i][j]
+        out.append(" ".join(targets[j - k:j]))
+        j -= k
+    return out[::-1]
+
 
 class TestSetError(ValueError):
     pass
@@ -75,9 +130,15 @@ def parse_case(obj: dict, where: str) -> tuple[Case | None, list[str]]:
         if normalize(w) not in targets:
             errors.append(f"{where}: new_words içindeki '{w}' metinde yok")
     if len(case.typed_words) != len(case.target_words):
-        errors.append(
-            f"{where}: 'input' ({len(case.typed_words)} kelime) ile 'text' ({len(case.target_words)} kelime) hizalı değil"
-        )
+        # Yazılan bir kelimenin hedefi iki kelime olabilir ("herşey" → "her şey"); yalnız bu durumda
+        # sayılar farklı olabilir ve birleşik hedef yazılan kelimeye yakın olmalı.
+        al = align(case.typed_words, case.target_words)
+        bad = al is None or any(" " in t and _edit(fold(w), fold(t.replace(" ", ""))) > 2
+                                for w, t in zip(case.typed_words, al))
+        if bad:
+            errors.append(
+                f"{where}: 'input' ({len(case.typed_words)} kelime) ile 'text' ({len(case.target_words)} kelime) hizalı değil"
+            )
     return (case if not errors else None), errors
 
 

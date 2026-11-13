@@ -82,6 +82,12 @@ class NgramSource(
     /** Kelime modelde var ve önerilebilir mi (yazım hatası düzeltmesi bunu bilinen kelime sayar). */
     fun isKnown(word: String): Boolean = model.id(word).let { it >= 0 && model.suggestable(it) }
 
+    /** Kelime modelde var mı (önerisi engellenmiş olsa da). */
+    fun contains(word: String): Boolean = model.id(word) >= 0
+
+    /** Katlanmış biçimi [word]'ünkiyle aynı bir model kelimesi var mı ("gormusun" → "görmüşün")? */
+    fun containsFold(word: String): Boolean = model.withFold(TurkishText.fold(word)).isNotEmpty()
+
     /** log10 P(w | bağlam). Kelime modelde yoksa null. */
     override fun logProb(word: String, context: List<String>, sentenceStart: Boolean): Float? {
         val id = model.id(word)
