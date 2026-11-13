@@ -1,0 +1,8 @@
+BILGI öğrenmeden önce 'mavi' sonrası 'kaplumbağa' önerilmiyor (beklenen)
+BILGI yazılan: "Mavi kaplumbağa mavi kaplumbağa mavi kaplumbağa mavi kaplumbağa mavi kaplumbağa "
+GECTI öğrenilenler dosyaya yazıldı: 84 bayt
+GECTI uygulama yeniden açılınca 'mavi' sonrası ilk öneri 'kaplumbağa'
+BILGI yerel yedek dosyası bulunamadı, yedek dışlama denenemedi
+GECTI yeniden başlatma sonrası dosya duruyor
+GECTI yeniden başlatma sonrası 'kaplumbağa' hâlâ öneriliyor (yuva 0)
+KALDI ayarlarda 'Öğrenilenleri sil' bulunamadı / dokunulamadı
