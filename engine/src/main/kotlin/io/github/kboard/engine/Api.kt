@@ -18,8 +18,10 @@ data class Query(
  * [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource).
  * [RULE]: yanlış yazım listesi düzeltmesi; [RULE_PARTICLE]: bitişik soru eki düzeltmesi
  * (rules/SpellingRuleSource). Uygulama ikisinin istisnalarını ayrı uygular.
+ * [RULE_SPLIT]: bitişik yazılmış bağlaç de/da/ki'nin ayrık önerisi (rules/ConjunctionSplitter);
+ * hiçbir zaman otomatik düzeltme değildir.
  */
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, RULE, RULE_PARTICLE, OTHER }
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, RULE, RULE_PARTICLE, RULE_SPLIT, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası
@@ -70,6 +72,19 @@ interface RuleCorrector {
      * kişisel sözlük adayları hariç).
      */
     fun replacement(word: String): String? = null
+}
+
+/**
+ * Bitişik yazılmış bağlacın ayrık önerisi ("bende" → "ben de", "dedimki" → "dedim ki"; kural PR B).
+ * Yalnız öneridir: motor adayı [Split.slot]'a yerleştirir, otomatik düzeltme yapmaz ve önerinin
+ * önüne geçebilecek otomatik düzeltme adayının (ör. aksan düzeltmesi) önüne geçirmez.
+ */
+interface SplitSuggester {
+    enum class Slot { FIRST, THIRD }
+
+    class Split(val word: String, val slot: Slot)
+
+    fun split(query: Query): Split?
 }
 
 /** Kaynaklardan gelen adayları birleştirip sıralar. */

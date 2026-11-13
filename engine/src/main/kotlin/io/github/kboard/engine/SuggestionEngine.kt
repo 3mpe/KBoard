@@ -19,6 +19,7 @@ class SuggestionEngine(
     private val baseSources = sources.filter { it !is GapFillSource }
     private val gapSources = sources.filterIsInstance<GapFillSource>()
     private val rules = sources.filterIsInstance<RuleCorrector>()
+    private val splitters = sources.filterIsInstance<SplitSuggester>()
 
     fun suggest(query: Query, limit: Int = DEFAULT_LIMIT): Suggestions {
         if (sources.isEmpty()) return EMPTY
@@ -34,6 +35,9 @@ class SuggestionEngine(
                     ranked.filter { TurkishText.lower(it.word) != key }).take(limit))
                 return Suggestions(ranked, rule.word, rule.source)
             }
+        }
+        if (!query.isNextWord && splitters.isNotEmpty()) {
+            splitters.firstNotNullOfOrNull { it.split(query) }?.let { ranked = placeSplit(ranked, it, limit) }
         }
         val ac = if (query.isNextWord) null else ranked.firstOrNull {
             it.autocorrectable && !TurkishText.sameWord(it.word, query.prefix)
@@ -95,6 +99,25 @@ class SuggestionEngine(
             }
         }
         return out
+    }
+
+    /**
+     * Ayrık bağlaç önerisini yerleştirir: [SplitSuggester.Slot.FIRST] baştaki otomatik düzeltme
+     * adaylarından hemen sonra, [SplitSuggester.Slot.THIRD] en erken üçüncü yuva. Aynı kelime
+     * listede varsa oradan çıkar. Puanlar artmayan kalır (uygulama puana göre sıralar).
+     */
+    private fun placeSplit(ranked: List<Candidate>, split: SplitSuggester.Split, limit: Int): List<Candidate> {
+        val key = TurkishText.lower(split.word)
+        val rest = ranked.filter { TurkishText.lower(it.word) != key }
+        val leadAc = rest.takeWhile { it.autocorrectable }.size
+        val at = when (split.slot) {
+            SplitSuggester.Slot.FIRST -> leadAc
+            SplitSuggester.Slot.THIRD -> maxOf(leadAc, TOP - 1)
+        }.coerceAtMost(rest.size)
+        val score = if (at == 0) ((rest.firstOrNull()?.score ?: 0.5) + SCORE_STEP).coerceAtMost(1.0)
+        else rest[at - 1].score - SCORE_STEP
+        val c = Candidate(split.word, score, Source.RULE_SPLIT, autocorrectable = false)
+        return nonIncreasing((rest.take(at) + c + rest.drop(at)).take(limit))
     }
 
     /**

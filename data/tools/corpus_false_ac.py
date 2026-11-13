@@ -74,6 +74,7 @@ def build_lm(specs: list[str], out: Path) -> None:
         "--exclude-jsonl", str(ROOT / "eval/testset/seed-v0.jsonl"),
         "--exclude-jsonl", str(ROOT / "eval/testset/kisisel-v0.jsonl"),
         "--exclude-jsonl", str(ROOT / "eval/testset/kural-v0.jsonl"),
+        "--exclude-jsonl", str(ROOT / "eval/testset/dedaki-v0.jsonl"),
         "--denylist", str(ROOT / "data/ngram-denylist.txt"),
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", str(out),
     ]

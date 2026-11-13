@@ -146,6 +146,37 @@ class KBoardSuggestionsTest {
     }
 
     @Test
+    fun conjunctionSplitIsASuggestionNeverAnAutocorrection() {
+        KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("dedim", 150), DeasciifyIndex.Companion.Entry("çok", 200),
+            DeasciifyIndex.Companion.Entry("çokda", 120),
+        ))))
+        val ctx = NgramContext(NgramContext.WordInfo("yarın"), NgramContext.WordInfo.BEGINNING_OF_SENTENCE_WORD_INFO)
+        // "dedimki": ayrık biçim ilk öneri, ama otomatik düzeltme değil
+        val ki = KBoardSuggestions.getSuggestions(composed("dedimki"), ctx, tr)
+        assertEquals("dedim ki", ki[0].word)
+        assertFalse(ki[0].isAppropriateForAutoCorrection)
+        assertEquals(SuggestedWordInfo.KIND_COMPLETION, ki[0].kind)
+        assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("dedimki", tr))
+        // HeliBoard ilk öneriyi puanıyla otomatik düzeltmek istese de ayrım düzeltme olmaz
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("dedimki", ki.toMutableList(), tr, true, true to true))
+        // başka bir ilk öneride HeliBoard'un kararı aynen kalır
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("dedimki", mutableListOf(info("dedim")), tr, true, true to true))
+        // "cokda": aksan düzeltmesi ("çokda") önde kalır, ayrım ("çok da") hemen arkasında; HeliBoard
+        // puana göre sıraladığı için puanlar kesin azalır
+        val de = KBoardSuggestions.getSuggestions(composed("cokda"), ctx, tr)
+        assertEquals(listOf("çokda", "çok da"), de.take(2).map { it.word })
+        assertTrue(de[0].isAppropriateForAutoCorrection)
+        assertFalse(de[1].isAppropriateForAutoCorrection)
+        assertTrue(de.zipWithNext().all { (a, b) -> a.score > b.score })
+        assertEquals(KBoardSuggestions.AutoCorrection.Replace("çokda"), KBoardSuggestions.autoCorrection("cokda", tr))
+        // kişisel sözlükteki kelime ayrılmaz
+        KBoardSuggestions.setUserWords(tr, listOf("dedimki"))
+        assertTrue(KBoardSuggestions.getSuggestions(composed("dedimki"), ctx, tr).none { it.word == "dedim ki" })
+        KBoardSuggestions.setDeasciifier(null)
+    }
+
+    @Test
     fun listedMisspellingIsNotOfferedFromNativeSuggestions() {
         KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
             DeasciifyIndex.Companion.Entry("herşey", 109), DeasciifyIndex.Companion.Entry("her", 200),

@@ -18,6 +18,7 @@ import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.personal.PersonalModel
 import io.github.kboard.engine.personal.PersonalSource
 import io.github.kboard.engine.rules.MisspellingList
+import io.github.kboard.engine.rules.ConjunctionSplitter
 import io.github.kboard.engine.rules.SpellingRuleSource
 import io.github.kboard.engine.typo.TypoSource
 import java.util.Locale
@@ -120,6 +121,24 @@ object KBoardSuggestions {
     }
 
     /**
+     * Bitişik yazılmış bağlaç de/da/ki'nin ayrık önerisi ("bende" → "ben de", "dedimki" → "dedim ki";
+     * docs/reports/faz-kural-b.md). Yalnız öneridir ([Source.RULE_SPLIT], otomatik düzeltmeye uygun
+     * değil); yazım kurallarıyla birlikte, aksan düzelticiyle açılır. Seçilen öneri boşluklu tek metin
+     * olarak yazılır; kullanıcı geçmişine ve kişisel öğrenmeye kelime kelime girer (bitişik biçim
+     * öğrenilmez).
+     */
+    private val splitter: ConjunctionSplitter by lazy {
+        ConjunctionSplitter(
+            dictKnown = { deasciifier?.isKnown(it) == true },
+            lmKnown = { ngram?.contains(it) == true },
+            lmLogProb = { w, ctx, start -> ngram?.logProb(w, ctx, start) },
+            personalKnown = { personal?.isKnown(it) == true }, // yalnız belirsiz sınıfta
+            userWord = { deasciifier?.isUserWord(it) == true },
+            deasciify = { deasciifier?.autocorrection(it) },
+        )
+    }
+
+    /**
      * `InputLogic.revertCommit` içindeki `// KBOARD:` satırı: kullanıcı bir otomatik düzeltmeyi geri
      * aldı. Yazım kuralının düzeltmesiyse aynı kelime bir daha düzeltilmez (kalıcı; "Öğrenilenleri
      * sil" temizler).
@@ -194,7 +213,7 @@ object KBoardSuggestions {
         // Ek zinciri: kök kütlesi ve bilinen biçim için ham dil modeli (kişisel kaynaktan bağımsız)
         val sfx = suffix
         sfx?.lm = lm
-        engine = SuggestionEngine(listOfNotNull(deasc?.let { rules }, deasc, p ?: lm, typo, sfx, userMorph), denylist = denylist)
+        engine = SuggestionEngine(listOfNotNull(deasc?.let { rules }, deasc?.let { splitter }, deasc, p ?: lm, typo, sfx, userMorph), denylist = denylist)
             .also { it.setUserWords(userWords) }
     }
 
@@ -260,7 +279,11 @@ object KBoardSuggestions {
         val words = ngramContext?.let { contextWords(it) } ?: emptyList()
         val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
         return when (val ac = autoCorrection(typedWord, locale, words, sentenceStart)) {
-            AutoCorrection.NoOpinion -> base
+            // Ayrık bağlaç önerisi ("dedim ki") yalnız öneridir: HeliBoard ilk öneriyi puanına bakıp
+            // otomatik düzeltme yapabilir; ilk öneri o ise düzeltme olmaz.
+            AutoCorrection.NoOpinion -> if (base.second && suggestions.firstOrNull()?.let { isSplitSuggestion(it) } == true) {
+                base.first to false
+            } else base
             AutoCorrection.Keep -> base.first to false
             // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.
             is AutoCorrection.Replace -> if (typedWordSourceType in (if (ac.listRule) LIST_EXEMPT_SOURCES else USER_SOURCES)) base else {
@@ -278,6 +301,10 @@ object KBoardSuggestions {
             }
         }
     }
+
+    /** Motorun ayrık bağlaç önerisi mi (KBoard kaynağı, boşluklu, otomatik düzeltmeye uygun değil)? */
+    private fun isSplitSuggestion(info: SuggestedWordInfo): Boolean =
+        info.sourceDict.mDictType == TYPE_KBOARD && !info.isAppropriateForAutoCorrection && ' ' in info.word
 
     private val calls = AtomicLong()
 

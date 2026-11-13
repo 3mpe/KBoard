@@ -10,6 +10,8 @@
   kisisel-v0 okunmadan yazıldı (CC0-1.0). Kategori `kural`; etiketler `kural_liste` (yanlış yazım
   listesi), `kural_soru` (bitişik uzun soru eki), `kural_tuzak` (değişmemesi gereken doğru cümle),
   `kural_dedaki` (de/da/ki, PR B için). Eşik: `.github/ci/kural-gate.py`; bkz. `docs/reports/faz-kural.md`.
+- `dedaki-v0.jsonl`: de/da/ki ayrımı seti (kural PR B): 176 vaka (107 bitişik yazılmış bağlaç, 69 tuzak),
+  yapay zekâ ile üretildi, insan gözden geçirmedi; ayardan önce donduruldu, dev/test kimliğe göre.
 
 ## seed-v0 dağılımı (327 vaka, 1250 kelime)
 
