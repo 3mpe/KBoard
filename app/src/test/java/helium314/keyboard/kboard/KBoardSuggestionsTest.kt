@@ -165,8 +165,13 @@ class KBoardSuggestionsTest {
         assertFalse(KBoardSuggestions.isRevertiblePick(info("dedim")))
         // HeliBoard ilk öneriyi puanıyla otomatik düzeltmek istese de ayrım düzeltme olmaz
         assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("dedimki", ki.toMutableList(), tr, true, true to true))
-        // başka bir ilk öneride HeliBoard'un kararı aynen kalır
-        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("dedimki", mutableListOf(info("dedim")), tr, true, true to true))
+        // HeliBoard'un kendi önerisi ilk sıradaysa kararı aynen kalır
+        val native = SuggestedWordInfo("dedim", "", 100, SuggestedWordInfo.KIND_CORRECTION or
+            SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION, Dictionary.DICTIONARY_USER_TYPED,
+            SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("dedimki", mutableListOf(native), tr, true, true to true))
+        // motorun yalnız öneri olan herhangi bir adayı (yazım hatası, ek zinciri, tamamlama) da düzeltme olmaz
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("gidiyprum", mutableListOf(info("gidiyorum")), tr, true, true to true))
         // "cokda": aksan düzeltmesi ("çokda") önde kalır, ayrım ("çok da") hemen arkasında; HeliBoard
         // puana göre sıraladığı için puanlar kesin azalır
         val de = KBoardSuggestions.getSuggestions(composed("cokda"), ctx, tr)

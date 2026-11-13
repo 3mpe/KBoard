@@ -27,7 +27,14 @@ class MisspellingList(entries: List<Entry>) {
     internal val byFold: Map<String, List<Entry>> = entries.groupBy { it.fold }
     /** Kök kayıtları, uzundan kısaya (en uzun eşleşen kök kazanır). */
     internal val stems: List<Entry> = entries.filter { it.stem }.sortedByDescending { it.wrong.length }
-    private val stemHeads: Set<String> = stems.mapTo(HashSet()) { it.fold.take(3) }
+    /**
+     * Uyum sınıfı değişen tam kayıtlar ("sezeryan" → "sezaryen", "mütevazi" → "mütevazı"): çekimde ek
+     * doğru köke göre yeniden uydurulur ("sezeryanla" → "sezaryenle"); uzundan kısaya.
+     */
+    internal val reharmonized: List<Entry> = entries
+        .filter { !it.stem && ' ' !in it.right && !sameSuffixClass(it.wrong, it.right) }
+        .sortedByDescending { it.wrong.length }
+    private val stemHeads: Set<String> = (stems + reharmonized).mapTo(HashSet()) { it.fold.take(3) }
 
     /** Ucuz ön süzgeç: [lower] bir kayıtla ya da bir kök kaydıyla eşleşebilir mi? */
     internal fun mightMatch(lower: String): Boolean {
@@ -228,7 +235,40 @@ class SpellingRuleSource(
             // ("müsadere", "müsademe") yalnız çekim bilinen bir kelimeyse düzeltilir.
             if (exactHead && !known(lower)) return e.right + rest
         }
+        // Uyum sınıfı değişen kökün çekimi: ek yeniden uydurulur. Çekim bilinen bir kelime değilse kök
+        // kayıtlarındaki gibi yalnız yanlış kök aynen yazıldıysa ve yazılan hiçbir yerde yoksa düzeltilir.
+        for (e in list.reharmonized) {
+            val n = e.wrong.length
+            if (lower.length <= n || lower.length - n > config.maxStemSuffix) continue
+            val head = lower.substring(0, n)
+            val exactHead = head == e.wrong
+            if (!exactHead && !(TurkishText.fold(head) == e.fold && accentsCompatible(head, e.wrong) && !known(lower))) continue
+            val rest = reharmonize(lower.substring(n), e.right)
+            inflect(e.right, rest)?.let { return it }
+            if (exactHead && !known(lower)) return e.right + rest
+        }
         return null
+    }
+
+    /**
+     * [rest] ekindeki ünlüleri [stem]in son ünlüsünden başlayarak yeniden uydurur: a/e iki yollu,
+     * ı/i/u/ü dört yollu; o/ö (-yor) olduğu gibi kalır. "la" + sezaryen → "le", "sin" + mütevazı → "sın".
+     */
+    private fun reharmonize(rest: String, stem: String): String {
+        var prev = stem.lastOrNull { it in VOWELS } ?: return rest
+        val sb = StringBuilder(rest.length)
+        for (c in rest) {
+            val front = prev in "eiöüî"
+            val round = prev in "ouöüû"
+            val out = when (c) {
+                'a', 'e' -> if (front) 'e' else 'a'
+                'ı', 'i', 'u', 'ü' -> if (front) (if (round) 'ü' else 'i') else (if (round) 'u' else 'ı')
+                else -> c
+            }
+            sb.append(out)
+            if (out in VOWELS) prev = out
+        }
+        return sb.toString()
     }
 
     /** Doğru köke [rest] ekini ekler; son kelime bilinen bir kelime olmalı (gerekirse aksan ve d/t uyumu). */

@@ -99,6 +99,17 @@ class DeasciifyContextTest {
     }
 
     @Test
+    fun questionParticleUsesTheCorrectedPreviousWord() {
+        val s = src()
+        // "orjinal" yanlış yazım listesinde "orijinal"; orijinal ince ek alır: "mi" kalır
+        assertEquals("mı", s.autocorrection("mi", listOf("Bu", "orjinal")))
+        s.previousWordFix = { if (it.lowercase() == "orjinal") "orijinal" else null }
+        assertNull(s.autocorrection("mi", listOf("Bu", "orjinal")))
+        // düzeltmesi olmayan önceki kelimede eski davranış
+        assertEquals("mı", s.autocorrection("mi", listOf("yemeğe", "çıkalım")))
+    }
+
+    @Test
     fun languageModelVetoesParticleChange() {
         // Model "mi"yi bu kelimeden sonra görmüş ve en az "mı" kadar olası buluyor: yazılan kalır
         val veto = object : ContextScorer {

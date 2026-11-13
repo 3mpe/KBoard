@@ -204,7 +204,7 @@ fun main(args: Array<String>) {
                 misspellings = "--no-rule-list" !in args,
                 questionParticle = "--no-rule-particle" !in args,
             ),
-        ).also { sources += it }
+        ).also { r -> sources += r; d.previousWordFix = { r.replacement(it) } }
     }
     if (deasciify != null && "--no-split" !in args) {
         val d = deasciify
