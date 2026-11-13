@@ -142,8 +142,13 @@ adb shell am force-stop "$pkg"
 ensure_kboard
 adb shell am start -W -n "$pkg/helium314.keyboard.settings.SettingsActivity" >/dev/null; sleep 4
 # Yine de kurulum sihirbazı açıldıysa son adımdan ayarlara geç.
-adb shell uiautomator dump /dev/tty 2>/dev/null | grep -qE "uygulamasını kurma|Set up " && \
-  tap_text "Klavyeyi yapılandır|Configure.*" && sleep 2
+# Sihirbaz 2. adımda KBoard'un seçilmesini bekler, sonra 3. adımın düğmesi ayarlara geçer.
+for n in 1 2 3 4 5; do
+  adb shell uiautomator dump /dev/tty 2>/dev/null | grep -qE "uygulamasını kurma|Set up " || break
+  log "kurulum sihirbazı açık ($n): $(adb shell settings get secure default_input_method | tr -d '\r')"
+  adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3
+  tap_text "Klavyeyi yapılandır|Configure.*" ; sleep 2
+done
 shot kboard-e2e-4-ayarlar 1
 if tap_text "Metin düzeltme|Text correction" && shot kboard-e2e-5-metin-duzeltme 1 \
    && tap_text "Öğrenilenleri sil|Clear learned words" && shot kboard-e2e-6-sil-onay 1 \
