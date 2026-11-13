@@ -228,6 +228,8 @@ def main() -> int:
 
     blocked = {w for w in vocab if denied(w)}
     words = sorted(vocab)
+    # Motor kelimeyi ikili aramayla bulur (Kotlin UTF-16 sırası): Python kod noktası sırası aynı olmalı.
+    assert words == sorted(words, key=lambda w: w.encode("utf-16-be")), "kelime sırası UTF-16 sırasıyla uyuşmuyor"
     words.insert(0, BOS)
     p_uni[BOS] = 1e-9
     ids = {w: i for i, w in enumerate(words)}

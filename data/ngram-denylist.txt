@@ -45,3 +45,35 @@ avni
 mihriye
 güzin
 viktor
+
+# Sohbet korpusundaki konuşma dili kısaltmaları: bağlam olarak kalır, standart yazan kullanıcıya
+# önerilmez. Bilerek yazılan kısaltmalar (tmm, slm, nbr, kanka, abi) önerilmeye devam eder.
+geliyom
+geliyo
+geliyosun
+gelicem
+gelcen
+getiriyom
+atıyom
+biliyom
+bilmiyom
+istiyosun
+yapıyosun
+vermiyosun
+kurtarıyosun
+giyiyosun
+giyicem
+kalıyo
+kalıcaksın
+kalkcam
+tutmuyo
+izliyoz
+sorcam
+yapcaz
+napıyosun
+napıyosunuz
+naptın
+napalım
+noldu
+bişey
+ordayım

@@ -71,8 +71,9 @@ eklenenler (ulaşılanın ~2 puan altı): @0 ≥ %9,5, @1 ≥ %19, @3 ≥ %40, K
 
 ## Ek: sohbet korpusu (2026-11-13)
 
-`data/sohbet/sohbet-v1.txt`: proje için sıfırdan yazılmış 2 801 mesaj (CC0-1.0, yapay zekâ destekli;
-yazılırken test seti okunmadı). Common Voice'a 3 kat ağırlıkla eklendi; test setiyle örtüşen 35 mesaj
+`data/sohbet/sohbet-v1.txt`: proje için yapay zekâ ile üretilmiş, insan gözden geçirmiş 2 801 mesaj
+(CC0-1.0; üretilirken test seti okunmadı). Konuşma dili kısaltmaları (geliyom, napıyosun...) bağlam
+olarak kullanılır, önerilmez. Common Voice'a 3 kat ağırlıkla eklendi; test setiyle örtüşen 35 mesaj
 derlemede atılır. Ağırlık dev yarısında seçildi (1: @3 %52,8, 2: %53,0, 3: %53,0 ve en iyi @0/KSR,
 4: %53,0).
 
@@ -88,5 +89,8 @@ Kategoriye göre (test, @0 / @3 / KSR): sohbet %23,0 / %54,0 / %42,7; dogru_yazi
 %35,0; kullanici_sozlugu %13,7 / %42,4 / %35,4; ozel_isim %41,7 / %66,7 / %50,5. Kazanç yalnız sohbet
 kategorisinde değil. Dosya 1,08 MB (bütçe 1,1 MB), p95 0,78 ms.
 
-Not: test seti ve sohbet korpusu aynı yöntemle (elle, yapay zekâ destekli) yazıldı; üslup benzerliği
-kazancı bir miktar şişirebilir. Gerçek kullanıcı metniyle doğrulama telefonda yapılacak.
+**Kazanç üst sınırdır.** Test seti ve sohbet korpusu aynı yöntemle (yapay zekâ ile) yazıldı. Sızıntı
+süzgeci sohbet korpusunun %1,25'ini attı (Common Voice'ta %0,17); korpus Common Voice'un onda biri
+kadar kelimeyle test bigram'larının aynı oranını kapsıyor (%35,7 ve %34,3). Yön güvenilir, +9 puan
+ise bu test setine özgü bir üst sınır; CI eşikleri gerileme koruması olarak okunmalı, ürün kalitesi
+olarak değil. Gerçek kullanıcı metniyle ayrı doğrulama (`eval/private`, depoya girmez) yapılacak.

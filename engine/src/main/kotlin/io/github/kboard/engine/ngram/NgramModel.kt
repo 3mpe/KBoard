@@ -42,6 +42,11 @@ class NgramModel private constructor(
     private val foldStart: IntArray
 
     init {
+        // id() ikili arama yapar: <s> dışındaki kelimeler kesin artan olmalı
+        for (i in 1 until size - 1) {
+            if (i == bosId || i + 1 == bosId) continue
+            require(compareWords(i, i + 1) < 0) { "KBNG kelimeleri sıralı değil: ${word(i)} / ${word(i + 1)}" }
+        }
         val folded = Array(size) { TurkishText.fold(word(it)) }
         byFold = (0 until size).filter { it != bosId }.sortedBy { folded[it] }.toIntArray()
         foldStart = IntArray(byFold.size + 1)
@@ -81,6 +86,8 @@ class NgramModel private constructor(
         }
         return -1
     }
+
+    private fun compareWords(a: Int, b: Int): Int = compareWord(a, word(b))
 
     private fun compareWord(id: Int, key: String): Int {
         val s = wordStart[id]

@@ -8,8 +8,8 @@ Faz 4, #26).
 
 ## Nasıl üretildi
 
-- Bütün cümleler bu proje için **sıfırdan yazıldı**; yapay zekâ destekli olarak hazırlandı ve
-  elle gözden geçirildi.
+- Bütün cümleler bu proje için **yapay zekâ ile üretildi ve insan gözden geçirdi** (sentetik metin;
+  kullanım kararı ve koşulları: `data/KAYNAKLAR.md`, "Sentetik sohbet metni").
 - Hiçbir şarkı, kitap, altyazı, web sitesi, forum veya sosyal medya metninden alıntı ya da
   kopya yoktur. Gerçek kişilere ait kişisel veri (telefon, adres, IBAN vb.) içermez; geçen
   adlar (Ayşe, Mehmet, Kerem...) yaygın Türkçe adlardır ve kimseyi işaret etmez.
