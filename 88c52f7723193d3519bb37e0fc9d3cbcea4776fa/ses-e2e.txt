@@ -1,0 +1,4 @@
+KALDI parola alanında mikrofon yerine dokununca klavye değişti: com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME
+GECTI ilk dokunuş yalnız bildirim gösterdi, klavye KBoard kaldı
+GECTI ikinci dokunuş sesle yazma yöntemine geçti: com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService
+GECTI geri tuşundan sonra KBoard'a kendiliğinden dönüldü

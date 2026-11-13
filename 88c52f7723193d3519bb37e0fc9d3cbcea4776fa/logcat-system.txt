@@ -1,0 +1,49 @@
+--------- beginning of system
+11-13 22:06:05.006   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:06:05.026   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 10112
+11-13 22:06:20.019   544  1845 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:06:20.847   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:06:21.002   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 10334
+11-13 22:06:35.642   544  1948 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:06:36.657   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:06:36.807   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 10502
+11-13 22:06:51.749   544  1948 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:06:52.679   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:06:52.883   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 10666
+11-13 22:07:07.138   544  1944 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:07:08.066   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:07:08.244   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 10838
+11-13 22:07:23.336   544  1841 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:07:24.361   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 10988
+11-13 22:07:25.556   544  1842 W InputMethodManagerService: Ignoring hideSoftInput of uid 10169 : com.android.internal.inputmethod.IInputMethodClient$Stub$Proxy@429884d
+11-13 22:07:34.761   544  1842 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:07:40.936   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:07:40.944   544   611 E InputMethodManagerService: Ignoring com.android.server.inputmethod.InputMethodManagerService.updateStatusIcon:2992 due to an invalid token. uid:10145 token:android.os.Binder@6ca7f30
+11-13 22:07:44.049   544   544 W InputMethodManagerService: Session failed to close due to remote exception
+11-13 22:07:44.049   544   544 W InputMethodManagerService: android.os.DeadObjectException
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transactNative(Native Method)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.internal.inputmethod.IInputMethodSession$Stub$Proxy.finishSession(IInputMethodSession.java:358)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.finishSessionLocked(InputMethodManagerService.java:2938)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionLocked(InputMethodManagerService.java:2910)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodManagerService.clearClientSessionsLocked(InputMethodManagerService.java:2971)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.clearCurMethodAndSessions(InputMethodBindingController.java:381)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController.-$$Nest$mclearCurMethodAndSessions(InputMethodBindingController.java:0)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.inputmethod.InputMethodBindingController$2.onServiceDisconnected(InputMethodBindingController.java:352)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2191)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at android.os.Looper.loop(Looper.java:294)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.run(SystemServer.java:970)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.server.SystemServer.main(SystemServer.java:664)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at java.lang.reflect.Method.invoke(Native Method)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-13 22:07:44.049   544   544 W InputMethodManagerService: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:949)
+11-13 22:07:44.168   544   644 W InputMethodManagerService: Illegal subtype state: old subtype = null, new subtype = android.view.inputmethod.InputMethodSubtype@7000000f
+11-13 22:07:44.220   544   564 W ActivityManager: setHasOverlayUi called on unknown pid: 11160
+11-13 22:07:58.822   544  1951 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:08:03.014   544  1933 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:08:12.681   544   833 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-13 22:08:18.989   544  1857 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found

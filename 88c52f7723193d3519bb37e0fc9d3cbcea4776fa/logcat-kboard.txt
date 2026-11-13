@@ -1,0 +1,22 @@
+--------- beginning of main
+11-13 22:06:05.889 10334 10354 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 35 ms
+11-13 22:06:06.127 10334 10354 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 29 ms
+11-13 22:06:07.469 10334 10369 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1341 ms
+11-13 22:06:21.677 10502 10523 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 33 ms
+11-13 22:06:21.957 10502 10523 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 52 ms
+11-13 22:06:23.222 10502 10538 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1263 ms
+11-13 22:06:37.509 10666 10687 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 31 ms
+11-13 22:06:37.749 10666 10687 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 47 ms
+11-13 22:06:39.077 10666 10701 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1325 ms
+11-13 22:06:53.636 10838 10858 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 30 ms
+11-13 22:06:53.862 10838 10858 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 28 ms
+11-13 22:06:55.138 10838 10873 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1274 ms
+11-13 22:07:09.005 10988 11008 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 29 ms
+11-13 22:07:09.250 10988 11008 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 27 ms
+11-13 22:07:10.539 10988 11023 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1287 ms
+11-13 22:07:25.120 11160 11187 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 53 ms
+11-13 22:07:25.362 11160 11187 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 40 ms
+11-13 22:07:27.310 11160 11199 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1945 ms
+11-13 22:07:44.989 11322 11343 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 30 ms
+11-13 22:07:45.232 11322 11343 I KBoardEngineLoader: ek zinciri modeli yüklendi: 6506 bayt, 51 ms
+11-13 22:07:46.493 11322 11358 I KBoardEngineLoader: dil modeli yüklendi: 36877 kelime, 1259 ms
