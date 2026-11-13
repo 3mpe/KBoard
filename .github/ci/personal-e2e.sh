@@ -41,17 +41,26 @@ ensure_kboard() {
   return 1
 }
 
+# Alanı açar ve etkin klavyenin gerçekten KBoard olduğunu doğrular (force-stop sistemi Gboard'a
+# döndürebiliyor; o zaman dokunuşlar Gboard'a yazar).
+open_kboard_field() {
+  local n
+  open_kboard_field
+  for n in 1 2 3; do
+    adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard" && return 0
+    echo "   etkin klavye KBoard değil, yeniden seçiliyor ($n)" >&2
+    [ -n "${gboard:-}" ] && adb shell ime set "$gboard" >/dev/null 2>&1
+    adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3; adb shell input tap 540 400; sleep 3
+  done
+  return 1
+}
+
 # "mavi " yazıldıktan sonra şeritteki üç öneriden hangisi $WORD? 0 = orta, 1 = sol, 2 = sağ, -1 = yok.
 # Her yuva için alan baştan açılır (open_field uygulamayı kapatıp açar: dosyadan yükleme de denenir).
 which_slot() { # $1 = görüntü adı
   local i txt
   for i in 0 1 2; do
-    ensure_kboard; open_field >/dev/null
-    if ! adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard"; then
-      echo "   etkin klavye KBoard değil, yeniden seçiliyor" >&2
-      [ -n "${gboard:-}" ] && adb shell ime set "$gboard" >/dev/null 2>&1
-      adb shell ime set "$kboard" >/dev/null 2>&1; sleep 3; adb shell input tap 540 400; sleep 3
-    fi
+    open_kboard_field
     type_word "mavi"; tap_space; sleep 3
     [ "$i" = 0 ] && shot "$1" 1 >&2
     adb shell input tap ${SLOTS[$i]}; sleep 2
@@ -94,7 +103,7 @@ else result BILGI "öğrenmeden önce de '$WORD' yuva $s'de öneriliyordu: denem
 base_slot=$s
 
 # 1) Öğrenme: "mavi kaplumbağa" 5 kez, tuşlara dokunarak.
-open_field >/dev/null
+open_kboard_field
 for r in 1 2 3 4 5; do type_word "mavi"; tap_space; type_word "$WORD"; tap_space; done
 sleep 2; result BILGI "yazılan: \"$(field_text)\""
 sleep 15 # kayıt son değişiklikten 10 sn sonra
@@ -109,7 +118,7 @@ elif [ "$s" != "-1" ]; then result GECTI "uygulama yeniden açılınca '$WORD' �
 else result KALDI "uygulama yeniden açılınca '$WORD' önerilmiyor"; fi
 
 # 2b) Yazım kuralı: iki kelimelik düzeltme ve geri alma (cümle başı: "Her şey"; büyük/küçük harf yok sayılır).
-ensure_kboard; open_field >/dev/null
+open_kboard_field
 type_word "herşey"; tap_space; sleep 2
 txt=$(field_text); shot kboard-e2e-kural-1-duzeltme 1
 case "$txt" in *"er şey"*) result GECTI "'herşey' + boşluk → \"$txt\" (iki kelime yazıldı)";;
@@ -123,7 +132,7 @@ sleep 2
 [ -n "$(revert_file)" ] && result GECTI "geri alma dosyaya yazıldı (kural-geri-alinan.tsv)" \
   || result KALDI "geri alma dosyası yok ($de_dir)"
 # Uygulama kapatılıp açılınca (bellek boş, dosyadan yüklenir) aynı kelime düzeltilmemeli.
-ensure_kboard; open_field >/dev/null
+open_kboard_field
 type_word "herşey"; tap_space; sleep 2
 txt=$(field_text)
 case "$txt" in *"er şey"*) result KALDI "yeniden açılınca geri alınan 'herşey' yine düzeltildi: \"$txt\"";;
