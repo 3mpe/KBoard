@@ -1,0 +1,29 @@
+# Tek seferlik: CI'ın ürettiği debug APK'yı zip'siz olarak bir pre-release'e koyar.
+name: APK release (tek seferlik)
+on:
+  push:
+    branches: [claude/project-thread-m1qxy4]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: KBoard-debug-apk
+          run-id: 43492209346
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: apk
+      - name: Pre-release oluştur
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la apk
+          cp apk/*.apk KBoard-0.1.0-debug-53ea4a6.apk
+          gh release create apk-53ea4a6 KBoard-0.1.0-debug-53ea4a6.apk \
+            --repo "$GITHUB_REPOSITORY" --target 53ea4a628b45633f7eb487a289e540f6d5a57518 \
+            --prerelease --title "KBoard 0.1.0 debug (main 53ea4a6)" \
+            --notes "Telefonda denemek için debug APK. Evrensel (arm64-v8a, armeabi-v7a, x86, x86_64). main 53ea4a6."
