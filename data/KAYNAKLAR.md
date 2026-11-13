@@ -6,6 +6,7 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 |---|---|---|---|
 | [aosp-dictionaries `main_tr.dict`](https://codeberg.org/Helium314/aosp-dictionaries) | Ana sözlük (HeliBoard'da gömülü) | depodaki lisansa bakılacak | doğrulanacak |
 | `data/deasciify-koruma.txt` | Aksansız yazımı da geçerli kelimeler (oto. düzeltme koruması) | CC0-1.0 | elle yazıldı |
+| `data/sohbet/sohbet-v1.txt` | Sohbet dili korpusu (sonraki kelime modeli, 2 801 mesaj) | CC0-1.0 | elle yazıldı (yapay zekâ destekli) |
 | [Zemberek-NLP](https://github.com/ahmetaa/zemberek-nlp) 0.17.1 | Ön hesaplama ve ölçüm (masaüstü, `tools/zemberek-spike`) | Apache-2.0 | doğrulandı (depodaki LICENSE) |
 | `eval/testset/seed-v0.jsonl` | Test seti | CC0-1.0 | elle yazıldı |
 | [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
