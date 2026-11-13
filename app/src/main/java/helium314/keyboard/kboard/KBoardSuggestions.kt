@@ -262,7 +262,15 @@ object KBoardSuggestions {
                 it.source != Source.TYPO || (!nativeFixes && TurkishText.lower(it.word) !in nativeWords)
             }
         }
-        return candidates.map { it.toWordInfo(query, dict) }
+        // HeliBoard puana göre sıralar (SuggestionResults): motor sırası [0,1] kırpmasından ve tamsayıya
+        // çevirmeden sonra da korunsun diye puanlar sırayla kesin azalır.
+        var prev = Int.MAX_VALUE
+        return candidates.map { c ->
+            val raw = (c.score.coerceIn(0.0, 1.0) * SCORE_SCALE).toInt()
+            val s = if (raw < prev) raw else (prev - 1).coerceAtLeast(0)
+            prev = s
+            c.toWordInfo(query, dict, s)
+        }
     }
 
     /** NgramContext'teki önceki kelimeler, eskiden yeniye; cümle başında durur. */
@@ -284,7 +292,7 @@ object KBoardSuggestions {
     internal fun startsSentence(ngramContext: NgramContext, count: Int): Boolean =
         ngramContext.isNthPrevWordBeginningOfSentence(count + 1)
 
-    private fun Candidate.toWordInfo(query: Query, dict: Dictionary): SuggestedWordInfo {
+    private fun Candidate.toWordInfo(query: Query, dict: Dictionary, appScore: Int): SuggestedWordInfo {
         var kind = when {
             query.isNextWord -> SuggestedWordInfo.KIND_PREDICTION
             autocorrectable -> SuggestedWordInfo.KIND_CORRECTION
@@ -292,7 +300,7 @@ object KBoardSuggestions {
         }
         if (autocorrectable) kind = kind or SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION
         return SuggestedWordInfo(
-            word, "", (score.coerceIn(0.0, 1.0) * SCORE_SCALE).toInt(), kind, dict,
+            word, "", appScore, kind, dict,
             SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE
         )
     }

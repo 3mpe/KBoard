@@ -178,15 +178,31 @@ class SuffixChainTest {
     fun gapFillTakesAtMostOneTopSlot() {
         fun c(w: String, s: Double, src: Source = Source.NGRAM) = Candidate(w, s, src)
         val gap = FixedGap(listOf(c("g1", 0.9, Source.MORPHOLOGY), c("g2", 0.85, Source.MORPHOLOGY), c("b1", 0.99, Source.MORPHOLOGY)))
-        // Temelde 3 aday: ilk 3'te en çok bir üretilmiş biçim, temel sıra korunur, tekrar yok
+        // Temelde 3 aday: ilk 3'te en çok bir üretilmiş biçim, o da üçüncü yuvada; temel sıra korunur, tekrar yok
         val full = SuggestionEngine(listOf(Fixed("lm", listOf(c("b1", 0.5), c("b2", 0.4), c("b3", 0.3))), gap))
-        assertEquals(listOf("g1", "b1", "b2", "g2", "b3"), full.suggest(Query(emptyList(), "x")).candidates.map { it.word })
+        assertEquals(listOf("b1", "b2", "g1", "g2", "b3"), full.suggest(Query(emptyList(), "x")).candidates.map { it.word })
         // Temelde 1 aday (yazım hatası önerisi sayılmaz): iki boş yuva dolar, temel aday ilk 3'te kalır
         val sparse = SuggestionEngine(listOf(Fixed("lm", listOf(c("b1", 0.5), c("t1", 0.01, Source.TYPO))), gap))
         assertEquals(listOf("g1", "g2", "b1", "t1"), sparse.suggest(Query(emptyList(), "x")).candidates.map { it.word })
         // Temel boş: üretilmiş biçimler bütün yuvaları alır
         val empty = SuggestionEngine(listOf(Fixed("lm", emptyList()), gap))
         assertEquals(listOf("b1", "g1", "g2"), empty.suggest(Query(emptyList(), "x")).candidates.map { it.word })
+    }
+
+    @Test
+    fun gapFillNeverLeadsWhenBaseIsFull() {
+        // "yoğ": puanı yüksek üretilmiş "yoğa" ilk yuvaya geçip "yoğurt"u öne itmemeli
+        fun c(w: String, s: Double, src: Source = Source.NGRAM) = Candidate(w, s, src)
+        val gap = FixedGap(listOf(c("yoğa", 0.95, Source.MORPHOLOGY), c("yoğu", 0.9, Source.MORPHOLOGY)))
+        val base = Fixed("lm", listOf(c("yoğurt", 0.6), c("yoğurdu", 0.5), c("yoğun", 0.4)))
+        val words = SuggestionEngine(listOf(base, gap)).suggest(Query(emptyList(), "yoğ")).candidates.map { it.word }
+        assertEquals(listOf("yoğurt", "yoğurdu", "yoğa"), words.take(3))
+        // Uygulama puana göre sıralar: puanlar liste sırasıyla azalmalı
+        val scores = SuggestionEngine(listOf(base, gap)).suggest(Query(emptyList(), "yoğ")).candidates.map { it.score }
+        assertEquals(scores.sortedDescending(), scores)
+        // İki üretilmiş biçim, temel 1 aday: boş yuvalar dolar, puanlar yine azalır
+        val sparse = SuggestionEngine(listOf(Fixed("lm", listOf(c("yoğurt", 0.99))), gap)).suggest(Query(emptyList(), "yoğ")).candidates
+        assertEquals(sparse.map { it.score }.sortedDescending(), sparse.map { it.score })
     }
 
     @Test
