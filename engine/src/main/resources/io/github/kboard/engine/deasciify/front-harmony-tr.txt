@@ -36,3 +36,38 @@ itaat
 kanaat
 sadakat
 liyakat
+# Ek: kural PR A (Fable kararı (a), 2026-11-13). Son l'si ince okunan alıntılar. Test setine bakılmadan
+# derlendi; her biri sözlükte (main_tr) ince ekli çekimiyle (-i/-ü, -ler) doğrulandı, kalın ekli çekimi
+# sözlükte yok: orijinali, terminali, sinyali, kristali, lokali, morali, liberali, rolü, golü,
+# alkolü, kontrolü, protokolü, sembolü, petrolü, kabulü, usulü, mahsulü, timsali, vokali, radikali,
+# kardinali, spirali. Sözlükte çekimi olmayan minimal, optimal, dijital, viral, total, mental ince l
+# kuralıyla eklendi. Elenenler: kanal, formal, karnaval (sözlükte kalın ekli), santral (ikisi de var),
+# futbol (futbolu).
+orijinal
+terminal
+sinyal
+kristal
+lokal
+moral
+liberal
+rol
+gol
+alkol
+kontrol
+protokol
+sembol
+petrol
+kabul
+usul
+mahsul
+timsal
+vokal
+radikal
+kardinal
+spiral
+minimal
+optimal
+dijital
+viral
+total
+mental

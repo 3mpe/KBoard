@@ -41,6 +41,7 @@ object KBoardSuggestions {
 
     /** Bu sözlüklerden gelen yazılan kelime kullanıcınındır; motor düzeltmez. */
     private val USER_SOURCES = setOf(Dictionary.TYPE_USER, Dictionary.TYPE_CONTACTS, Dictionary.TYPE_USER_HISTORY)
+    private val LIST_EXEMPT_SOURCES = setOf(Dictionary.TYPE_USER, Dictionary.TYPE_CONTACTS)
 
     /** Kişisel sözlük kelimelerinin çekimleri (her zaman açık; sözlük boşken aday üretmez). */
     // Aksan düzeltici yokken (kapalı ya da dizin henüz yüklenmedi) hangi kelimenin geçerli olduğu
@@ -99,8 +100,10 @@ object KBoardSuggestions {
 
     /**
      * Yazım kuralları (yanlış yazım listesi, bitişik soru eki; docs/reports/faz-kural.md). Aksan
-     * düzelticiyle birlikte açılır (onun sözlüğünü kullanır). Kişisel sözlük, kişisel modelde 2+
-     * kullanım ve geri alınmış düzeltme istisnalarını kendisi uygular. Düzeltme iki kelime olabilir
+     * düzelticiyle birlikte açılır (onun sözlüğünü kullanır). Liste için istisna yalnız kişisel
+     * sözlük ve geri alınmış düzeltmedir (kullanıcı geçmişi ve kişisel model istisna değil: yanlış
+     * yazım alışkanlıkla tekrarlanır); bitişik soru ekinde kişisel modelde 2+ kullanım da istisnadır.
+     * Geri almalar [KBoardPersonal] ile `kboard/kural-geri-alinan.tsv`'ye kaydedilir. Düzeltme iki kelime olabilir
      * ("herşey" → "her şey"): HeliBoard boşluklu düzeltmeyi tek metin olarak yazar, kullanıcı
      * geçmişine kelime kelime ekler ve geri almada tamamını siler.
      */
@@ -110,7 +113,7 @@ object KBoardSuggestions {
             dictKnown = { deasciifier?.isKnown(it) == true },
             dictFold = { deasciifier?.hasFoldForm(it) == true || ngram?.containsFold(it) == true },
             lmKnown = { ngram?.contains(it) == true },
-            personalKnown = { personal?.isKnown(it) == true },
+            personalKnown = { personal?.isKnown(it) == true }, // yalnız bitişik soru ekinde
             userWord = { deasciifier?.isUserWord(it) == true },
             deasciify = { deasciifier?.autocorrection(it) },
         )
@@ -118,12 +121,19 @@ object KBoardSuggestions {
 
     /**
      * `InputLogic.revertCommit` içindeki `// KBOARD:` satırı: kullanıcı bir otomatik düzeltmeyi geri
-     * aldı. Yazım kuralının düzeltmesiyse aynı kelime bu oturumda bir daha düzeltilmez.
+     * aldı. Yazım kuralının düzeltmesiyse aynı kelime bir daha düzeltilmez (kalıcı; "Öğrenilenleri
+     * sil" temizler).
      */
     @JvmStatic
     fun noteRevert(typedWord: String, committedWord: String) {
-        if (deasciifier != null) rules.noteRevert(typedWord, committedWord)
+        if (deasciifier != null && rules.noteRevert(typedWord, committedWord)) KBoardPersonal.saveReverts(rules.reverts())
     }
+
+    /** [KBoardPersonal] açılışta kayıtlı geri almaları yükler. */
+    internal fun loadReverts(map: Map<String, String>) = rules.loadReverts(map)
+
+    /** "Öğrenilenleri sil": geri alınan düzeltmeler unutulur. */
+    internal fun clearReverts() = rules.clearReverts()
 
     /** Kişisel öğrenmeyi açar/kapatır (kişiselleştirme ayarı); [model] yalnız testler için. */
     @Synchronized
@@ -200,16 +210,20 @@ object KBoardSuggestions {
         data object NoOpinion : AutoCorrection
         /** Yazılan kelime korunmalı ("sus", kullanıcı sözlüğü); HeliBoard düzeltmesin. */
         data object Keep : AutoCorrection
-        /** Boşlukta [word] ile değiştir. */
-        data class Replace(val word: String) : AutoCorrection
+        /**
+         * Boşlukta [word] ile değiştir. [listRule]: düzeltme yanlış yazım listesinden (aksan ya da
+         * soru eki değil); kullanıcı geçmişindeki kelime de düzeltilir.
+         */
+        data class Replace(val word: String, val listRule: Boolean = false) : AutoCorrection
     }
 
     fun autoCorrection(
         typedWord: String, locale: Locale, context: List<String> = emptyList(), sentenceStart: Boolean = true,
     ): AutoCorrection {
         if (locale.language != "tr" || typedWord.isEmpty()) return AutoCorrection.NoOpinion
-        engine.suggest(Query(context, typedWord, sentenceStart)).autocorrect?.let {
-            return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it))
+        val s = engine.suggest(Query(context, typedWord, sentenceStart))
+        s.autocorrect?.let {
+            return AutoCorrection.Replace(DeasciifySource.applyCase(typedWord, it), s.autocorrectSource == Source.RULE)
         }
         return if (deasciifier?.isProtected(typedWord) == true) AutoCorrection.Keep else AutoCorrection.NoOpinion
     }
@@ -225,7 +239,9 @@ object KBoardSuggestions {
      *
      * [typedWordSourceType]: yazılan kelime HeliBoard'un hangi sözlüğünde bulunduysa onun türü.
      * Kişisel sözlük, kişiler ve kullanıcı geçmişindeki kelimeleri (ör. düzeltmeyi geri alıp yeniden
-     * yazılan kelime) motor düzeltmez; bu durumda HeliBoard'un kararı aynen geçerlidir.
+     * yazılan kelime) motor düzeltmez; bu durumda HeliBoard'un kararı aynen geçerlidir. Yanlış yazım
+     * listesinin düzeltmesinde ([AutoCorrection.Replace.listRule]) istisna yalnız kişisel sözlük ve
+     * kişilerdir: "herşey" kullanıcı geçmişinde olsa da düzeltilir (geri alma ayrıca hatırlanır).
      *
      * [trailingQuotes]: yazılanın sonundaki tek tırnak sayısı; düzeltme kelimesine geri eklenir.
      *
@@ -244,7 +260,7 @@ object KBoardSuggestions {
             AutoCorrection.NoOpinion -> base
             AutoCorrection.Keep -> base.first to false
             // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.
-            is AutoCorrection.Replace -> if (typedWordSourceType in USER_SOURCES) base else {
+            is AutoCorrection.Replace -> if (typedWordSourceType in (if (ac.listRule) LIST_EXEMPT_SOURCES else USER_SOURCES)) base else {
                 val word = ac.word + "'".repeat(trailingQuotes)
                 val target = TurkishText.lower(word)
                 val i = suggestions.indexOfFirst { TurkishText.lower(it.word) == target }
@@ -300,6 +316,32 @@ object KBoardSuggestions {
             val s = if (raw < prev) raw else (prev - 1).coerceAtLeast(0)
             prev = s
             c.toWordInfo(query, dict, s)
+        }
+    }
+
+    /**
+     * `DictionaryFacilitatorImpl.getSuggestions` içindeki `// KBOARD:` satırı: HeliBoard'un kendi
+     * sözlüklerinden (ana sözlük, kullanıcı geçmişi) gelen bir öneri yanlış yazım listesindeyse
+     * ("birş" → "birşey") yerine doğrusu ("bir şey") konur; doğrusu zaten listedeyse yanlışı çıkarılır.
+     * Yazılan kelimenin kendisi, kişisel sözlük ve kişiler dokunulmaz; geri alınan düzeltme de
+     * (kullanıcı o yazımı seçti). Motorun kendi adayları için aynısını `SuggestionEngine` yapar.
+     */
+    fun replaceMisspellings(typedWord: String, suggestions: MutableList<SuggestedWordInfo>, locale: Locale) {
+        if (locale.language != "tr" || deasciifier == null || suggestions.isEmpty()) return
+        val typed = TurkishText.lower(typedWord)
+        val present = suggestions.mapTo(HashSet()) { TurkishText.lower(it.word) }
+        val iter = suggestions.listIterator()
+        while (iter.hasNext()) {
+            val info = iter.next()
+            val lower = TurkishText.lower(info.word)
+            if (lower == typed || info.sourceDict.mDictType in LIST_EXEMPT_SOURCES) continue
+            val rep = rules.replacement(info.word) ?: continue
+            if (TurkishText.lower(rep) in present) iter.remove()
+            else {
+                iter.set(info.copy(word = DeasciifySource.applyCase(info.word, rep),
+                    kindAndFlags = info.kindAndFlags and SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION.inv()))
+                present.add(TurkishText.lower(rep))
+            }
         }
     }
 

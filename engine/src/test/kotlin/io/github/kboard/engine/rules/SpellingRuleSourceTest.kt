@@ -8,6 +8,8 @@ import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.TurkishText
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -40,7 +42,7 @@ class SpellingRuleSourceTest {
         config = config,
     )
 
-    private fun SpellingRuleSource.fix(w: String) = correction(Query(emptyList(), w))
+    private fun SpellingRuleSource.fix(w: String) = correction(Query(emptyList(), w))?.word
 
     @Test
     fun listOverridesKnownWordsAndKeepsCase() {
@@ -78,18 +80,30 @@ class SpellingRuleSourceTest {
         s.setUserWords(listOf("Herşey"))
         assertNull(s.fix("herşey"))
         s.setUserWords(emptyList())
+        // Liste için kişisel model istisnası yok: yıllardır "yanlız" yazan da düzeltilir
         personal += "yanlız"
-        assertNull(s.fix("yanlız"))
+        assertEquals("yalnız", s.fix("yanlız"))
+        assertEquals(Source.RULE, s.correction(Query(emptyList(), "yanlız"))?.source)
+        // Soru ekinde var
+        personal += "gelirmisin"
+        assertNull(s.fix("gelirmisin"))
         personal.clear()
+        assertEquals(Source.RULE_PARTICLE, s.correction(Query(emptyList(), "gelirmisin"))?.source)
         assertEquals("ya da", s.fix("yada"))
-        s.noteRevert("yada", "ya da")
+        assertTrue(s.noteRevert("yada", "ya da"))
+        assertFalse(s.noteRevert("yada", "ya da")) // değişmedi: yeniden kaydetmeye gerek yok
         assertNull(s.fix("yada"))
         assertNull(s.fix("Yada"))
         // Başka bir düzeltmenin geri alınması bu kuralı kapatmaz
-        s.noteRevert("herşey", "herşeyi")
+        assertFalse(s.noteRevert("herşey", "herşeyi"))
         assertEquals("her şey", s.fix("herşey"))
+        // Kaydet / yükle
+        val saved = s.reverts()
+        assertEquals(mapOf("yada" to "ya da"), saved)
         s.clearReverts()
         assertEquals("ya da", s.fix("yada"))
+        s.loadReverts(saved)
+        assertNull(s.fix("yada"))
     }
 
     @Test
@@ -113,6 +127,27 @@ class SpellingRuleSourceTest {
     }
 
     @Test
+    fun stemEntryMustKeepHarmonyClass() {
+        assertFailsWith<IllegalArgumentException> { MisspellingList.parse(sequenceOf("sezeryan\tsezaryen\tkök")) }
+        assertFailsWith<IllegalArgumentException> { MisspellingList.parse(sequenceOf("mütevazi\tmütevazı\tkök")) }
+        // Tam kayıt olarak geçerli
+        assertEquals(1, MisspellingList.parse(sequenceOf("sezeryan\tsezaryen")).size)
+        assertTrue(MisspellingList.sameSuffixClass("herşey", "her şey"))
+        assertFalse(MisspellingList.sameSuffixClass("vejeteryan", "vejetaryen"))
+    }
+
+    @Test
+    fun replacementOfferedInsteadOfMisspelling() {
+        val s = source()
+        assertEquals("her şeyi", s.replacement("herşeyi"))
+        assertEquals("Yalnız", s.replacement("Yanlız"))
+        assertNull(s.replacement("herkes"))
+        assertNull(s.replacement("ambulans"))
+        s.setUserWords(listOf("herşey"))
+        assertNull(s.replacement("herşey"))
+    }
+
+    @Test
     fun harmony() {
         assertEquals('ı', SpellingRuleSource.harmonyVowel("yapacak"))
         assertEquals('i', SpellingRuleSource.harmonyVowel("gelir"))
@@ -125,6 +160,8 @@ class SpellingRuleSourceTest {
     fun defaultListLoadsAndStaysSmall() {
         val l = MisspellingList.default()
         assertTrue(l.size in 100..150, "liste boyutu ${l.size}")
+        // Yükleyici kök kayıtlarında uyum sınıfını denetler; varsayılan liste bu denetimden geçmeli
+        assertTrue(l.stems.all { MisspellingList.sameSuffixClass(it.wrong, it.right) })
         assertEquals("her şey", l.exact["herşey"]?.right)
     }
 
@@ -141,6 +178,14 @@ class SpellingRuleSourceTest {
         assertEquals("her şey", s.autocorrect)
         assertEquals("her şey", s.candidates.first().word)
         assertEquals(Source.RULE, s.candidates.first().source)
+        assertEquals(Source.RULE, s.autocorrectSource)
+        // Listedeki yanlış biçim başka kaynaktan da önerilmez, yerine doğru biçim gelir
+        val words = s.candidates.map { it.word }
+        assertTrue("herşeyi" !in words && "her şeyi" in words, words.toString())
+        val typing = SuggestionEngine(listOf(other, source())).suggest(Query(emptyList(), "herş"))
+        assertEquals(listOf("her şeyi", "her şey"), typing.candidates.map { it.word })
+        // Yazılanın kendisi muaf
+        assertTrue(SuggestionEngine(listOf(other, source())).suggest(Query(emptyList(), "herşeyi")).candidates.any { it.word == "herşeyi" })
         // Kural yoksa eski davranış
         assertEquals("herşey", SuggestionEngine(listOf(other)).suggest(Query(emptyList(), "hersey")).autocorrect)
     }

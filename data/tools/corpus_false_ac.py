@@ -19,10 +19,11 @@ Her --run ad=ek-argümanlar bir motor yapılandırmasıdır (ek argümanlar boş
 --context: her yapılandırma ayrıca "ad+ctx" adıyla, her sözcük satırdaki önceki iki sözcükle
 birlikte sorularak da ölçülür (bağlama göre aksan seçimi ve soru eki uyumu yalnız bunda devreye girer).
 --compare yeni:taban=fark: "yeni"de olup "taban"da olmayan her yanlış düzeltme tek tek yazılır
-(ör. yazım kurallarının katkısı, taban = aynı yapılandırma --no-rules ile). Yazılan sözcüğün kendisi
-yanlış yazım listesindeyse ("birşey" → "bir şey": korpus TDK'ya göre yanlış yazılmış, düzeltme
-doğru) fark ayrıca işaretlenir. Ham oran farkı her zaman yazılır; eşik, listedeki korpus yanlışları
-dışarıda bırakılmış farka uygulanır (karar: docs/reports/faz-kural.md, "Korpus").
+(ör. yazım kurallarının katkısı, taban = aynı yapılandırma --no-rules ile). Yazılan sözcük ve
+düzeltmesi gözden geçirilmiş korpus yanlışları listesindeyse (data/korpus-yanlislari.tsv; "birşey"
+→ "bir şey": korpus TDK'ya göre yanlış yazılmış, düzeltme doğru) fark ayrıca işaretlenir. Ham oran
+farkı her zaman yazılır; eşik, yalnız o listedekiler dışarıda bırakılmış farka uygulanır (karar:
+docs/reports/faz-kural.md, "Korpus").
 """
 
 from __future__ import annotations
@@ -40,7 +41,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_ngram as b  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-MISSPELLINGS = ROOT / "engine/src/main/resources/io/github/kboard/engine/rules/yazim-yanlislari-tr.tsv"
+CORPUS_MISSPELLINGS = ROOT / "data/korpus-yanlislari.tsv"
 CORPORA = [
     ("cv", ROOT / "data/corpus/commonvoice-tr.txt", 1),
     ("sohbet", ROOT / "data/sohbet/sohbet-v1.txt", 3),
@@ -110,22 +111,19 @@ def run_engine(cmd: list[str], words: list[str], contexts: list[list[str]] | Non
     return out
 
 
-def misspelling_matcher():
-    """'... yazılan→düzeltme' anahtarındaki yazılan sözcük yanlış yazım listesinde mi (kök kayıtları dahil)?"""
-    exact, stems = set(), []
-    if MISSPELLINGS.exists():
-        for line in MISSPELLINGS.read_text(encoding="utf-8").splitlines():
-            line = line.split("#")[0].rstrip()
-            if not line.strip():
-                continue
-            p = line.split("\t")
-            exact.add(p[0])
-            if len(p) > 2 and p[2].strip() == "kök":
-                stems.append(p[0])
+def misspelling_matcher(path: Path = CORPUS_MISSPELLINGS):
+    """'... yazılan→düzeltme' anahtarı gözden geçirilmiş korpus yanlışları listesinde mi (sözcük ve düzeltme tam)?"""
+    pairs = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.split("#")[0].rstrip()
+        if not line.strip():
+            continue
+        wrong, right = line.split("\t")
+        pairs.add((b.tr_lower(wrong), b.tr_lower(right)))
 
     def listed(key: str) -> bool:
-        w = b.tr_lower(key.split("→")[0].split(" ")[-1])
-        return w in exact or any(w.startswith(s) for s in stems)
+        typed, _, ac = key.rpartition("→")
+        return (b.tr_lower(typed.split(" ")[-1]), b.tr_lower(ac)) in pairs
     return listed
 
 
@@ -192,16 +190,16 @@ def main() -> int:
         delta = r_new["rate"] - r_base["rate"]
         delta_unlisted = (sum(added.values()) - n_list - removed) / r_new["tokens"] if r_new["tokens"] else 0.0
         print(f"\n{new} - {base}: ham %{delta * 100:+.3f} puan ({sum(added.values())} yeni, {removed} giden; "
-              f"yeni olanlardan {n_list} sözcükte korpusun kendisi listede yanlış yazım); "
+              f"yeni olanlardan {n_list} gözden geçirilmiş korpus yanlışı); "
               f"onlar hariç %{delta_unlisted * 100:+.3f} puan")
         for k, v in sorted(added.items(), key=lambda kv: (-kv[1], kv[0])):
-            print(f"  + {k} ({v}){'  [korpusta yanlış yazım: listede]' if listed(k) else ''}")
+            print(f"  + {k} ({v}){'  [gözden geçirilmiş korpus yanlışı]' if listed(k) else ''}")
         r_new.setdefault("compare", {})[base] = {"delta": delta, "delta_unlisted": delta_unlisted, "added": added,
                                                  "removed": removed, "listed": n_list}
         if limit:
             ok = delta_unlisted <= float(limit)
-            print(f"{'OK ' if ok else 'HATA'} korpus yanlış oto. düzeltme farkı ({new} - {base}, listedeki korpus "
-                  f"yanlışları hariç): %{delta_unlisted * 100:+.3f} puan (eşik <= %{float(limit) * 100:.3f} puan)")
+            print(f"{'OK ' if ok else 'HATA'} korpus yanlış oto. düzeltme farkı ({new} - {base}, gözden geçirilmiş "
+                  f"korpus yanlışları hariç): %{delta_unlisted * 100:+.3f} puan (eşik <= %{float(limit) * 100:.3f} puan)")
             failed |= not ok
     for r in results.values():
         r.pop("all", None)

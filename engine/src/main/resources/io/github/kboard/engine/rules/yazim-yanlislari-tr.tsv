@@ -5,8 +5,10 @@
 #
 # Biçim: yanlış<TAB>doğru[<TAB>kök]. Küçük harf. Doğru biçim iki kelime olabilir. "kök" işaretli
 # kayıtta yanlış biçimle başlayan çekimler de düzeltilir (herkeze → herkese); düzeltilmiş çekim
-# sözlükte ya da dil modelinde olmalıdır. ASCII yazım (hersey) yalnız kendisi bir kelime değilse
-# düzeltilir. Motor: engine/.../rules/SpellingRuleSource.kt; rapor: docs/reports/faz-kural.md.
+# sözlükte ya da dil modelinde olmalıdır. Kök kaydında son ünlünün uyum sınıfı (ı/i/u/ü) ve son harfin
+# ünlü/ünsüz oluşu değişmemeli (yükleyici reddeder); değişenler (sezeryan → sezaryen) yalnız tam
+# kayıttır. ASCII yazım (hersey) yalnız kendisi bir kelime değilse düzeltilir.
+# Motor: engine/.../rules/SpellingRuleSource.kt; rapor: docs/reports/faz-kural.md.
 yanlız	yalnız	kök
 yalnış	yanlış	kök
 herkez	herkes	kök
@@ -106,7 +108,7 @@ süpriz	sürpriz	kök
 ambülans	ambulans	kök
 entellektüel	entelektüel	kök
 kollektif	kolektif	kök
-mütevazi	mütevazı	kök
+mütevazi	mütevazı
 şarz	şarj	kök
 laboratuar	laboratuvar	kök
 pisikoloji	psikoloji	kök
@@ -117,11 +119,11 @@ espiri	espri	kök
 tıraktör	traktör	kök
 dinazor	dinozor	kök
 teşekür	teşekkür	kök
-sezeryan	sezaryen	kök
+sezeryan	sezaryen
 kordina	koordina	kök
 aksesuvar	aksesuar	kök
 fasülye	fasulye	kök
-vejeteryan	vejetaryen	kök
+vejeteryan	vejetaryen
 ekzersiz	egzersiz	kök
 şöför	şoför	kök
 anfi	amfi	kök
@@ -134,7 +136,6 @@ konsentre	konsantre	kök
 sitres	stres	kök
 istres	stres	kök
 piroje	proje	kök
-hastahane	hastane	kök
 ünvan	unvan	kök
 kahfaltı	kahvaltı	kök
 kütüpane	kütüphane	kök

@@ -6,6 +6,9 @@
 # Senaryo: "mavi" sonrası dil modeli "kaplumbağa" önermez (temel durum). "mavi kaplumbağa" birkaç kez
 # yazılınca öğrenilmeli; uygulama kapatılıp açılınca ve cihaz yeniden başlatılınca da kalmalı;
 # Android yedeğine girmemeli; ayarlardaki "Öğrenilenleri sil" ile unutulmalı.
+# Yazım kuralı (iki kelimelik düzeltme): "herşey" + boşluk → "her şey"; geri silme düzeltmeyi geri
+# alır ("herşey" kalır), geri alma dosyaya yazılır ve uygulama yeniden açılınca da geçerlidir;
+# "Öğrenilenleri sil" o dosyayı da siler.
 
 e2e_out="$out/kisisel-e2e.txt"; : > "$e2e_out"
 result() { echo "$1 $2" | tee -a "$e2e_out"; } # $1 = GECTI|KALDI|BILGI, $2 = açıklama
@@ -22,6 +25,9 @@ field_text() {
 # `uiautomator dump /dev/tty` boru içinde tty olmadığından boş döner; dosyaya yazıp okunur.
 ui_xml() { adb shell uiautomator dump /sdcard/t.xml >/dev/null 2>&1; adb shell cat /sdcard/t.xml 2>/dev/null; }
 personal_file() { adb shell run-as "$pkg" ls -l "$de_dir" 2>&1 | tr -d '\r' | grep -E "personal-tr\.bin$" || true; }
+revert_file() { adb shell run-as "$pkg" ls -l "$de_dir" 2>&1 | tr -d '\r' | grep -E "kural-geri-alinan\.tsv$" || true; }
+# Geri silme tuşu (pixel_6, KBoard Türkçe Q: alt harf sırasının sağ ucu, ç'nin sağı).
+tap_delete() { adb shell input tap 1015 1973; }
 
 # KBoard seçili değilse (yeniden başlatmadan sonra sistem Gboard'a dönebiliyor) yeniden seç.
 ensure_kboard() {
@@ -102,6 +108,28 @@ if [ "$s" = "0" ]; then result GECTI "uygulama yeniden açılınca 'mavi' sonras
 elif [ "$s" != "-1" ]; then result GECTI "uygulama yeniden açılınca '$WORD' şeritte (yuva $s, ilk değil)"
 else result KALDI "uygulama yeniden açılınca '$WORD' önerilmiyor"; fi
 
+# 2b) Yazım kuralı: iki kelimelik düzeltme ve geri alma (cümle başı: "Her şey"; büyük/küçük harf yok sayılır).
+ensure_kboard; open_field >/dev/null
+type_word "herşey"; tap_space; sleep 2
+txt=$(field_text); shot kboard-e2e-kural-1-duzeltme 1
+case "$txt" in *"er şey"*) result GECTI "'herşey' + boşluk → \"$txt\" (iki kelime yazıldı)";;
+  *) result KALDI "'herşey' + boşluk sonrası alan: \"$txt\" ('her şey' bekleniyordu)";; esac
+tap_delete; sleep 2
+txt=$(field_text); shot kboard-e2e-kural-2-geri-alma 1
+case "$txt" in *"er şey"*) result KALDI "geri silme düzeltmeyi geri almadı: \"$txt\"";;
+  *"erşey"*) result GECTI "geri silme düzeltmeyi geri aldı: \"$txt\"";;
+  *) result KALDI "geri silme sonrası alan beklenmedik: \"$txt\"";; esac
+sleep 2
+[ -n "$(revert_file)" ] && result GECTI "geri alma dosyaya yazıldı (kural-geri-alinan.tsv)" \
+  || result KALDI "geri alma dosyası yok ($de_dir)"
+# Uygulama kapatılıp açılınca (bellek boş, dosyadan yüklenir) aynı kelime düzeltilmemeli.
+ensure_kboard; open_field >/dev/null
+type_word "herşey"; tap_space; sleep 2
+txt=$(field_text)
+case "$txt" in *"er şey"*) result KALDI "yeniden açılınca geri alınan 'herşey' yine düzeltildi: \"$txt\"";;
+  *"erşey"*) result GECTI "yeniden açılınca geri alınan 'herşey' düzeltilmedi";;
+  *) result KALDI "yeniden açılınca alan beklenmedik: \"$txt\"";; esac
+
 # 3) Android yedeği: yerel yedek aktarıcısıyla tam yedek alınır, içinde kboard/ olmamalı.
 adb shell bmgr enable true >/dev/null 2>&1
 adb shell bmgr transport com.android.localtransport/.LocalTransport >/dev/null 2>&1
@@ -157,6 +185,8 @@ if tap_text "Metin düzeltme|Text correction" && shot kboard-e2e-5-metin-duzeltm
    && tap_text "Sil|SİL|Delete|DELETE"; then
   sleep 3
   [ -z "$(personal_file)" ] && result GECTI "'Öğrenilenleri sil' sonrası dosya silindi" || result KALDI "'Öğrenilenleri sil' sonrası dosya duruyor"
+  [ -z "$(revert_file)" ] && result GECTI "'Öğrenilenleri sil' sonrası geri alma dosyası silindi" \
+    || result KALDI "'Öğrenilenleri sil' sonrası geri alma dosyası duruyor"
   # Yeniden açılışta öneri kalmamalı.
   s=$(which_slot kboard-e2e-7-silindi)
   if [ "$s" = "-1" ] || [ "$s" = "$base_slot" ]; then result GECTI "silme sonrası '$WORD' artık önerilmiyor"

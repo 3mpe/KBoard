@@ -1,0 +1,12 @@
+# Korpus yanlış oto. düzeltme kapısında (data/tools/corpus_false_ac.py --compare) hariç tutulan,
+# gözden geçirilmiş korpus yanlış yazımları. Her satır: korpustaki sözcük TAB beklenen düzeltme.
+# Yalnız burada adı geçen sözcük ve tam bu düzeltme hariç tutulur; yazım kuralı listesinin geri
+# kalanı (engine/.../rules/yazim-yanlislari-tr.tsv) hariç değildir (döngüsel olurdu). Ham oran farkı
+# her zaman yanında yazılır. Gerekçe: TDK Yazım Kılavuzu (bitişik/ayrı yazılışlar, "sezaryen");
+# karar ve gözden geçirme: docs/reports/faz-kural.md, "Korpus". Elle derlendi, CC0.
+birşey	bir şey
+herşey	her şey
+sağol	sağ ol
+sağolun	sağ olun
+farkeder	fark eder
+sezeryan	sezaryen

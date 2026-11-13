@@ -16,9 +16,10 @@ data class Query(
 
 /**
  * [PERSONAL]: kullanıcının yazdıklarından öğrenilen kişisel model (personal/PersonalSource).
- * [RULE]: yazım kuralı düzeltmesi (rules/SpellingRuleSource: yanlış yazım listesi, bitişik soru eki).
+ * [RULE]: yanlış yazım listesi düzeltmesi; [RULE_PARTICLE]: bitişik soru eki düzeltmesi
+ * (rules/SpellingRuleSource). Uygulama ikisinin istisnalarını ayrı uygular.
  */
-enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, RULE, OTHER }
+enum class Source { DEASCIIFY, MORPHOLOGY, NGRAM, USER, TYPO, PERSONAL, RULE, RULE_PARTICLE, OTHER }
 
 /**
  * Bir aday kelime. [score] 0..1 arası olasılığa benzer bir güven değeridir; kaynaklar arası
@@ -60,7 +61,15 @@ interface GapFillSource : CandidateSource {
  * Düzeltme birden çok kelime olabilir (boşluk içerir).
  */
 interface RuleCorrector {
-    fun correction(query: Query): String?
+    /** Yazılanın düzeltmesi (kaynağı [Source.RULE] ya da [Source.RULE_PARTICLE]); yoksa null. */
+    fun correction(query: Query): Candidate?
+
+    /**
+     * [word] listede bir yanlışsa ("birşey", "herşeyi") yerine önerilecek doğru biçim; değilse null.
+     * Motor, başka kaynakların önerdiği yanlış biçimleri bununla değiştirir (yazılanın kendisi ve
+     * kişisel sözlük adayları hariç).
+     */
+    fun replacement(word: String): String? = null
 }
 
 /** Kaynaklardan gelen adayları birleştirip sıralar. */
@@ -77,4 +86,6 @@ data class Suggestions(
     val candidates: List<Candidate>,
     /** Boşlukta yazılanın yerine geçecek kelime; null = yazıldığı gibi kalsın. */
     val autocorrect: String?,
+    /** [autocorrect]'u veren kaynak (ör. [Source.RULE]); uygulama istisnaları buna göre seçer. */
+    val autocorrectSource: Source? = null,
 )

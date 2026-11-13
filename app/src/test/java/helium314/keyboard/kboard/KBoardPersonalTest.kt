@@ -6,6 +6,8 @@ import helium314.keyboard.latin.NgramContext
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.common.InputPointers
+import io.github.kboard.engine.deasciify.DeasciifyIndex
+import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.personal.PersonalModel
 import org.junit.After
 import org.junit.Before
@@ -117,6 +119,34 @@ class KBoardPersonalTest {
         file.writeText("bozuk")
         KBoardPersonal.initForTest(file)
         assertTrue(KBoardPersonal.model.isEmpty)
+    }
+
+    @Test
+    fun spellingRuleRevertsPersistAndClear() {
+        KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("her", 200), DeasciifyIndex.Companion.Entry("şey", 200),
+        ))))
+        try {
+            assertEquals(KBoardSuggestions.AutoCorrection.Replace("her şey", listRule = true),
+                KBoardSuggestions.autoCorrection("herşey", tr, sentenceStart = false))
+            KBoardSuggestions.noteRevert("herşey", "her şey")
+            KBoardPersonal.awaitIdle()
+            val reverts = File(file.parentFile, KBoardPersonal.REVERTS_FILE)
+            assertEquals("herşey\ther şey\n", reverts.readText())
+            // Yeniden açılışta (bellek boşken) dosyadan yüklenir
+            KBoardSuggestions.clearReverts()
+            KBoardPersonal.initForTest(file)
+            assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("herşey", tr))
+            // "Öğrenilenleri sil": dosya ve bellek temizlenir, düzeltme geri gelir
+            KBoardPersonal.clear()
+            KBoardPersonal.awaitIdle()
+            assertFalse(reverts.exists())
+            assertEquals(KBoardSuggestions.AutoCorrection.Replace("her şey", listRule = true),
+                KBoardSuggestions.autoCorrection("herşey", tr, sentenceStart = false))
+        } finally {
+            KBoardSuggestions.clearReverts()
+            KBoardSuggestions.setDeasciifier(null)
+        }
     }
 
     @Test

@@ -6,58 +6,70 @@ rules PR A".
 
 **Özet.** Klavye artık iki tür yazım kuralı hatasını boşlukta düzeltiyor:
 
-1. **Yanlış yazım listesi.** Elle derlenmiş 138 kayıt var ("yanlız" → "yalnız", "herşey" → "her
+1. **Yanlış yazım listesi.** Elle derlenmiş 137 kayıt var ("yanlız" → "yalnız", "herşey" → "her
    şey", "farkettim" → "fark ettim"); 68'inin doğru biçimi iki kelime. Liste, sözlükte olan
-   yanlışları da düzeltiyor. 82 kayıt "kök" işaretli; bunların çekimleri de düzeltiliyor
-   ("herkeze" → "herkese").
+   yanlışları da düzeltiyor. 78 kayıt "kök" işaretli; bunların çekimleri de düzeltiliyor
+   ("herkeze" → "herkese"). Listedeki yanlışlar hiçbir kaynaktan öneri olarak da gelmiyor; yerine
+   doğrusu öneriliyor ("birş" → "bir şey").
 2. **Bitişik uzun soru eki.** "geliyormusun" → "geliyor musun" düzeltiliyor. Yalın "mi" bu kurala
    hiç girmiyor.
 
 Bazı düzeltmeler iki kelimeye çıkıyor. HeliBoard bunları tek metin olarak yazıyor. Kullanıcı
 geçmişine kelime kelime ekliyor. Geri almada da metnin tamamını siliyor. Bu kod okunarak
-doğrulandı; cihazda denenmedi.
+doğrulandı. Emülatör denemesi (`personal-e2e.sh`, "herşey" + boşluk → "her şey", geri silme →
+"herşey") CI'a eklendi; bu ortamda çalıştırılamadı.
+
+Fable'ın gözden geçirmesinden sonra yapılan değişiklikler aşağıda, "Gözden geçirme sonrası"
+bölümünde. Tablodaki test sayıları resmî tek çalıştırmanın sayıları; düzeltme sonrası değerler
+yanında ayrıca yazılı.
 
 | Ölçü (kural-v0) | Hedef | dev | test |
 |---|---|---|---|
 | Tuzak vakalarda otomatik düzeltme | 0 | **0** (0/121 kelime, 32 vaka) | **0** (0/108 kelime, 32 vaka) |
-| Kural setinde otomatik düzeltme kesinliği | ≥ %99 | **%100** (62/62) | **%98,4** (60/61) ✗ |
-| Yanlış yazım listesi duyarlılığı | ≥ %95 | **%100** (48/48) | **%100** (45/45) |
+| Kural setinde otomatik düzeltme kesinliği | ≥ %99 | **%100** (62/62) | **%98,4** (60/61) ✗ ölçülen; "orijinal" düzeltmesinden sonra %100 (59/59) |
+| Yanlış yazım listesi duyarlılığı | ≥ %95 | **%100** (48/48) | **%100** (45/45); "hastahane" çıkarıldıktan sonra %97,8 (44/45) |
 | Bitişik uzun soru eki duyarlılığı | ≥ %85 | **%93,3** (14/15) | **%100** (15/15) |
-| Korpusta yanlış oto. düzeltme (iki kip) | ≤ %0,3; kurallardan en çok +0,01 puan | — | %0,10 / %0,11 · ham fark **+0,051 puan** (bkz. "Korpus") |
+| Korpusta yanlış oto. düzeltme (iki kip) | ≤ %0,3; kurallardan en çok +0,01 puan | — | %0,10 / %0,11 · ham fark **+0,051 puan**, gözden geçirilmiş korpus yanlışları hariç **+0,000 puan** (bkz. "Korpus") |
 | seed-v0 @0/@1/@3/KSR, aksan, yazım hatası ilk 3 | 0,2 puandan çok düşüş yok | düşüş yok | düşüş yok |
-| Kişisel eşik; p95 ≤ 1,5 ms | geçmeli | geçiyor; seed-v0 p95 ~1,0–1,1 ms | |
+| Kişisel eşik; p95 ≤ 1,5 ms | geçmeli | geçiyor; seed-v0 p95 ~1,0–1,4 ms | |
 
-Hedeflerden ikisi tam tutmuyor. Her ikisi için de karar Fable'ın.
+İlk turda hedeflerden ikisi tam tutmadı; Fable ikisine de karar verdi (bkz. "Gözden geçirme sonrası").
 
 - **Test kesinliği (%98,4).** Tek hata yeni kurallardan gelmiyor. Daha önce de olan ayrı yazılmış
   soru eki uyumundan geliyor (`DeasciifySource.questionParticle`): "orijinal mi" → "mı". Kuralların
-  kendi yaptığı düzeltmelerin hepsi doğru: dev'de 62/62, testte 60/60. Bkz. "Test sonucu".
+  kendi yaptığı düzeltmelerin hepsi doğru: dev'de 62/62, testte 60/60. Bkz. "Test sonucu". Karar
+  (a): "orijinal" ve benzeri alıntılar `front-harmony-tr.txt`'e eklendi; bu düzeltme testten
+  **sonra** yapıldı, ölçülen değer %98,4 olarak kalıyor.
 - **Korpus farkı (+0,051 puan).** Ham farkın tamamı 11 sözcükten geliyor. Bunlar korpusun
   kendisinde TDK'ya göre yanlış yazılmış sözcükler ("birşey", "sağol"); düzeltme doğru. Doğru
-  yazılmış korpus sözcüklerinde yeni yanlış düzeltme yok (+0,000 puan). CI eşiği bu ikinci sayıya
-  uygulanıyor. Bu bir ölçüm tanımı değişikliği olduğu için Fable onayına sunuluyor.
+  yazılmış korpus sözcüklerinde yeni yanlış düzeltme yok (+0,000 puan). Karar (b): eşik, ayrı ve
+  gözden geçirilmiş 6 sözcüklük bir listeyi (`data/korpus-yanlislari.tsv`) hariç tutan farka
+  uygulanıyor; ham fark yanında yazılıyor.
 
 ## Ne yapıldı
 
 | Parça | Dosya |
 |---|---|
-| Yanlış yazım listesi (CC0, 138 kayıt) | `engine/src/main/resources/io/github/kboard/engine/rules/yazim-yanlislari-tr.tsv` |
+| Yanlış yazım listesi (CC0, 137 kayıt) | `engine/src/main/resources/io/github/kboard/engine/rules/yazim-yanlislari-tr.tsv` |
 | Kural kaynağı | `engine/.../rules/SpellingRuleSource.kt` (`MisspellingList`, `SpellingRuleSource`) |
-| Motor | `Api.kt`: `RuleCorrector`, `Source.RULE`. `SuggestionEngine`: kuralın düzeltmesi ilk yuvaya geçer ve otomatik düzeltme olur |
+| Motor | `Api.kt`: `RuleCorrector` (`correction`, `replacement`), `Source.RULE` / `RULE_PARTICLE`, `Suggestions.autocorrectSource`. `SuggestionEngine`: kuralın düzeltmesi ilk yuvaya geçer ve otomatik düzeltme olur; başka kaynaktan gelen listedeki yanlış adayın yerine doğrusu konur |
 | Yardımcılar | `DeasciifySource.hasFoldForm`, `isUserWord`; `FRONT_HARMONY_EXCEPTIONS` artık açık. `NgramSource.contains`, `containsFold` |
 | CLI | `EvalCli`: kurallar `--deasciify` ile varsayılan olarak açık; `--no-rules`, `--no-rule-list`, `--no-rule-particle`, `--rules <tsv>`; yeni `revert` işlemi |
-| Uygulama | `KBoardSuggestions`: kural kaynağı aksan düzelticiyle birlikte açılıyor; `noteRevert`. `InputLogic.revertCommit`: `// KBOARD:` satırı |
+| Uygulama | `KBoardSuggestions`: kural kaynağı aksan düzelticiyle birlikte açılıyor; `noteRevert`, `replaceMisspellings` (HeliBoard'un kendi önerileri), `AutoCorrection.Replace.listRule`. `KBoardPersonal`: geri almalar `kboard/kural-geri-alinan.tsv`'de. `InputLogic.revertCommit` ve `DictionaryFacilitatorImpl.getSuggestions`: `// KBOARD:` satırları |
 | Test seti | `eval/testset/kural-v0.jsonl` (196 vaka; yapay zekâ ile üretildi) |
 | Ölçüm aracı | `testset.align` / `Case.aligned_targets`: tek yazılan kelime iki hedef kelimeye hizalanabiliyor. `simulate`: iki kelimelik hedef bağlamda iki kelime. `metrics`: `autocorrect_precision`, `fix_recall` |
-| Eşikler | `.github/ci/kural-gate.py` (yeni). `data/tools/corpus_false_ac.py --compare yeni:taban=fark`. `ci.yml`: kural adımı, korpus adımında `kuralsiz` çalıştırması ve fark eşiği |
+| Eşikler | `.github/ci/kural-gate.py` (yeni). `data/tools/corpus_false_ac.py --compare yeni:taban=fark`, hariç listesi `data/korpus-yanlislari.tsv`. `ci.yml`: kural adımı, korpus adımında `kuralsiz` çalıştırması ve fark eşiği. `personal-e2e.sh`: iki kelimelik düzeltme ve geri alma |
 | Dil modeli | `buildNgramModel` ve `corpus_false_ac.py`, kural-v0'ı da sızıntı süzgecine ekliyor |
-| Testler | `engine/src/test/.../rules/SpellingRuleSourceTest.kt` (8 test). `eval/tests`: hizalama ve iki kelimelik hedef. `app/src/test/.../KBoardSuggestionsTest.kt`: iki kelimelik düzeltme, kişisel sözlük ve geri alma (Robolectric; CI'da çalışır, burada SDK yok) |
+| Testler | `engine/src/test/.../rules/SpellingRuleSourceTest.kt` (10 test; kök kaydında ünlü uyumu sınıfı denetimi dahil). `eval/tests`: hizalama ve iki kelimelik hedef. `app/src/test/.../KBoardSuggestionsTest.kt`: iki kelimelik düzeltme, kişisel sözlük, kullanıcı geçmişi, geri alma, HeliBoard önerilerinde yanlışın yerine doğrusu. `KBoardPersonalTest`: geri almanın kaydı, yüklenmesi ve "Öğrenilenleri sil" (Robolectric; CI'da çalışır, burada SDK yok) |
 
 ## Kurallar
 
 ### Yanlış yazım listesi
 
-Satır biçimi: `yanlış<TAB>doğru[<TAB>kök]`. Liste elle derlendi. Yayımlanmış bir liste
+Satır biçimi: `yanlış<TAB>doğru[<TAB>kök]`. Kök kaydında yanlışın ve doğrunun son ünlüsü aynı uyum
+sınıfında olmalı (kalın/ince, düz/yuvarlak) ve ikisi de ünlüyle ya da ünsüzle bitmeli; yoksa ek
+uyumsuz kalırdı ("sezeryanla" → "sezaryenla"). Liste yüklenirken bu denetleniyor
+(`MisspellingList.sameSuffixClass`), uymayan kök kaydı hata verir. Liste elle derlendi. Yayımlanmış bir liste
 kopyalanmadı; doğru biçimler TDK Yazım Kılavuzu'na göre yazıldı. Yalnız tek okunuşlu yanlışlar
 girdi. "birde" (saat birde), "oda", "bende", "hala" girmedi.
 
@@ -116,16 +128,22 @@ Kural Fable'ın koşullarını aynen uyguluyor:
 
 ### Kullanıcı istisnaları
 
-Şu durumlarda düzeltme yapılmaz:
+Yanlış yazım listesinde (karar, Fable 2. tur) yalnız iki istisna var:
 
-- Kelime kişisel sözlükte.
-- Kişisel model kelimeyi en az 2 kez öğrenmiş.
+- Kelime kişisel sözlükte (uygulamada kişiler de: HeliBoard'un `TYPE_CONTACTS` kaynağı).
 - Kullanıcı aynı düzeltmeyi geri almış. `InputLogic.revertCommit` → `KBoardSuggestions.noteRevert`
-  çağrılır. Bu bellek oturum içindir; uygulama yeniden başlayınca silinir.
+  çağrılır. Geri alma kalıcı: `files/kboard/kural-geri-alinan.tsv` (cihaz korumalı depo, Android
+  yedeği dışında, `yazılan<TAB>düzeltme`). "Öğrenilenleri sil" ve HeliBoard'un geçmiş silme yolu
+  (`KBoardPersonal.clear`) dosyayı ve belleği temizler.
 
-Uygulamada bir istisna daha var. HeliBoard yazılan kelimeyi kişisel sözlükte, kişilerde ya da
-kullanıcı geçmişinde bulduysa karar eskisi gibi HeliBoard'da kalır (`USER_SOURCES`). Kullanıcı
-geçmişinde 1 kullanım yeter; bu, şartnamenin "2+ kullanım" koşulundan sıkı.
+Kullanıcı geçmişi ve kişisel model listede istisna değil: yanlış yazım alışkanlıkla tekrarlanır,
+tekrar onu doğru yapmaz. Uygulama bu yüzden liste düzeltmesini (`Source.RULE` →
+`AutoCorrection.Replace.listRule`) aksan ve soru eki düzeltmesinden ayırıyor. Aksan ve soru ekinde
+HeliBoard yazılanı kişisel sözlükte, kişilerde ya da kullanıcı geçmişinde bulduysa karar eskisi gibi
+HeliBoard'da kalır (`USER_SOURCES`); listede yalnız kişisel sözlük ve kişilerde.
+
+Bitişik soru ekinde kişisel modelde 2+ kullanım da istisna olarak kalıyor (yazılan "hiçbir yerde
+olmamalı" koşulunun parçası).
 
 ## İki kelimelik düzeltme (uygulama yolu)
 
@@ -144,8 +162,24 @@ HeliBoard'un kodu okundu:
 
 Bilinen eksik: geri almadaki `unlearnFromUserHistory("her şey")` bekleyen kelimeleri tek tek
 tuttuğu için bulamıyor. "her" ve "şey" geçmişte ve kişisel modelde kalıyor. İkisi de doğru kelime
-olduğu için zararsız. Cihazda ya da emülatörde **denenmedi**. Robolectric testi CI'da
-çalışacak.
+olduğu için zararsız.
+
+Emülatör denemesi `personal-e2e.sh`'e eklendi (2b adımı, tuş dokunuşlarıyla): "herşey" + boşluk →
+alan "Her şey"; geri silme → "Herşey"; geri alma dosyası yazıldı mı; uygulama kapatılıp açılınca
+"herşey" yine düzeltilmiyor mu; "Öğrenilenleri sil"den sonra dosya silindi mi. Bu ortamda emülatör
+yok, **çalıştırılmadı**; geri silme tuşunun konumu (1015, 1973) ölçülmedi, harf sırasından
+çıkarıldı.
+
+### Listedeki yanlış öneri olarak da gelmez
+
+Hiçbir kaynak listedeki yanlışı önermez; yerine doğrusu konur (yazılanın kendisi hariç):
+
+- Motorda `SuggestionEngine`, kural dışı kaynakların adaylarını `RuleCorrector.replacement` ile
+  değiştiriyor ("herş" → "her şeyi", "her şey"). Kişisel sözlük kaynağı (`Source.USER`) ve geri
+  alınan yazımlar dokunulmaz.
+- Uygulamada HeliBoard'un kendi sözlüklerinden (ana sözlük, kullanıcı geçmişi) gelen öneriler de
+  `KBoardSuggestions.replaceMisspellings` ile değiştiriliyor; doğrusu zaten listedeyse yanlış
+  çıkarılıyor. Değiştirilen öneri otomatik düzeltmeye uygun sayılmıyor (yalnız şeritte).
 
 ## Test seti: kural-v0
 
@@ -189,10 +223,20 @@ kaynaklardan bulundu:
 
 Değişikliklerden sonra test yeniden çalıştırıldı; sonuçlar aynı çıktı.
 
+Fable'ın gözden geçirmesinden sonra (2. tur) iki değişiklik test sonucunu değiştirdi; ikisi de
+testten değil, Fable'ın kararından geliyor ve test yarısına bakılarak ayarlanmadı:
+
+- Karar (a), `front-harmony-tr.txt`'e "orijinal" ve 27 benzer alıntı: kural-liste-063 artık doğru.
+- Karar (c), "hastahane" çıkarıldı (sözlükte ve Zemberek sözlüğünde var): kural-liste-082
+  ("Hastahaneye" → "Hastaneye") artık düzeltilmiyor. Vakanın etiketi değiştirilmedi.
+
+2. tur sonrası: dev tuzak 0/121, kesinlik 62/62, liste 48/48, soru eki 14/15; test tuzak 0/108,
+kesinlik 59/59, liste 44/45, soru eki 15/15. Resmî test sonucu yukarıdaki ilk çalıştırmadır.
+
 Testteki tek kesinlik hatası kural-liste-063: "Bu orjinal mi, çakma mı?". Bağlamdaki kelime
 "orijinal" olduğu için önceki sürümden kalan ayrı soru eki uyumu "mi"yi "mı" yapıyor. "orijinal"
-de "normal", "ideal" gibi ince ek alıyor ve `front-harmony-tr.txt`'e girmeli. Hata testte
-bulunduğu için bu PR'da **düzeltilmedi**; ayrı bir değişiklik olarak öneriliyor.
+de "normal", "ideal" gibi ince ek alıyor ve `front-harmony-tr.txt`'e girmeli. İlk turda hata testte
+bulunduğu için düzeltilmedi; 2. turda Fable'ın kararıyla düzeltildi (yukarıda).
 
 Kurallar kapalıyken (`--no-rules`) kural setinin tamamında 3 otomatik düzeltme vardı, hiçbiri
 doğru değildi:
@@ -237,14 +281,23 @@ sözcük. Düzeltmelerin hepsi doğru:
 Doğru yazılmış korpus sözcüklerinde yeni yanlış düzeltme yok; giden de yok.
 
 Ham fark +0,051 puan ve Fable'ın +0,01 puan sınırını aşıyor. Bu ölçüm korpustaki her sözcüğü doğru
-sayıyor, ama yukarıdaki 11 sözcük doğru değil. CI eşiği (`--compare ...=0.0001`) bu yüzden
-yazılanı listede olan farkları dışarıda bırakarak uygulanıyor. Ham fark her çalıştırmada
-yazılıyor ve JSON'a da (`compare.delta`) yazılıyor. **Fable'ın onayı gerekiyor.**
+sayıyor, ama yukarıdaki 11 sözcük doğru değil.
 
-Onaylanmazsa iki yol var:
+Karar (b, Fable): yazım kuralı listesinin tamamını hariç tutmak döngüsel olurdu (liste kendini
+aklardı). Bunun yerine ayrı, gözden geçirilmiş bir liste var: `data/korpus-yanlislari.tsv`, 6
+satır (birşey, herşey, sağol, sağolun, farkeder, sezeryan), her biri beklenen düzeltmesiyle. CI
+eşiği (`--compare ...=0.0001`) yalnız tam bu sözcük + düzeltme çiftlerini hariç tutan farka
+uygulanıyor. Ham fark her çalıştırmada yanında yazılıyor ve JSON'a da (`compare.delta`) yazılıyor.
 
-- Liste o sözcüklerden arındırılır. Ama "herşey" ve "birşey" şartnamenin kendi örnekleri.
-- Common Voice'taki bu satırlar ölçümden çıkarılır.
+2. tur sonrası ölçüm (aynı dilim):
+
+| Fark | Ham | Gözden geçirilmiş korpus yanlışları hariç |
+|---|---|---|
+| varsayılan − kurallar kapalı | +0,051 puan (11 yeni, 0 giden) | **+0,000 puan** |
+| varsayılan+bağlam − kurallar kapalı+bağlam | +0,051 puan (11 yeni, 0 giden) | **+0,000 puan** |
+
+Yeni 11 düzeltmenin 11'i de bu listede; doğru yazılmış korpus sözcüklerinde yeni yanlış düzeltme
+yok.
 
 Ek denetimler bunlar dev sayıldı; eğitim verisi de içerdikleri için resmî ölçüm değiller:
 
@@ -282,19 +335,39 @@ Gecikme sessiz makinede üçer kez ölçüldü:
 
 Fark ölçüm gürültüsü içinde. 1,5 ms eşiği seed-v0 için.
 
+## Gözden geçirme sonrası (Fable, 2. tur)
+
+- **Ünlü uyumunu değiştiren kök kayıtları (engel 1).** "mütevazi" → "mütevazı", "sezeryan" →
+  "sezaryen", "vejeteryan" → "vejetaryen" kökte uyum sınıfını değiştiriyordu ("sezeryanla" →
+  "sezaryenla" gibi olmayan kelimeler). Üçü de yalnız tam eşleşmeye çevrildi; liste yüklenirken
+  denetim var (bkz. "Yanlış yazım listesi") ve testte varsayılan liste bu denetimden geçiyor.
+- **Listedeki yanlış öneri olarak gelmiyor (engel 2).** Bkz. "Listedeki yanlış öneri olarak da
+  gelmez".
+- **İstisnalar (engel 3).** Listede yalnız kişisel sözlük (ve kişiler) ile geri alma; geri alma
+  kalıcı, "Öğrenilenleri sil" temizler. Bkz. "Kullanıcı istisnaları". Kişiler (`TYPE_CONTACTS`) de
+  istisna tutuldu: kişi adları kullanıcının açıkça verdiği adlardır; Fable isterse çıkarılır.
+- **Karar (a).** `front-harmony-tr.txt`'e 28 alıntı eklendi, test setine bakılmadan derlendi:
+  orijinal, terminal, sinyal, kristal, lokal, moral, liberal, rol, gol, alkol, kontrol, protokol,
+  sembol, petrol, kabul, usul, mahsul, timsal, vokal, radikal, kardinal, spiral (sözlükte yalnız
+  ince ekli çekimleri var), minimal, optimal, dijital, viral, total, mental (sözlükte çekim yok;
+  ince l kuralıyla). Elenenler: kanal, formal, karnaval (sözlükte kalın ekli), santral (ikisi de),
+  futbol (futbolu).
+- **Karar (b).** Korpus eşiği ayrı, gözden geçirilmiş listeyle (bkz. "Korpus").
+- **Karar (c).** değilmi, varmı, yokmu (tam), yinede, hemde, belkide ve sağol kaldı.
+  "hastahane" çıkarıldı: `main_tr`'de (sıklık 88) ve Zemberek 0.17.1 sözlüğünde geçerli kelime.
+  "konsentre" kaldı: `main_tr`'de, ek zinciri kök listesinde (`stems-tr.tsv`) ve Zemberek
+  sözlüğünde (`lexicon.bin`) yok. Bilgi: Zemberek sözlüğünde "sezeryan" da var; Fable'ın kararıyla
+  (b listesi) kaldı.
+
 ## Riskler ve doğrulanmayanlar
 
-- **İki kelimelik düzeltme cihazda denenmedi.** Yalnız kod okundu ve Robolectric testi yazıldı.
-  Uygulama bu ortamda derlenmedi (Android SDK yok); CI derleyecek.
-- **Korpus fark eşiğinin tanımı değişti.** Listedeki korpus yanlışları hariç tutuluyor; Fable
-  onayı gerekiyor (yukarıda).
-- **Test kesinliği %98,4.** Tek hata eski soru eki uyumundan ("orijinal mi"). Önerilen düzeltme:
-  `front-harmony-tr.txt`'e "orijinal". Yapılmadı.
-- **Geri alma belleği oturumluk.** Uygulama kapanınca silinir. Kullanıcı sözlüğe ekleyerek ya da
-  kelimeyi 2+ kez kullanarak kalıcı istisna yapabilir. Ama düzeltilen kelime metne geçmediği için
-  kişisel model onu öğrenemez.
-- **Uygulamada HeliBoard kullanıcı geçmişi 1 kullanımda istisna.** Daha önce "herşey" yazmış bir
-  kullanıcıda o kelime düzeltilmeyebilir (`USER_SOURCES`, değiştirilmedi).
+- **İki kelimelik düzeltme cihazda denenmedi.** Kod okundu, Robolectric testleri yazıldı, emülatör
+  denemesi eklendi ama bu ortamda çalıştırılamadı. Uygulama bu ortamda derlenmedi (Android SDK
+  yok); CI derleyecek.
+- **Kullanıcı geçmişi listede istisna değil.** "herşey"i bilerek yazan kullanıcı her seferinde geri
+  silmeli; bir kez geri alması kalıcı olarak yeter.
+- **Geri alma dosyası küçük ama sınırsız.** Her geri alma bir satır; liste 137 kayıt ve çekimler
+  olduğundan pratikte küçük kalır.
 - **Sohbet dilinde rahatsızlık.** "sağol", "farkettim", "değilmi" bilerek bitişik yazılabiliyor;
   düzeltme TDK'ya göre doğru ama istenmeyebilir. Geri alma ve kişisel sözlük bunu kapatıyor.
 - **Test seti kural yazarıyla aynı kaynaktan.** Yapay zekâ üretti, insan gözden geçirmedi;
