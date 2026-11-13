@@ -9,6 +9,8 @@ HeliBoard tabanlı, **yalnızca Türkçe** ve tamamen çevrimdışı bir Android
   izinleri ve internet kullanımı o uygulamanın ayarlarına bağlıdır. İlk dokunuşta bu kısa bir bildirimle
   söylenir, ikinci dokunuşta geçilir. Parola ve e-posta alanlarında ve kurulu sesle yazma uygulaması yoksa
   mikrofon görünmez; araç çubuğu ayarlarından sabitlemesi kaldırılabilir.
+  İlk dokunuşta bildirim görünmediyse (bazı eski Android sürümlerinde uygulamanın bildirimleri
+  kapalıyken kısa bildirimler gösterilmeyebilir) ikinci dokunuş yine geçer.
 - Taban: [HeliBoard](https://github.com/HeliBorg/HeliBoard) forku (GPL-3.0). Upstream'e katkı gönderilmez.
 - Durum: **Faz 0, ölçüm altyapısı.** HeliBoard kodu Faz 1'de depoya alınacak.
 
