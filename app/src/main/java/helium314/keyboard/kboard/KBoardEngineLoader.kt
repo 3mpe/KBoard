@@ -12,6 +12,7 @@ import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.ngram.NgramModel
 import io.github.kboard.engine.ngram.NgramSource
+import io.github.kboard.engine.typo.TypoSource
 import kotlin.concurrent.thread
 
 /**
@@ -74,6 +75,7 @@ object KBoardEngineLoader {
     private fun apply(context: Context, prefs: SharedPreferences) {
         if (!prefs.getBoolean(Settings.PREF_KBOARD_DEASCIIFY, Defaults.PREF_KBOARD_DEASCIIFY)) {
             KBoardSuggestions.setDeasciifier(null)
+            KBoardSuggestions.setTypo(null)
             return
         }
         val idx = index ?: try {
@@ -87,5 +89,7 @@ object KBoardEngineLoader {
         }
         index = idx
         KBoardSuggestions.setDeasciifier(DeasciifySource(idx))
+        // Yazım hatası önerileri aynı dizini kullanır; yalnız öneri çubuğunda (oto. düzeltme kapalı).
+        KBoardSuggestions.setTypo(TypoSource(idx, isKnownWord = KBoardSuggestions::isLmKnown))
     }
 }

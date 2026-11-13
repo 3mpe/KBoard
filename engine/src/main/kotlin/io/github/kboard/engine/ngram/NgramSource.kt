@@ -56,6 +56,9 @@ class NgramSource(
         }
     }
 
+    /** Kelime modelde var ve önerilebilir mi (yazım hatası düzeltmesi bunu bilinen kelime sayar). */
+    fun isKnown(word: String): Boolean = model.id(word).let { it >= 0 && model.suggestable(it) }
+
     /** log10 P(w | bağlam). Kelime modelde yoksa null. */
     fun logProb(word: String, context: List<String>): Float? {
         val id = model.id(word)

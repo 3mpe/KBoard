@@ -13,6 +13,7 @@ import io.github.kboard.engine.TurkishText
 import io.github.kboard.engine.deasciify.DeasciifySource
 import io.github.kboard.engine.morph.UserWordSuffixSource
 import io.github.kboard.engine.ngram.NgramSource
+import io.github.kboard.engine.typo.TypoSource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -59,6 +60,20 @@ object KBoardSuggestions {
     @Volatile
     private var denylist: Denylist = Denylist.EMPTY
 
+    /** Yazım hatası önerileri (yalnız öneri çubuğu; otomatik düzeltme kapalı, bkz. faz-typo.md). */
+    @Volatile
+    private var typo: TypoSource? = null
+
+    /** Dil modelinin önerilebilir kelimeleri bilinen kelimedir; yazım hatası sayılmaz. */
+    internal fun isLmKnown(word: String): Boolean = ngram?.isKnown(word) == true
+
+    /** Yazım hatası kaynağını bağlar ya da (null) kaldırır; aksan düzeltici dizinini kullanır. */
+    @Synchronized
+    fun setTypo(source: TypoSource?) {
+        typo = source
+        rebuild()
+    }
+
     /** Önerilmeyecek kelimeleri bağlar (`assets/kboard/denylist-tr.txt`). */
     @Synchronized
     fun setDenylist(list: Denylist) {
@@ -81,7 +96,7 @@ object KBoardSuggestions {
     }
 
     private fun rebuild() {
-        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, userMorph), denylist = denylist)
+        engine = SuggestionEngine(listOfNotNull(deasciifier, ngram, typo, userMorph), denylist = denylist)
             .also { it.setUserWords(userWords) }
     }
 

@@ -93,20 +93,20 @@ fun main(args: Array<String>) {
         }
         deasciify = DeasciifySource(index, config).also { sources += it }
     }
-    var model: NgramModel? = null
+    var ngramSource: NgramSource? = null
     val ngramPath = argValue(args, "--ngram") ?: System.getenv("KBOARD_NGRAM")
     if (ngramPath != null) {
-        model = File(ngramPath).inputStream().buffered().use { NgramModel.read(it) }
+        val model = File(ngramPath).inputStream().buffered().use { NgramModel.read(it) }
         var config = NgramSource.Config()
         argValue(args, "--ngram-params")?.split(',')?.map { it.toDouble() }?.let { p ->
             config = config.copy(offset = p[0], slope = p[1], nextOffset = p[2], nextSlope = p[3])
         }
-        sources += NgramSource(model, config)
+        ngramSource = NgramSource(model, config).also { sources += it }
     }
     if (index != null && "--no-typo" !in args) {
-        val lm = model
+        val lm = ngramSource
         // Dil modelinin önerilebilir sözcükleri bilinen kelimedir: hiç yazım hatası sayılmaz
-        val lmKnown: (String) -> Boolean = { w -> lm != null && lm.id(w).let { it >= 0 && lm.suggestable(it) } }
+        val lmKnown: (String) -> Boolean = { w -> lm?.isKnown(w) == true }
         sources += TypoSource(index, TypoSource.Config(autocorrect = "--typo-autocorrect" in args), lmKnown)
     }
     if ("--no-user-morph" !in args) sources += UserWordSuffixSource { deasciify?.isKnown(it) == true }
