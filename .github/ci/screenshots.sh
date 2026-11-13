@@ -104,10 +104,15 @@ adb shell cmd uimode night no; sleep 1
 open_field
 type_word "kadikoyd"; shot "kboard-07-kisisel-sozluk-ek" 3 # cümle başı: K otomatik büyük
 
+# Kişisel öğrenme uçtan uca (öğren, yeniden aç, yeniden başlat, yedek, sil).
+source .github/ci/personal-e2e.sh
+
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
-adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* > "$out/logcat-kboard.txt" 2>&1 || true
+adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* KBoardPersonal:* > "$out/logcat-kboard.txt" 2>&1 || true
 adb logcat -d -b crash > "$out/logcat-crash.txt" 2>&1 || true
 adb logcat -d -s AndroidRuntime:E ActivityManager:W InputMethodManagerService:* > "$out/logcat-system.txt" 2>&1 || true
 ls -la "$out"
+# e2e adımlarından biri kaldıysa iş kırmızı görünsün (zorunlu kontrol değil; görüntüler yine yazılır).
+grep -q "^KALDI" "$out/kisisel-e2e.txt" 2>/dev/null && exit 1
 exit 0
