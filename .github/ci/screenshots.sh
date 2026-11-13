@@ -3,7 +3,17 @@
 # android-emulator-runner içinden çalışır.
 set -uo pipefail
 out=screenshots; mkdir -p "$out"
-shot() { sleep "${2:-2}"; adb exec-out screencap -p > "$out/$1.png"; echo "görüntü: $1"; }
+# "System UI isn't responding" kutusu (emülatörün ilk dakikalarında) varsa "Wait"e dokun.
+dismiss_anr() {
+  local xml b
+  xml=$(adb shell uiautomator dump /dev/tty 2>/dev/null | tr '>' '\n')
+  echo "$xml" | grep -qiE "isn.t responding|yanıt vermiyor" || return 0
+  b=$(echo "$xml" | grep -m1 -E 'text="(Wait|Bekle)"' | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
+  log "ANR kutusu kapatılıyor: $b"
+  if [ -n "$b" ]; then set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); else adb shell input keyevent BACK; fi
+  sleep 1
+}
+shot() { sleep "${2:-2}"; dismiss_anr; adb exec-out screencap -p > "$out/$1.png"; echo "görüntü: $1"; }
 log() { echo "== $*"; }
 
 apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
@@ -12,7 +22,7 @@ pkg=$(adb shell pm list packages | tr -d '\r' | sed 's/^package://' | grep -m1 k
 kboard="$pkg/helium314.keyboard.latin.LatinIME"
 log "paket: $pkg, IME: $kboard"
 adb shell settings put secure show_ime_with_hard_keyboard 1
-sleep 20 # açılış sonrası sistem arayüzü otursun (ilk koşuda "System UI isn't responding" çıktı)
+sleep 40 # açılış sonrası sistem arayüzü otursun (ilk koşuda "System UI isn't responding" çıktı)
 for i in 1 2 3 4 5; do
   adb shell ime list -a -s | tr -d '\r' | grep -q "^$kboard$" && break
   sleep 2
@@ -26,7 +36,7 @@ log "Gboard: ${gboard:-yok}"
 test_activity="$pkg/helium314.keyboard.kboard.TestFieldActivity"
 open_field() {
   adb shell am force-stop "$pkg" >/dev/null 2>&1 # deneme alanını kapat (klavye de yeniden başlar)
-  adb shell ime set "${current_ime:-$kboard}" >/dev/null 2>&1
+  adb shell ime set "${current_ime:-$kboard}" 2>&1 | tail -1
   adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 # "yanıt vermiyor" kutusu
   adb shell am start -W -n "$test_activity" >/dev/null
   sleep 4
@@ -78,6 +88,8 @@ type_word "Kadikoy\\'d"; shot "kboard-07-kisisel-sozluk-ek" 3
 
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$out/ui.xml" >/dev/null 2>&1 || true
 adb shell dumpsys input_method > "$out/input_method.txt" 2>&1 || true
-adb logcat -d -s KBoardEngineLoader:* > "$out/logcat-kboard.txt" 2>&1 || true
+adb logcat -d -s KBoardEngineLoader:* KBoardSuggestions:* > "$out/logcat-kboard.txt" 2>&1 || true
+adb logcat -d -b crash > "$out/logcat-crash.txt" 2>&1 || true
+adb logcat -d -s AndroidRuntime:E ActivityManager:W InputMethodManagerService:* > "$out/logcat-system.txt" 2>&1 || true
 ls -la "$out"
 exit 0

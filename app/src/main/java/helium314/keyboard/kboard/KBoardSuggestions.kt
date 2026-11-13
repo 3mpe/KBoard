@@ -104,6 +104,11 @@ object KBoardSuggestions {
         correctionAllowed: Boolean, base: Pair<Boolean, Boolean>,
         typedWordSourceType: String? = null, trailingQuotes: Int = 0,
     ): Pair<Boolean, Boolean> {
+        if (helium314.keyboard.latin.BuildConfig.DEBUG) android.util.Log.d(
+            "KBoardSuggestions", "merge typed=$typedWord allowed=$correctionAllowed base=$base " +
+                "src=$typedWordSourceType locale=$locale deasc=${deasciifier != null} " +
+                "ac=${if (locale.language == "tr") autoCorrection(typedWord, locale) else "-"}"
+        )
         if (!correctionAllowed) return base
         return when (val ac = autoCorrection(typedWord, locale)) {
             AutoCorrection.NoOpinion -> base
