@@ -1,0 +1,4 @@
+BILGI yazilan: önce 'Vp pu', 1300 ms basılı tutunca 'Vp pu'
+KALDI yazilan: basılı tutunca tekrar silme olmadı
+BILGI kesme: önce 'Yarin ogleden sonra saat ikide Bugun Kadikoy'de bulusalim', 1000 ms basılı tutunca 'Yarin ogleden sonra saat ikide '
+GECTI kesme: kelime kelime silindi, kalan 'Yarin ogleden sonra saat ikide '
