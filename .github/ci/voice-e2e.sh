@@ -17,10 +17,18 @@ log "sesle yazma e2e"
 log "kurulu ses yöntemleri:"; adb shell ime list -a | tr -d '\r' | grep -iE "mId=|voice" | head -20 >&2
 
 # Parola alanı: mikrofon yok, iki dokunuş da klavyeyi değiştirmemeli
-ensure_kboard
+# Ön koşul: parola alanı açıkken etkin klavye KBoard (force-stop sistemi Gboard'a döndürebiliyor;
+# bu, dokunuşlardan ÖNCE düzeltilir, sonucu örtmez).
 adb shell am force-stop "$pkg" >/dev/null 2>&1
-adb shell am start -W -n "$test_activity" -e alan sifre >/dev/null; sleep 4
-adb shell input tap 540 400; sleep 3
+for n in 1 2 3; do
+  ensure_kboard
+  adb shell am start -W -n "$test_activity" -e alan sifre >/dev/null; sleep 4
+  adb shell input tap 540 400; sleep 3
+  adb shell dumpsys input_method | grep -q "mCurMethodId=$kboard" && break
+  echo "   parola alanında etkin klavye KBoard değil, yeniden seçiliyor ($n)" >&2
+  adb shell ime set "$kboard" >/dev/null 2>&1; sleep 2
+done
+adb shell dumpsys input_method | grep -E "mCurMethodId|inputType=0x" | head -2 >&2
 shot "kboard-e2e-ses-1-parola" 1 >&2
 adb shell input tap $MIC; sleep 2; adb shell input tap $MIC; sleep 3
 c=$(cur_ime)
