@@ -12,7 +12,7 @@ import helium314.keyboard.latin.BuildConfig
 import helium314.keyboard.latin.common.Constants.Separators
 import helium314.keyboard.latin.common.Constants.Subtype.ExtraValue
 import helium314.keyboard.latin.utils.LayoutType
-import helium314.keyboard.latin.utils.POPUP_KEYS_LABEL_DEFAULT
+import helium314.keyboard.latin.utils.KBOARD_POPUP_KEYS_HINT_ORDER
 import helium314.keyboard.latin.utils.POPUP_KEYS_ORDER_DEFAULT
 import helium314.keyboard.latin.utils.defaultClipboardToolbarPref
 import helium314.keyboard.latin.utils.defaultPinnedToolbarPref
@@ -46,7 +46,7 @@ object Defaults {
     private const val DEFAULT_SIZE_SCALE = 1.0f // 100%
     // KBOARD: büyük, rahat basılır tuşlar (SwiftKey'in küçük tuşları sorundu). Ayarlardan değiştirilebilir.
     const val KBOARD_KEYBOARD_HEIGHT_SCALE = 1.15f
-    const val PREF_THEME_STYLE = KeyboardTheme.STYLE_MATERIAL
+    const val PREF_THEME_STYLE = KeyboardTheme.STYLE_ROUNDED // KBOARD: yuvarlak köşeli tuşlar, hap biçimli ?123 ve eylem tuşu
     fun PREF_ICON_STYLE(prefs: SharedPreferences) = prefs.getString(Settings.PREF_THEME_STYLE, PREF_THEME_STYLE)!!
     const val PREF_ACCENT_SHIFTED_ICON = false
     const val PREF_THEME_COLORS = KeyboardTheme.THEME_LIGHT
@@ -81,7 +81,7 @@ object Defaults {
     const val PREF_BLOCK_POTENTIALLY_OFFENSIVE = true
     const val PREF_SHOW_LANGUAGE_SWITCH_KEY = false
     const val PREF_LANGUAGE_SWITCH_KEY = "internal"
-    const val PREF_SHOW_EMOJI_KEY = false
+    const val PREF_SHOW_EMOJI_KEY = true // KBOARD: alt sırada virgül, emoji, boşluk, nokta
     const val PREF_SHOW_DPAD_KEY = true
     const val PREF_VARIABLE_TOOLBAR_DIRECTION = true
     const val PREF_ADDITIONAL_SUBTYPES = "de${Separators.SET}${ExtraValue.KEYBOARD_LAYOUT_SET}=MAIN:qwerty${Separators.SETS}" +
@@ -157,7 +157,7 @@ object Defaults {
     const val PREF_CUSTOM_CURRENCY_KEY = ""
     const val PREF_SHOW_HINTS = true
     const val PREF_POPUP_KEYS_ORDER = POPUP_KEYS_ORDER_DEFAULT
-    const val PREF_POPUP_KEYS_HINT_ORDER = POPUP_KEYS_LABEL_DEFAULT
+    const val PREF_POPUP_KEYS_HINT_ORDER = KBOARD_POPUP_KEYS_HINT_ORDER // KBOARD: yalnızca üst sırada rakam ipuçları
     const val PREF_SHOW_POPUP_HINTS = false
     const val PREF_SHOW_TLD_POPUP_KEYS = true
     const val PREF_MORE_POPUP_KEYS = "main"
@@ -183,8 +183,8 @@ object Defaults {
     const val PREF_QUICK_PIN_TOOLBAR_KEYS = false
     val PREF_PINNED_TOOLBAR_KEYS = defaultPinnedToolbarPref
     val PREF_TOOLBAR_KEYS = defaultToolbarPref
-    const val PREF_AUTO_SHOW_TOOLBAR = false
-    const val PREF_AUTO_HIDE_TOOLBAR = false
+    const val PREF_AUTO_SHOW_TOOLBAR = true // KBOARD: klavye açılınca araç çubuğu görünür
+    const val PREF_AUTO_HIDE_TOOLBAR = true // KBOARD: yazmaya başlayınca öneriler gelir
     val PREF_CLIPBOARD_TOOLBAR_KEYS = defaultClipboardToolbarPref
     const val PREF_ABC_AFTER_EMOJI = false
     const val PREF_ABC_AFTER_CLIP = false

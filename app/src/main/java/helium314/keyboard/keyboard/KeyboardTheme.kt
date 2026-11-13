@@ -152,28 +152,34 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) DynamicColors(context, themeStyle, hasBorders, backgroundImage)
                     else getThemeColors(THEME_LIGHT, themeStyle, context, prefs, isNight)
                 }
+                // KBOARD: açık tema koyu temayla aynı biçim dilinde: gri-mavi zemin, beyaz harf tuşları,
+                // bir ton koyu işlev tuşları; eylem tuşu da işlev tuşu renginde (koyu simge).
                 THEME_LIGHT -> DefaultColors(
                     themeStyle,
                     hasBorders,
-                    ContextCompat.getColor(context, R.color.gesture_trail_color_lxx_light),
-                    ContextCompat.getColor(context, R.color.keyboard_background_lxx_light_border),
-                    ContextCompat.getColor(context, R.color.key_background_normal_lxx_light_border),
-                    ContextCompat.getColor(context, R.color.key_background_functional_lxx_light_border),
-                    ContextCompat.getColor(context, R.color.key_background_normal_lxx_light_border),
-                    ContextCompat.getColor(context, R.color.key_text_color_lxx_light),
-                    ContextCompat.getColor(context, R.color.key_hint_letter_color_lxx_light),
+                    "#d3d9e6".toColorInt(), // vurgu = eylem tuşu
+                    "#eceff5".toColorInt(), // zemin
+                    "#ffffff".toColorInt(), // harf tuşu
+                    "#d3d9e6".toColorInt(), // işlev tuşu
+                    "#ffffff".toColorInt(), // boşluk
+                    "#1b1c21".toColorInt(), // harf
+                    "#6a6d78".toColorInt(), // ipucu
+                    gesture = "#4a6fb8".toColorInt(),
                     keyboardBackground = backgroundImage
                 )
+                // KBOARD: varsayılan koyu görünüm. Koyu lacivert-gri zemin, zeminden bir ton açık harf
+                // tuşları, bir ton daha açık işlev tuşları (shift, sil, ?123, virgül, nokta, eylem).
                 THEME_DARK -> DefaultColors(
                     themeStyle,
                     hasBorders,
-                    ContextCompat.getColor(context, R.color.gesture_trail_color_lxx_dark),
-                    "#263238".toColorInt(),
-                    "#364248".toColorInt(),
-                    "#2d393f".toColorInt(),
-                    "#364248".toColorInt(),
-                    ContextCompat.getColor(context, R.color.key_text_color_lxx_dark),
-                    ContextCompat.getColor(context, R.color.key_hint_letter_color_lxx_dark),
+                    "#353b4b".toColorInt(), // vurgu = eylem tuşu
+                    "#18191e".toColorInt(), // zemin
+                    "#2a2d34".toColorInt(), // harf tuşu
+                    "#353b4b".toColorInt(), // işlev tuşu
+                    "#2a2d34".toColorInt(), // boşluk
+                    "#e6e7ee".toColorInt(), // harf
+                    "#a6a8b3".toColorInt(), // ipucu
+                    gesture = "#a8c4f5".toColorInt(),
                     keyboardBackground = backgroundImage
                 )
                 THEME_HOLO_WHITE -> DefaultColors(
