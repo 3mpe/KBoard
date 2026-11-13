@@ -86,6 +86,30 @@ class DeasciifyContextTest {
         assertNull(s.autocorrection("mi", listOf("?")))
         // Soru eki biçiminde olmayanlar etkilenmez
         assertNull(s.autocorrection("mis", listOf("çıkalım")))
+        // Eki ince alan alıntılar: doğru yazılmış, dokunulmaz
+        assertNull(s.autocorrection("mi", listOf("saat")))
+        assertNull(s.autocorrection("mi", listOf("Normal")))
+        assertNull(s.autocorrection("mi", listOf("dikkat")))
+        assertNull(s.autocorrection("misin", listOf("saat")))
+        // Yalnız incelik düzeltilir; düzlük/yuvarlaklık yazılana kalır
+        assertNull(s.autocorrection("mu", listOf("geldi")))
+        assertNull(s.autocorrection("mi", listOf("okul")))
+        assertNull(s.autocorrection("mi", listOf("İstanbul")))
+        assertNull(s.autocorrection("mu", listOf("okul")))
+    }
+
+    @Test
+    fun languageModelVetoesParticleChange() {
+        // Model "mi"yi bu kelimeden sonra görmüş ve en az "mı" kadar olası buluyor: yazılan kalır
+        val veto = object : ContextScorer {
+            override fun logProb(word: String, context: List<String>, sentenceStart: Boolean): Float? =
+                when (TurkishText.lower(word)) { "mi" -> -1f; "mı" -> -3f; else -> null }
+            override fun sameFold(fold: String) = emptyList<String>()
+            override fun follows(word: String, previous: String) = word == "mi" && previous == "rahat"
+        }
+        assertNull(src(veto).autocorrection("mi", listOf("rahat")))
+        // Görmediyse uyum kuralı geçerli
+        assertEquals("mı", src(veto).autocorrection("mi", listOf("çıkalım")))
     }
 
     @Test

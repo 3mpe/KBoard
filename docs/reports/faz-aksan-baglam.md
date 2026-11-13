@@ -4,10 +4,17 @@ Aksan düzeltici (`DeasciifySource`) artık boşlukta karar verirken önceki kel
 Üç yeni kural, eski sözlük kuralının üstüne eklenir:
 
 1. **Soru eki uyumu.** Ayrı yazılan `mi, misin, miyim, miyiz, misiniz, midir, miydi(m/n/k/niz),
-   miymiş` (ve u'lu biçimleri), önceki kelimenin son ünlüsüne uydurulur: "yemeğe çıkalım mi" → mı,
-   "pencereyi kapatır misin" → mısın. Yazılan i yalnız i/ı, u yalnız u/ü olabilir. Önceki kelime
-   ASCII yazılmışsa önce onun düzeltmesine bakılır ("Saat kacta mi" → kaçta → mı). Dil modeli
-   gerektirmez.
+   miymiş` (ve u'lu biçimleri) için yalnız ASCII'nin kaybettiği incelik düzeltilir: yazılan i, önceki
+   kelimenin son ünlüsü a/ı ise ı olur ("yemeğe çıkalım mi" → mı, "kapatır misin" → mısın); yazılan
+   u, ö/ü'den sonra ü olur ("gördün mu" → mü). Başka her durumda yazılan kalır ("geldi mu",
+   "okul mi" dokunulmaz; bunlar yazım hatası, aksan değil). Önceki kelime ASCII yazılmışsa önce onun
+   düzeltmesine bakılır ("Saat kacta mi" → kaçta → mı). Değişmeyenler:
+   - eki ince ünlüyle alan alıntılar: "saat mi", "normal mi", "dikkat mi". Liste:
+     `engine/src/main/resources/.../deasciify/front-harmony-tr.txt`.
+   - dil modelinin yazılan eki bu kelimeden sonra görüp en az uyumlu biçim kadar olası bulduğu durumlar.
+   İlk sürüm iki yönlü uyum yapıyordu ve "saat mi" → mı, "okul mi" → mı gibi doğru ya da başka türlü
+   hatalı metni bozuyordu (Fable incelemesi). Korpus ölçümü bunu göremedi: korpustaki 4.724 soru
+   ekinden yalnız ~5'i bu kalıpta. Bu yüzden birim testleriyle korunuyor.
 2. **Sözlük kararı bağlamla değişir.** Sözlük kuralı bir biçim seçtiyse ama dil modeli bağlamda başka
    bir biçimi en az 1,5 (log10) daha olası buluyorsa o biçim seçilir.
 3. **Bilinmeyen ASCII kelime.** Yazılan ne aksan sözlüğünde ne dil modelinde varsa, aynı katlanmış
@@ -34,7 +41,7 @@ dil modeli ve aynı motor derlemesi.
 | Yanlış oto. düzeltme | %0,2 (434) | %0,2 | %0,0 (470) | %0,0 | %0,1 (904) | %0,1 |
 | İlk-3 @0 / @1 / @3 | 21,2 / 31,4 / 53,0 | aynı | 20,2 / 29,8 / 51,6 | aynı | 20,7 / 30,6 / 52,3 | aynı |
 | KSR | %40,3 | %40,3 | %39,5 | %39,5 | %39,9 | %39,9 |
-| Gecikme p95 | 1,11 ms | | 1,03 ms | | 1,06 ms | 1,14–1,23 ms |
+| Gecikme p95 | 1,11 ms | | 1,03 ms | | 1,06 ms | 1,14–1,55 ms (yükte oynuyor) |
 
 İlk-3 @2 testte 38,5 → 38,3 (ara öneklerde düzeltme adayı bir yer kaplıyor, ör. "oc" → öç); diğerleri
 aynı. Tek harfte ("s" → ş) dil modeli kuralı çalışmaz; bu, ilk denemedeki @1 düşüşünü gideriyordu.

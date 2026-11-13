@@ -134,6 +134,13 @@ class NgramModel private constructor(
         return if (e >= 0) deq(entQ[e]) else deq(biGamma[b]) + logUnigram(id)
     }
 
+    /** [id] kelimesinin [v]'den sonra görülmüş bir bigram kaydı var mı? */
+    fun hasBigram(id: Int, v: Int): Boolean {
+        if (id < 0 || v < 0) return false
+        val b = biRow(v)
+        return b >= 0 && find(biStart[b], biStart[b + 1], id) >= 0
+    }
+
     /** Bağlamda en olası ardıllar (trigram + bigram satırları, yoksa genel en sıklar). */
     fun successors(u: Int, v: Int): IntArray {
         val out = LinkedHashSet<Int>()

@@ -68,6 +68,8 @@ class NgramSource(
         return model.logProb(id, u, v)
     }
 
+    override fun follows(word: String, previous: String): Boolean = model.hasBigram(model.id(word), model.id(previous))
+
     override fun sameFold(fold: String): List<String> =
         model.withFold(fold).filter { model.suggestable(it) }.map { model.display(it) }
 

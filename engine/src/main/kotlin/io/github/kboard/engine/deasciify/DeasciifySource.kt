@@ -183,7 +183,11 @@ class DeasciifySource(
 
     /**
      * Ayrı yazılan soru eki: ünlüsü önceki kelimenin son ünlüsüne uyar ("çıkalım mi" → mı,
-     * "kapatır misin" → mısın). Yazılan i yalnız i/ı, u yalnız u/ü olabilir. Ek değilse null.
+     * "kapatır misin" → mısın, "gördün mu" → mü). Yalnız ASCII'nin kaybettiği incelik düzeltilir:
+     * yazılan i, a/ı'dan sonra ı olur; u, ö/ü'den sonra ü olur. Başka her durumda yazılan kalır
+     * ("geldi mu", "okul mi" dokunulmaz). Eki ince alan alıntılardan sonra ("saat mi", "normal mi";
+     * front-harmony-tr.txt) ve dil modeli yazılanı bu kelimeden sonra görüp en az o kadar olası
+     * buluyorsa da değişmez. Ek biçiminde değilse null.
      */
     private fun questionParticle(typed: String, context: List<String>): String? {
         if (!isAscii(typed)) return null
@@ -192,11 +196,23 @@ class DeasciifySource(
         var prev = context.last()
         if (prev.isEmpty() || !prev.last().isLetter()) return null
         if (isAscii(prev)) prev = autocorrection(prev, context.dropLast(1)) ?: prev
-        val front = lastVowelFront(prev) ?: return null
+        val lowerPrev = TurkishText.lower(prev)
+        if (lowerPrev in FRONT_HARMONY_EXCEPTIONS) return typed
+        val last = lastVowel(lowerPrev) ?: return typed
         val v = fold[1]
-        val hv = if (v == 'i') (if (front) 'i' else 'ı') else (if (front) 'ü' else 'u')
+        val hv = when {
+            v == 'i' && (last == 'a' || last == 'ı') -> 'ı'
+            v == 'u' && (last == 'ö' || last == 'ü') -> 'ü'
+            else -> return typed
+        }
         var word = fold.replace(v, hv)
         if (word.endsWith("m${hv}s") && word.length > 3) word = word.dropLast(1) + "ş" // miymiş
+        val lm = contextScorer
+        if (lm != null && lm.follows(fold, lowerPrev)) {
+            val typedLp = lm.logProb(fold, context, false)
+            val harmLp = lm.logProb(word, context, false)
+            if (typedLp != null && (harmLp == null || typedLp >= harmLp)) return typed
+        }
         return applyCase(typed, word)
     }
 
@@ -296,6 +312,25 @@ class DeasciifySource(
 
         internal fun compatible(word: String, mustMatch: Map<Int, Char>): Boolean =
             mustMatch.all { (i, c) -> i < word.length && TurkishText.lower(word[i].toString())[0] == c }
+
+        /** Ünlü uyumu istisnaları (kaynak dosyası; yoksa boş). */
+        private val FRONT_HARMONY_EXCEPTIONS: Set<String> by lazy {
+            DeasciifySource::class.java.getResourceAsStream("front-harmony-tr.txt")?.bufferedReader(Charsets.UTF_8)
+                ?.useLines { lines ->
+                    lines.map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }
+                        .map { TurkishText.lower(it) }.toSet()
+                } ?: emptySet()
+        }
+
+        private const val VOWELS = "aeıioöuüâîû"
+
+        private fun lastVowel(s: String): Char? {
+            for (i in s.indices.reversed()) {
+                val c = s[i]
+                if (c in VOWELS) return when (c) { 'â' -> 'a'; 'î' -> 'i'; 'û' -> 'u'; else -> c }
+            }
+            return null
+        }
 
         private fun lastVowelFront(s: String): Boolean? {
             for (i in s.indices.reversed()) {

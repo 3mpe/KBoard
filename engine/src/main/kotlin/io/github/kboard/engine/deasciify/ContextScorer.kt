@@ -10,4 +10,7 @@ interface ContextScorer {
 
     /** Katlanmış biçimi tam olarak [fold] olan önerilebilir model kelimeleri (gösterim biçimiyle). */
     fun sameFold(fold: String): List<String>
+
+    /** Model [word]'ü [previous]'ın ardından görmüş mü (bigram kaydı var mı)? */
+    fun follows(word: String, previous: String): Boolean = false
 }
