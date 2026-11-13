@@ -103,10 +103,11 @@ else result KALDI "uygulama yeniden açılınca '$WORD' önerilmiyor"; fi
 # 3) Android yedeği: yerel yedek aktarıcısıyla tam yedek alınır, içinde kboard/ olmamalı.
 adb shell bmgr enable true >/dev/null 2>&1
 adb shell bmgr transport com.android.localtransport/.LocalTransport >/dev/null 2>&1
-adb shell bmgr backupnow "$pkg" 2>&1 | tail -2
+adb shell bmgr backupnow --non-incremental "$pkg" 2>&1 | tail -2
+adb shell dumpsys backup 2>/dev/null | grep -iE "kboard|transport" | head -10 > "$out/yedek-dumpsys.txt" || true
 if adb root >/dev/null 2>&1; then
   sleep 3; adb wait-for-device
-  adb shell "find /data/cache/backup /cache/backup /data/backup -type f 2>/dev/null" | tr -d '\r' > "$out/yedek-dosyalar.txt"
+  adb shell "find /data/cache /cache /data/backup -path '*backup*' -type f 2>/dev/null" | tr -d '\r' > "$out/yedek-dosyalar.txt"
   bk=$(grep -F "$pkg" "$out/yedek-dosyalar.txt" | head -5)
   if [ -n "$bk" ]; then
     : > "$out/yedek-icerik.txt"
@@ -136,9 +137,13 @@ else result KALDI "emülatör yeniden açılmadı"; fi
 
 # 5) Ayarlar (KBoard seçili değilse ayarlar kurulum sihirbazını açar)
 # Metin düzeltme → Öğrenilenleri sil → Sil.
-ensure_kboard
+# force-stop sistemi Gboard'a döndürebiliyor; KBoard'u ondan sonra seç.
 adb shell am force-stop "$pkg"
+ensure_kboard
 adb shell am start -W -n "$pkg/helium314.keyboard.settings.SettingsActivity" >/dev/null; sleep 4
+# Yine de kurulum sihirbazı açıldıysa son adımdan ayarlara geç.
+adb shell uiautomator dump /dev/tty 2>/dev/null | grep -qE "uygulamasını kurma|Set up " && \
+  tap_text "Klavyeyi yapılandır|Configure.*" && sleep 2
 shot kboard-e2e-4-ayarlar 1
 if tap_text "Metin düzeltme|Text correction" && shot kboard-e2e-5-metin-duzeltme 1 \
    && tap_text "Öğrenilenleri sil|Clear learned words" && shot kboard-e2e-6-sil-onay 1 \
