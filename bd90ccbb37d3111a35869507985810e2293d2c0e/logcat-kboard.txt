@@ -1,0 +1,13 @@
+--------- beginning of main
+11-13 09:39:12.714  5685  5717 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 47 ms
+11-13 09:39:16.501  5685  5725 I KBoardEngineLoader: dil modeli yüklendi: 36881 kelime, 3776 ms
+11-13 09:39:48.577  6244  6281 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 205 ms
+11-13 09:39:52.652  6244  6294 I KBoardEngineLoader: dil modeli yüklendi: 36881 kelime, 4059 ms
+11-13 09:40:13.258  6512  6536 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 79 ms
+11-13 09:40:15.330  6512  6547 I KBoardEngineLoader: dil modeli yüklendi: 36881 kelime, 2067 ms
+11-13 09:40:45.918  6796  6824 I KBoardPersonal: kişisel model yüklendi, 2 ms
+11-13 09:40:45.987  6796  6816 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 79 ms
+11-13 09:40:48.497  6796  6825 I KBoardEngineLoader: dil modeli yüklendi: 36881 kelime, 2503 ms
+11-13 09:41:11.253  6992  7025 I KBoardPersonal: kişisel model yüklendi, 0 ms
+11-13 09:41:11.343  6992  7017 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 89 ms
+11-13 09:41:13.371  6992  7028 I KBoardEngineLoader: dil modeli yüklendi: 36881 kelime, 2022 ms
