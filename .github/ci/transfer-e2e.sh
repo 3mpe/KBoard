@@ -119,7 +119,7 @@ if [ "$have_root" = 1 ]; then # yeni telefon: eski kelime yok, yalnız bu cihaza
   dict_del kboardaktarim >/dev/null; dict_add yenicihazkelime
 fi
 [ -z "$(personal_file)" ] && tresult GECTI "pm clear sonrası öğrenilenler yok" || tresult KALDI "pm clear sonrası öğrenme dosyası duruyor"
-s=$(which_slot kboard-aktarim-4-temiz)
+s=$(which_slot kboard-aktarim-4-temiz | tail -1)
 [ "$s" = "-1" ] && tresult GECTI "temiz kurulumda 'mavi' sonrası '$WORD' önerilmiyor" \
   || tresult KALDI "temiz kurulumda '$WORD' yine de öneriliyor (yuva $s)"
 
@@ -136,7 +136,7 @@ if [ -n "$f" ] && import_file ogrenilensiz; then
   fi
   [ -z "$(personal_file)" ] && tresult GECTI "öğrenilenler seçilmeyince dosya gelmedi" \
     || tresult KALDI "öğrenilenler seçilmediği halde dosya geldi"
-  s=$(which_slot kboard-aktarim-5-ogrenilensiz)
+  s=$(which_slot kboard-aktarim-5-ogrenilensiz | tail -1)
   [ "$s" = "-1" ] && tresult GECTI "öğrenilenler seçilmeyince '$WORD' önerilmiyor" \
     || tresult KALDI "öğrenilenler seçilmediği halde '$WORD' öneriliyor (yuva $s)"
 else
@@ -147,7 +147,7 @@ fi
 if [ -n "$f" ] && import_file hepsi; then
   [ -n "$(personal_file)" ] && tresult GECTI "öğrenilenler içe aktarıldı (dosya geldi)" \
     || tresult KALDI "öğrenilenler içe aktarılmadı"
-  s=$(which_slot kboard-aktarim-6-hepsi)
+  s=$(which_slot kboard-aktarim-6-hepsi | tail -1)
   [ "$s" != "-1" ] && tresult GECTI "içe aktarmadan sonra 'mavi' sonrası '$WORD' öneriliyor (yuva $s)" \
     || tresult KALDI "içe aktarmadan sonra '$WORD' önerilmiyor"
 else
