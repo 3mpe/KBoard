@@ -1,0 +1,29 @@
+--------- beginning of main
+11-13 07:33:04.241  5619  5695 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 147 ms
+11-13 07:33:10.757  5619  5714 I KBoardEngineLoader: dil modeli yüklendi: 36889 kelime, 6511 ms
+11-13 07:33:39.363  6314  6356 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 140 ms
+11-13 07:33:43.755  6314  6368 I KBoardEngineLoader: dil modeli yüklendi: 36889 kelime, 4368 ms
+11-13 07:34:00.650  6314  6537 D KBoardSuggestions: correction=true composing=true digits=false resumed=true mostlyCaps=false
+11-13 07:34:00.653  6314  6537 D KBoardSuggestions: merge typed=simdi allowed=false base=(true, false) src=main locale=tr deasc=true ac=Replace(word=şimdi)
+11-13 07:34:05.070  6597  6638 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 115 ms
+11-13 07:34:08.964  6597  6645 I KBoardEngineLoader: dil modeli yüklendi: 36889 kelime, 3871 ms
+11-13 07:34:36.950  6927  6955 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 46 ms
+11-13 07:34:39.658  6927  6965 I KBoardEngineLoader: dil modeli yüklendi: 36889 kelime, 2694 ms
+11-13 07:34:49.176  6927  6974 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:34:49.209  6927  6974 D KBoardSuggestions: merge typed=S allowed=true base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:34:49.502  6927  6974 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:34:49.504  6927  6974 D KBoardSuggestions: merge typed=Sim allowed=true base=(false, false) src=main locale=tr deasc=true ac=NoOpinion
+11-13 07:34:49.679  6927  6974 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:34:49.681  6927  6974 D KBoardSuggestions: merge typed=Simdi allowed=true base=(true, false) src=main locale=tr deasc=true ac=Replace(word=Şimdi)
+11-13 07:35:01.678  7154  7178 I KBoardEngineLoader: aksan dizini yüklendi: 180727 kayıt, 111 ms
+11-13 07:35:03.539  7154  7184 I KBoardEngineLoader: dil modeli yüklendi: 36889 kelime, 1845 ms
+11-13 07:35:09.590  7154  7212 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:35:09.628  7154  7212 D KBoardSuggestions: merge typed=K allowed=true base=(false, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:35:09.874  7154  7212 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:35:09.881  7154  7212 D KBoardSuggestions: merge typed=Kad allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:35:10.090  7154  7212 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:35:10.093  7154  7212 D KBoardSuggestions: merge typed=Kadi allowed=true base=(true, true) src=null locale=tr deasc=true ac=Replace(word=Kadı)
+11-13 07:35:10.396  7154  7212 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:35:10.397  7154  7212 D KBoardSuggestions: merge typed=Kadiko allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion
+11-13 07:35:10.667  7154  7212 D KBoardSuggestions: correction=true composing=true digits=false resumed=false mostlyCaps=false
+11-13 07:35:10.668  7154  7212 D KBoardSuggestions: merge typed=Kadikoyd allowed=true base=(true, false) src=null locale=tr deasc=true ac=NoOpinion

@@ -1,0 +1,693 @@
+Current Input Method Manager state:
+  Input Methods: mMethodMapUpdateCount=12
+  InputMethod #0:
+    mId=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME mSettingsActivityName=com.google.android.apps.inputmethod.latin.preference.SettingsActivity mIsVrOnly=false mSupportsSwitchingToNextInputMethod=true mInlineSuggestionsEnabled=true mSupportsInlineSuggestionsWithTouchExploration=false mSuppressesSpellChecker=false mShowInInputMethodPicker=true mSupportsStylusHandwriting=false mStylusHandwritingSettingsActivityAttr=null
+    mIsDefaultResId=0x0
+    Service:
+      priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+      ServiceInfo:
+        name=com.android.inputmethod.latin.LatinIME
+        packageName=com.google.android.inputmethod.latin
+        labelRes=0x7f1402e5 nonLocalizedLabel=null icon=0x0 banner=0x0
+        enabled=true exported=true directBootAware=true
+        permission=android.permission.BIND_INPUT_METHOD
+        flags=0x0
+        ApplicationInfo:
+          name=com.google.android.apps.inputmethod.latin.ImeLatinApp
+          packageName=com.google.android.inputmethod.latin
+          labelRes=0x7f1402e5 nonLocalizedLabel=null icon=0x7f110003 banner=0x0
+          className=com.google.android.apps.inputmethod.latin.ImeLatinApp
+          processName=com.google.android.inputmethod.latin
+          taskAffinity=null
+          uid=10145 flags=0x20cabe45 privateFlags=0x8c081110 theme=0x7f150013
+          requiresSmallestWidthDp=0 compatibleWidthLimitDp=0 largestWidthLimitDp=0
+          sourceDir=/product/app/LatinIMEGooglePrebuilt/LatinIMEGooglePrebuilt.apk
+          resourceDirs=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          overlayPaths=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          seinfo=default:targetSdkVersion=33
+          seinfoUser=:complete
+          dataDir=/data/user/0/com.google.android.inputmethod.latin
+          deviceProtectedDataDir=/data/user_de/0/com.google.android.inputmethod.latin
+          credentialProtectedDataDir=/data/user/0/com.google.android.inputmethod.latin
+          sharedLibraryFiles=[/system_ext/framework/androidx.window.extensions.jar, /system_ext/framework/androidx.window.sidecar.jar]
+          enabled=true minSdkVersion=23 targetSdkVersion=33 versionCode=99078520 targetSandboxVersion=1
+          supportsRtl=true
+          fullBackupContent=true
+          crossProfile=true
+          HiddenApiEnforcementPolicy=2
+          usesNonSdkApi=false
+          allowsPlaybackCapture=true
+          nativeHeapZeroInitialized=0
+          enableOnBackInvokedCallback=false
+          createTimestamp=140413
+  InputMethod #1:
+    mId=com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService mSettingsActivityName=com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.ui.VoiceImeSettingsActivity mIsVrOnly=false mSupportsSwitchingToNextInputMethod=false mInlineSuggestionsEnabled=false mSupportsInlineSuggestionsWithTouchExploration=false mSuppressesSpellChecker=false mShowInInputMethodPicker=true mSupportsStylusHandwriting=false mStylusHandwritingSettingsActivityAttr=null
+    mIsDefaultResId=0x0
+    Service:
+      priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+      ServiceInfo:
+        name=com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService
+        packageName=com.google.android.tts
+        labelRes=0x7f14014b nonLocalizedLabel=null icon=0x0 banner=0x0
+        enabled=true exported=true directBootAware=false
+        permission=android.permission.BIND_INPUT_METHOD
+        flags=0x0
+        ApplicationInfo:
+          name=com.google.android.apps.speech.tts.googletts.GoogleTTSRoot_Application
+          packageName=com.google.android.tts
+          labelRes=0x7f14002a nonLocalizedLabel=null icon=0x7f110001 banner=0x0
+          className=com.google.android.apps.speech.tts.googletts.GoogleTTSRoot_Application
+          processName=com.google.android.tts
+          taskAffinity=null
+          uid=10147 flags=0x24cbbe45 privateFlags=0x8c081100 theme=0x7f150225
+          requiresSmallestWidthDp=0 compatibleWidthLimitDp=0 largestWidthLimitDp=0
+          sourceDir=/product/app/GoogleTTS/GoogleTTS.apk
+          resourceDirs=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          overlayPaths=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          seinfo=default:targetSdkVersion=33
+          seinfoUser=:complete
+          dataDir=/data/user/0/com.google.android.tts
+          deviceProtectedDataDir=/data/user_de/0/com.google.android.tts
+          credentialProtectedDataDir=/data/user/0/com.google.android.tts
+          sharedLibraryFiles=[/system_ext/framework/androidx.window.extensions.jar, /system_ext/framework/androidx.window.sidecar.jar]
+          enabled=true minSdkVersion=26 targetSdkVersion=33 versionCode=210411863 targetSandboxVersion=1
+          supportsRtl=true
+          fullBackupContent=@xml/2132213763
+          dataExtractionRules=@xml/2132213764
+          crossProfile=false
+          HiddenApiEnforcementPolicy=2
+          usesNonSdkApi=false
+          allowsPlaybackCapture=true
+          nativeHeapZeroInitialized=0
+          enableOnBackInvokedCallback=false
+          createTimestamp=140413
+  InputMethod #2:
+    mId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME mSettingsActivityName=helium314.keyboard.settings.SettingsActivity mIsVrOnly=false mSupportsSwitchingToNextInputMethod=true mInlineSuggestionsEnabled=true mSupportsInlineSuggestionsWithTouchExploration=false mSuppressesSpellChecker=false mShowInInputMethodPicker=true mSupportsStylusHandwriting=false mStylusHandwritingSettingsActivityAttr=null
+    mIsDefaultResId=0x7f050005
+    Service:
+      priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+      ServiceInfo:
+        name=helium314.keyboard.latin.LatinIME
+        packageName=io.github.kboard.tr.debug
+        labelRes=0x7f0e008c nonLocalizedLabel=null icon=0x0 banner=0x0
+        enabled=true exported=true directBootAware=true
+        permission=android.permission.BIND_INPUT_METHOD
+        flags=0x0
+        ApplicationInfo:
+          name=helium314.keyboard.latin.App
+          packageName=io.github.kboard.tr.debug
+          labelRes=0x7f0e008c nonLocalizedLabel=null icon=0x7f0d0001 banner=0x0
+          className=helium314.keyboard.latin.App
+          processName=io.github.kboard.tr.debug
+          taskAffinity=io.github.kboard.tr.debug
+          uid=10192 flags=0x30c8be46 privateFlags=0x8c001100 theme=0x0
+          requiresSmallestWidthDp=0 compatibleWidthLimitDp=0 largestWidthLimitDp=0
+          sourceDir=/data/app/~~RmhVYFnYpiCJfdMIqFWwzw==/io.github.kboard.tr.debug-uvTXlh_vQ2ofxwjxktjlAw==/base.apk
+          resourceDirs=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          overlayPaths=[/product/overlay/EmulationPixel6/EmulationPixel6Overlay.apk, /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk]
+          seinfo=default:targetSdkVersion=37
+          seinfoUser=:complete
+          dataDir=/data/user/0/io.github.kboard.tr.debug
+          deviceProtectedDataDir=/data/user_de/0/io.github.kboard.tr.debug
+          credentialProtectedDataDir=/data/user/0/io.github.kboard.tr.debug
+          enabled=true minSdkVersion=21 targetSdkVersion=37 versionCode=4300 targetSandboxVersion=1
+          supportsRtl=true
+          fullBackupContent=true
+          crossProfile=false
+          HiddenApiEnforcementPolicy=2
+          usesNonSdkApi=false
+          allowsPlaybackCapture=true
+          nativeHeapZeroInitialized=0
+          localeConfigRes=0x7f110005
+          enableOnBackInvokedCallback=true
+          createTimestamp=140413
+  Clients:
+  Client ClientState{e1df2d3 mUid=10192 mPid=7154 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@8e2cc04
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@1d245ed
+    sessionRequested=false
+    sessionRequestedForAccessibility=true
+    curSession=SessionState{uid 10192 pid 7154 method a242c22 session b2556b3 channel ClientState{e1df2d3 mUid=10192 mPid=7154 mSelfReportedDisplayId=0} (server)}
+  Client ClientState{6c8b52d mUid=10145 mPid=1672 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@8770a62
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@9a577f3
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{ef24cb0 mUid=10154 mPid=2252 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@a87729
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@ebf6aae
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{95fb6e0 mUid=1000 mPid=1142 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@a95a04f
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@4a783dc
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{b1b83ba mUid=1000 mPid=547 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@8b5f26b
+    fallbackInputConnection=RemoteInputConnectionImpl{connection=android.view.inputmethod.BaseInputConnection@f1701c8 finished=false mParentInputMethodManager.isActive()=false mServedView=null}
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{806e261 mUid=10168 mPid=910 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@bee2186
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@63f4a47
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{b7e7274 mUid=10084 mPid=1632 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@56e439d
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@fad012
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{61c43e3 mUid=10169 mPid=5621 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@b4a41e0
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@1f07c99
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  Client ClientState{b1db5e mUid=10132 mPid=1868 mSelfReportedDisplayId=0}:
+    client=com.android.server.inputmethod.IInputMethodClientInvoker@5453b3f
+    fallbackInputConnection=com.android.internal.inputmethod.IRemoteInputConnection$Stub$Proxy@8419c0c
+    sessionRequested=false
+    sessionRequestedForAccessibility=false
+    curSession=null
+  mCurMethodId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME
+  mCurClient=ClientState{e1df2d3 mUid=10192 mPid=7154 mSelfReportedDisplayId=0} mCurSeq=14
+  mCurPerceptible=true
+  mCurFocusedWindow=android.os.BinderProxy@794798d softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION client=ClientState{e1df2d3 mUid=10192 mPid=7154 mSelfReportedDisplayId=0}
+  mCurId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME mHaveConnection=true mBoundToMethod=true mVisibleBound=true
+  mCurToken=android.os.Binder@95f011d
+  mCurTokenDisplayId=0
+  mCurHostInputToken=null
+  mCurIntent=Intent { act=android.view.InputMethod cmp=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME (has extras) }
+  mCurMethod=com.android.server.inputmethod.IInputMethodInvoker@c2a470
+  mEnabledSession=SessionState{uid 10192 pid 7154 method a242c22 session b2556b3 channel ClientState{e1df2d3 mUid=10192 mPid=7154 mSelfReportedDisplayId=0} (server)}
+ mRequestedShowExplicitly=true mShowForced=false
+  mImeHiddenByDisplayPolicy=false
+  mInputShown=true
+  mInFullscreenMode=false
+  mSystemReady=true mInteractive=true
+  mSettingsObserver=SettingsObserver{mUserId=0 mRegistered=true mLastEnabled=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME:com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService:io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME}
+  mStylusIds=[4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  mSwitchingController:
+    mSwitchingAwareRotationList:
+      rank=1 item=ImeSubtypeListItem{mImeName=Gboard mSubtypeName=null mSubtypeId=0 mIsSystemLocale=false mIsSystemLanguage=false}
+      rank=0 item=ImeSubtypeListItem{mImeName=KBoard debug mSubtypeName= mSubtypeId=0 mIsSystemLocale=false mIsSystemLanguage=false}
+    mSwitchingUnawareRotationList:
+  mSettings:
+    mCurrentUserId=0
+    mCurrentProfileIds=[0]
+    mCopyOnWrite=false
+    mEnabledInputMethodsStrCache=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME:com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService:io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME
+  mStartInputHistory:
+   StartInput #0:
+    time=2026-11-13 07:32:10.671 (timestamp=36137) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@7abf68f [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@5efc1fb [com.android.settings] targetUserId=0 targetDisplayId=0 clientBindSeq=1
+    softInputMode=STATE_UNSPECIFIED|ADJUST_PAN
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #1:
+    time=2026-11-13 07:32:19.292 (timestamp=44759) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@7abf68f [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@fcb6e01 [com.google.android.apps.nexuslauncher] targetUserId=0 targetDisplayId=0 clientBindSeq=2
+    softInputMode=STATE_UNSPECIFIED|ADJUST_NOTHING
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #2:
+    time=2026-11-13 07:32:22.846 (timestamp=48313) reason=WINDOW_FOCUS_GAIN restarting=false
+    imeToken=android.os.Binder@7abf68f [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@fcb6e01 [com.google.android.apps.nexuslauncher] targetUserId=0 targetDisplayId=0 clientBindSeq=3
+    softInputMode=STATE_UNSPECIFIED|ADJUST_NOTHING
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #3:
+    time=2026-11-13 07:33:05.186 (timestamp=90652) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@7abf68f [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@d24a9e0 [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=4
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #4:
+    time=2026-11-13 07:33:36.312 (timestamp=121779) reason=WINDOW_FOCUS_GAIN restarting=false
+    imeToken=android.os.Binder@7abf68f [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@6989c27 [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=5
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #5:
+    time=2026-11-13 07:33:40.937 (timestamp=126403) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@7abf68f [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@be639b [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=6
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #6:
+    time=2026-11-13 07:33:58.827 (timestamp=144294) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@68a1a8b [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@be639b [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=8
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #7:
+    time=2026-11-13 07:34:04.150 (timestamp=149617) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@a9116b1 [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@31c99eb [com.google.android.apps.nexuslauncher] targetUserId=0 targetDisplayId=0 clientBindSeq=9
+    softInputMode=STATE_UNSPECIFIED|ADJUST_NOTHING
+    inputType=0x0 imeOptions=0x0 fieldId=0x0 fieldName=null actionId=0 actionLabel=null
+   StartInput #8:
+    time=2026-11-13 07:34:06.015 (timestamp=151482) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@a9116b1 [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@a2b977 [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=10
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #9:
+    time=2026-11-13 07:34:34.080 (timestamp=179547) reason=WINDOW_FOCUS_GAIN restarting=false
+    imeToken=android.os.Binder@a9116b1 [com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@749b45c [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=11
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #10:
+    time=2026-11-13 07:34:37.945 (timestamp=183411) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@95f011d [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@f50efef [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=12
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+   StartInput #11:
+    time=2026-11-13 07:35:06.380 (timestamp=211847) reason=SESSION_CREATED_BY_IME restarting=false
+    imeToken=android.os.Binder@95f011d [io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME] imeUserId=0 imeDisplayId=0
+    targetWin=android.os.BinderProxy@794798d [io.github.kboard.tr.debug] targetUserId=0 targetDisplayId=0 clientBindSeq=14
+    softInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+    inputType=0x2c001 imeOptions=0x40000006 fieldId=0xffffffff fieldName=null actionId=0 actionLabel=null
+  mSoftInputShowHideHistory:
+   SoftInputShowHideHistory #3:
+    time=2026-11-13 07:33:36.313 (timestamp=121779)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{bb0c64f mUid=10192 mPid=5619 mSelfReportedDisplayId=0}
+    focusedWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=79ec499 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{983c1c5 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x58a34d4
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #4:
+    time=2026-11-13 07:33:36.313 (timestamp=121780)
+    reason=SHOW_RESTORE_IME_VISIBILITY inFullscreenMode=false
+    requestClient=ClientState{bb0c64f mUid=10192 mPid=5619 mSelfReportedDisplayId=0}
+    focusedWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=79ec499 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{983c1c5 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x58a34d4
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #5:
+    time=2026-11-13 07:33:37.141 (timestamp=122608)
+    reason=HIDE_REMOVE_CLIENT inFullscreenMode=false
+    requestClient=ClientState{bb0c64f mUid=10192 mPid=5619 mSelfReportedDisplayId=0}
+    focusedWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{983c1c5 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x58a34d4
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #6:
+    time=2026-11-13 07:33:40.932 (timestamp=126398)
+    reason=SHOW_STATE_ALWAYS_VISIBLE inFullscreenMode=false
+    requestClient=ClientState{f4a2d80 mUid=10192 mPid=6314 mSelfReportedDisplayId=0}
+    focusedWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=null
+    imeTargetNameFromWm=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{983c1c5 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x58a34d4
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #7:
+    time=2026-11-13 07:33:40.937 (timestamp=126404)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{f4a2d80 mUid=10192 mPid=6314 mSelfReportedDisplayId=0}
+    focusedWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=null
+    imeTargetNameFromWm=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{983c1c5 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x58a34d4
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #8:
+    time=2026-11-13 07:33:44.606 (timestamp=130073)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{f4a2d80 mUid=10192 mPid=6314 mSelfReportedDisplayId=0}
+    focusedWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{5f2dde2 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x5f3af42
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #9:
+    time=2026-11-13 07:33:58.830 (timestamp=144297)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{f4a2d80 mUid=10192 mPid=6314 mSelfReportedDisplayId=0}
+    focusedWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{5f2dde2 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x5f3af42
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #10:
+    time=2026-11-13 07:34:05.990 (timestamp=151456)
+    reason=SHOW_STATE_ALWAYS_VISIBLE inFullscreenMode=false
+    requestClient=ClientState{c70f36b mUid=10192 mPid=6597 mSelfReportedDisplayId=0}
+    focusedWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=d55348 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity
+    imeTargetNameFromWm=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{5f2dde2 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x5f3af42
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+   SoftInputShowHideHistory #11:
+    time=2026-11-13 07:34:06.041 (timestamp=151507)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{c70f36b mUid=10192 mPid=6597 mSelfReportedDisplayId=0}
+    focusedWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=d55348 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity
+    imeTargetNameFromWm=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{5f2dde2 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x5f3af42
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+   SoftInputShowHideHistory #12:
+    time=2026-11-13 07:34:09.939 (timestamp=155406)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{c70f36b mUid=10192 mPid=6597 mSelfReportedDisplayId=0}
+    focusedWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{d53b80b u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x91b0d83
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+   SoftInputShowHideHistory #13:
+    time=2026-11-13 07:34:34.081 (timestamp=179547)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{c70f36b mUid=10192 mPid=6597 mSelfReportedDisplayId=0}
+    focusedWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{d53b80b u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x91b0d83
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #14:
+    time=2026-11-13 07:34:34.081 (timestamp=179547)
+    reason=SHOW_RESTORE_IME_VISIBILITY inFullscreenMode=false
+    requestClient=ClientState{c70f36b mUid=10192 mPid=6597 mSelfReportedDisplayId=0}
+    focusedWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{d53b80b u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x91b0d83
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #15:
+    time=2026-11-13 07:34:35.350 (timestamp=180816)
+    reason=HIDE_REMOVE_CLIENT inFullscreenMode=false
+    requestClient=ClientState{c70f36b mUid=10192 mPid=6597 mSelfReportedDisplayId=0}
+    focusedWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{d53b80b u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x91b0d83
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #16:
+    time=2026-11-13 07:34:37.945 (timestamp=183412)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{5d72ef2 mUid=10192 mPid=6927 mSelfReportedDisplayId=0}
+    focusedWindowName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=null
+    imeTargetNameFromWm=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{d53b80b u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x91b0d83
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #17:
+    time=2026-11-13 07:34:41.494 (timestamp=186961)
+    reason=SHOW_SOFT_INPUT inFullscreenMode=false
+    requestClient=ClientState{5d72ef2 mUid=10192 mPid=6927 mSelfReportedDisplayId=0}
+    focusedWindowName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{bf76355 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x5cfbda1
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE
+   SoftInputShowHideHistory #18:
+    time=2026-11-13 07:35:06.381 (timestamp=211848)
+    reason=ATTACH_NEW_INPUT inFullscreenMode=false
+    requestClient=ClientState{e1df2d3 mUid=10192 mPid=7154 mSelfReportedDisplayId=0}
+    focusedWindowName=74ee742 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    requestWindowName=74ee742 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeControlTargetName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeTargetNameFromWm=74ee742 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    imeSurfaceParentName=Surface(name=ActivityRecord{bf76355 u0 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity)/@0x5cfbda1
+    editorInfo:  inputType=180225 privateImeOptions=null fieldId (viewId)=-1
+    focusedWindowSoftInputMode=STATE_ALWAYS_VISIBLE|ADJUST_RESIZE|IS_FORWARD_NAVIGATION
+  mImeTrackerService#History:
+   ImeTrackerService#History.mLiveEntries: 0 elements
+   ImeTrackerService#History.mEntries: 45 elements
+    #0 TYPE_HIDE - STATUS_CANCEL - com.android.settings:8bc26b66 (1ms):
+      startTime=2026-11-13 07:32:09.720 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #1 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:24f4b199 (2ms):
+      startTime=2026-11-13 07:32:14.745 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #2 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:ae0c48f5 (3ms):
+      startTime=2026-11-13 07:32:16.454 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #3 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:b198fd30 (1ms):
+      startTime=2026-11-13 07:32:16.603 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #4 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:8a1a34a5 (0ms):
+      startTime=2026-11-13 07:32:17.321 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #5 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:165a0d04 (0ms):
+      startTime=2026-11-13 07:32:19.289 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #6 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:1d49ad31 (0ms):
+      startTime=2026-11-13 07:32:22.846 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_SAME_WINDOW_FOCUSED_WITHOUT_EDITOR PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #7 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:2ae00764 (0ms):
+      startTime=2026-11-13 07:33:03.149 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_REMOVE_CLIENT PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #10 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:6b613f78 (1ms):
+      startTime=2026-11-13 07:33:05.298 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #11 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:1b27c00a (3ms):
+      startTime=2026-11-13 07:33:05.660 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #8 TYPE_SHOW - STATUS_FAIL - io.github.kboard.tr.debug:f04b9caa (819ms):
+      startTime=2026-11-13 07:33:05.179 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_STATE_ALWAYS_VISIBLE PHASE_WM_SHOW_IME_RUNNER
+      requestWindowName=79ec499 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #9 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:d2741304 (2698ms):
+      startTime=2026-11-13 07:33:05.189 ORIGIN_SERVER_START_INPUT
+      reason=ATTACH_NEW_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=79ec499 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #12 TYPE_SHOW - STATUS_CANCEL - io.github.kboard.tr.debug:d7825a79 (40ms):
+      startTime=2026-11-13 07:33:09.234 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=79ec499 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #13 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:2f35aa75 (6ms):
+      startTime=2026-11-13 07:33:21.379 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #14 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:ae7e4064 (0ms):
+      startTime=2026-11-13 07:33:35.821 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #17 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:a2077d42 (1ms):
+      startTime=2026-11-13 07:33:36.398 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #16 TYPE_SHOW - STATUS_CANCEL - io.github.kboard.tr.debug:54bed455 (338ms):
+      startTime=2026-11-13 07:33:36.313 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_RESTORE_IME_VISIBILITY PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #15 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:176675df (400ms):
+      startTime=2026-11-13 07:33:36.312 ORIGIN_SERVER_START_INPUT
+      reason=ATTACH_NEW_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #18 TYPE_HIDE - STATUS_FAIL - io.github.kboard.tr.debug:3430d6c (107ms):
+      startTime=2026-11-13 07:33:37.135 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_REMOVE_CLIENT PHASE_SERVER_APPLY_IME_VISIBILITY
+      requestWindowName=bb88ed4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #19 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:de8d74cf (1ms):
+      startTime=2026-11-13 07:33:40.783 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #20 TYPE_SHOW - STATUS_FAIL - io.github.kboard.tr.debug:e703b452 (168ms):
+      startTime=2026-11-13 07:33:40.930 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_STATE_ALWAYS_VISIBLE PHASE_WM_SHOW_IME_RUNNER
+      requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #21 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:f2c2aaf7 (570ms):
+      startTime=2026-11-13 07:33:40.937 ORIGIN_SERVER_START_INPUT
+      reason=ATTACH_NEW_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #22 TYPE_SHOW - STATUS_CANCEL - io.github.kboard.tr.debug:fc45d23c (22ms):
+      startTime=2026-11-13 07:33:44.606 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #23 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:f6793c87 (1820ms):
+      startTime=2026-11-13 07:33:58.828 ORIGIN_SERVER_START_INPUT
+      reason=ATTACH_NEW_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=84bd338 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #24 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:23683536 (0ms):
+      startTime=2026-11-13 07:34:02.005 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #25 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:f4a3aad (0ms):
+      startTime=2026-11-13 07:34:02.790 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #26 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:c5449327 (0ms):
+      startTime=2026-11-13 07:34:03.622 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #28 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:61c9b12a (1ms):
+      startTime=2026-11-13 07:34:05.934 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #27 TYPE_SHOW - STATUS_FAIL - io.github.kboard.tr.debug:53f48b0c (338ms):
+      startTime=2026-11-13 07:34:05.915 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_STATE_ALWAYS_VISIBLE PHASE_WM_SHOW_IME_RUNNER
+      requestWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #29 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:4cdf88fe (1627ms):
+      startTime=2026-11-13 07:34:06.015 ORIGIN_SERVER_START_INPUT
+      reason=ATTACH_NEW_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #30 TYPE_SHOW - STATUS_CANCEL - io.github.kboard.tr.debug:f6723831 (47ms):
+      startTime=2026-11-13 07:34:09.938 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=2d569e4 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #31 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:5a8e0663 (0ms):
+      startTime=2026-11-13 07:34:33.593 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #34 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:964b3321 (1ms):
+      startTime=2026-11-13 07:34:34.116 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #32 TYPE_SHOW - STATUS_FAIL - io.github.kboard.tr.debug:2bdb18b1 (54ms):
+      startTime=2026-11-13 07:34:34.080 ORIGIN_SERVER_START_INPUT
+      reason=ATTACH_NEW_INPUT PHASE_WM_SHOW_IME_RUNNER
+      requestWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #33 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:73ad0aff (119ms):
+      startTime=2026-11-13 07:34:34.081 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_RESTORE_IME_VISIBILITY PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #35 TYPE_HIDE - STATUS_FAIL - io.github.kboard.tr.debug:1a4dadf9 (118ms):
+      startTime=2026-11-13 07:34:35.347 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_REMOVE_CLIENT PHASE_SERVER_APPLY_IME_VISIBILITY
+      requestWindowName=a7e0365 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #36 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:14e4fe40 (2ms):
+      startTime=2026-11-13 07:34:37.524 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #37 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:6137ea00 (1712ms):
+      startTime=2026-11-13 07:34:37.554 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_STATE_ALWAYS_VISIBLE PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #38 TYPE_SHOW - STATUS_CANCEL - io.github.kboard.tr.debug:358d089 (10ms):
+      startTime=2026-11-13 07:34:41.493 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_APPLY_ANIMATION
+      requestWindowName=6b2afc io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+    #39 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:370b16 (3ms):
+      startTime=2026-11-13 07:34:59.687 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #40 TYPE_HIDE - STATUS_FAIL - com.google.android.apps.nexuslauncher:74cc50d3 (0ms):
+      startTime=2026-11-13 07:35:00.067 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_CLIENT_VIEW_SERVED
+      requestWindowName=not set
+    #41 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:3cedd9c5 (0ms):
+      startTime=2026-11-13 07:35:00.937 ORIGIN_SERVER_HIDE_INPUT
+      reason=HIDE_UNSPECIFIED_WINDOW PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #42 TYPE_HIDE - STATUS_CANCEL - com.google.android.apps.nexuslauncher:9e3abc54 (37ms):
+      startTime=2026-11-13 07:35:01.545 ORIGIN_CLIENT_HIDE_SOFT_INPUT
+      reason=HIDE_SOFT_INPUT PHASE_SERVER_SHOULD_HIDE
+      requestWindowName=not set
+    #43 TYPE_SHOW - STATUS_CANCEL - io.github.kboard.tr.debug:cc95b47f (4038ms):
+      startTime=2026-11-13 07:35:02.221 ORIGIN_SERVER_START_INPUT
+      reason=SHOW_STATE_ALWAYS_VISIBLE PHASE_SERVER_WAIT_IME
+      requestWindowName=not set
+    #44 TYPE_SHOW - STATUS_SUCCESS - io.github.kboard.tr.debug:59f1b0bd (1123ms):
+      startTime=2026-11-13 07:35:06.256 ORIGIN_CLIENT_SHOW_SOFT_INPUT
+      reason=SHOW_SOFT_INPUT PHASE_CLIENT_ANIMATION_FINISHED_SHOW
+      requestWindowName=74ee742 io.github.kboard.tr.debug/helium314.keyboard.kboard.TestFieldActivity
+ 
+Input method client state for android.view.inputmethod.InputMethodManager@9d2e6ce:
+  mFallbackInputConnection=RemoteInputConnectionImpl{connection=android.view.inputmethod.BaseInputConnection@27339ef finished=false mParentInputMethodManager.isActive()=true mServedView=null}
+  mActive=true mRestartOnNextWindowFocus=false mBindSequence=14 mCurImeId=io.github.kboard.tr.debug/helium314.keyboard.latin.LatinIME
+  mFullscreenMode=false
+  mCurMethod=android.inputmethodservice.IInputMethodSessionWrapper@490acfc
+  mCurRootView=android.view.ViewRootImpl@d369f85
+  mServedView=android.widget.EditText{97bee8c VFED..CL. .F...... 42,126-1038,376 aid=1073741824}
+  mNextServedView=android.widget.EditText{97bee8c VFED..CL. .F...... 42,126-1038,376 aid=1073741824}
+  mServedConnecting=false
+  mCurrentEditorInfo:
+    inputType=0x2c001 imeOptions=0x40000006 privateImeOptions=null
+    actionLabel=null actionId=0
+    initialSelStart=0 initialSelEnd=0 initialToolType=0 initialCapsMode=0x2000
+    hintText=Mesaj yaz label=null
+    packageName=io.github.kboard.tr.debug autofillId=1073741824 fieldId=-1 fieldName=null
+    hintLocales=null
+    supportedHandwritingGestureTypes=SELECT|SELECT_RANGE|INSERT|DELETE|DELETE_RANGE|REMOVE_SPACE|JOIN_OR_SPLIT
+    supportedHandwritingGesturePreviewTypes=SELECT|SELECT_RANGE|DELETE|DELETE_RANGE
+    contentMimeTypes=null
+  mServedInputConnection=RemoteInputConnectionImpl{connection=com.android.internal.inputmethod.EditableInputConnection@abaa1da finished=false mParentInputMethodManager.isActive()=true mServedView=android.widget.EditText{97bee8c VFED..CL. .F...... 42,126-1038,376 aid=1073741824}}
+  mServedInputConnectionHandler=null
+  mCompletions=null
+  mCursorRect=Rect(0, 0 - 0, 0)
+  mCursorSelStart=8 mCursorSelEnd=8 mCursorCandStart=0 mCursorCandEnd=8
+ 
+Input method service state for helium314.keyboard.latin.LatinIME@d26d449:
+  mViewsCreated=true
+  mDecorViewVisible=true mDecorViewWasVisible=true mWindowVisible=true mInShowWindow=false
+  Configuration={1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h842dp 420dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 128 - 1080, 2337) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.3 s.969 fontWeightAdjustment=0}
+  mToken=android.os.BinderProxy@d603368
+  mInputBinding=InputBinding{RemoteInputConnectionImpl{connection=android.view.inputmethod.BaseInputConnection@27339ef finished=false mParentInputMethodManager.isActive()=true mServedView=null} / uid 10192 / pid 7154}
+  mInputConnection=RemoteInputConnection{idHash=#fb99ce8}
+  mStartedInputConnection=RemoteInputConnection{idHash=#346af01}
+  mInputStarted=true mInputViewStarted=true mCandidatesViewStarted=false
+  mInputEditorInfo:
+    inputType=0x2c001 imeOptions=0x40000006 privateImeOptions=null
+    actionLabel=null actionId=0
+    initialSelStart=0 initialSelEnd=0 initialToolType=0 initialCapsMode=0x2000
+    hintText=Mesaj yaz label=null
+    packageName=io.github.kboard.tr.debug autofillId=1073741824 fieldId=-1 fieldName=null
+    hintLocales=null
+    supportedHandwritingGestureTypes=SELECT|SELECT_RANGE|INSERT|DELETE|DELETE_RANGE|REMOVE_SPACE|JOIN_OR_SPLIT
+    supportedHandwritingGesturePreviewTypes=SELECT|SELECT_RANGE|DELETE|DELETE_RANGE
+    contentMimeTypes=null
+  mShowInputRequested=true mLastShowInputRequested=true mShowInputFlags=0x1
+  mCandidatesVisibility=4 mFullscreenApplied=true mIsFullscreen=false mExtractViewHidden=false
+  mExtractedText: null
+  mExtractedToken=0
+  mIsInputViewShown=true mStatusIcon=0
+Last computed insets:
+  contentTopInsets=1274 visibleTopInsets=1274 touchableInsets=3 touchableRegion=SkRegion((0,1274,1080,2246))
+ mSettingsObserver=SettingsObserver{mShowImeWithHardKeyboard=2}
+ mNavigationBarController={mImeDrawsImeNavBar=true mNavigationBarFrame=android.inputmethodservice.navigationbar.NavigationBarFrame{a3101a6 V.E...... ........ 0,2146-1080,2272} mShouldShowImeSwitcherWhenImeIsShown=true mAppearance=0x10 mDarkIntensity=1.0 mDrawLegacyNavigationBarBackground=false}
