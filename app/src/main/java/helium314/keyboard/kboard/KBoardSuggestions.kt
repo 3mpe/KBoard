@@ -362,6 +362,18 @@ object KBoardSuggestions {
     private fun isUnflaggedKBoard(info: SuggestedWordInfo): Boolean =
         info.sourceDict.mDictType == TYPE_KBOARD && !info.isAppropriateForAutoCorrection
 
+    /**
+     * `Suggest.getSuggestedWordsForNonBatchInput` içindeki `// KBOARD:` satırları. HeliBoard geçerli bir
+     * kelimeyi düzeltip düzeltmeyeceğine karar verirken ilk öneriyi ve yazılan kelimeyi o bağlamın sonraki
+     * kelime önerilerinde arar; yazılan orada yoksa "bu bağlamda bilinmiyor" sayıp düzeltir. Motorun
+     * tahminleri (dil modeli, kişisel model) bu aramada kanıt sayılmaz: tahmin listesinde olmamak kelimenin
+     * yanlış olduğunu göstermez ("killitledin mi" → "mı", #59). Motorun kendi bağlamlı kararı
+     * [autoCorrection] ile ayrıca verilir. HeliBoard'un kendi sözlükleri ve kullanıcı geçmişi aynen sayılır.
+     */
+    @JvmStatic
+    fun contextEvidence(nextWordSuggestions: Iterable<SuggestedWordInfo>, word: String): SuggestedWordInfo? =
+        nextWordSuggestions.firstOrNull { it.word == word && it.sourceDict.mDictType != TYPE_KBOARD }
+
     private val calls = AtomicLong()
 
     /** Çağrı sayısı; adaptörün hatta bağlı olduğunu testlerde/hata ayıklamada doğrulamak için. */

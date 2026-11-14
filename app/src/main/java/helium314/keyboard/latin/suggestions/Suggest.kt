@@ -123,8 +123,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             {
                 val first = suggestionsContainer.firstOrNull() ?: suggestionResults.first()
                 val suggestions = getNextWordSuggestions(ngramContext, keyboard, inputStyleIfNotPrediction, settingsValuesForSuggestion)
-                val suggestionForFirstInContainer = suggestions.firstOrNull { it.word == first.word }
-                val suggestionForTypedWord = suggestions.firstOrNull { it.word == capitalizedTypedWord }
+                // KBOARD: motorun sonraki kelime tahminleri düzeltme kanıtı sayılmaz (#59)
+                val suggestionForFirstInContainer = KBoardSuggestions.contextEvidence(suggestions, first.word)
+                val suggestionForTypedWord = KBoardSuggestions.contextEvidence(suggestions, capitalizedTypedWord)
                 suggestionForFirstInContainer to suggestionForTypedWord
             },
             isCorrectionEnabled,

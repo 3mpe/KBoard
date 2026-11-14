@@ -523,4 +523,25 @@ class KBoardSuggestionsTest {
         KBoardSuggestions.setPersonalEnabled(false, m)
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("dinleniyorum", mutableListOf(native("Dinleniyorum")), tr, true, heli))
     }
+
+    // #59: "Kapıyı killitledin mi" → motorun sonraki kelime tahmininde "mı" var, "mi" yok. HeliBoard bunu
+    // "mi bu bağlamda bilinmiyor" diye okuyup geçerli kelimeyi düzeltiyordu.
+    @Test
+    fun `motorun sonraki kelime tahmini düzeltme kanıtı sayılmaz`() {
+        val kboardMi = info("mı")
+        // İlk öneri de yazılan da yalnız motor tahminindeyse ikisi için de kanıt yok
+        assertEquals(null, KBoardSuggestions.contextEvidence(listOf(kboardMi, info("bir")), "mı"))
+        assertEquals(null, KBoardSuggestions.contextEvidence(listOf(info("mi")), "mi"))
+        // Listede olmayan kelime
+        assertEquals(null, KBoardSuggestions.contextEvidence(listOf(native("mı")), "mi"))
+    }
+
+    @Test
+    fun `HeliBoard'un kendi sonraki kelime önerisi kanıt sayılır`() {
+        val heliMi = native("mı")
+        assertEquals(heliMi, KBoardSuggestions.contextEvidence(listOf(heliMi), "mı"))
+        // Aynı kelime iki kaynaktan da geldiyse motorunki atlanır, HeliBoard'unki bulunur (sıra önemsiz)
+        assertEquals(heliMi, KBoardSuggestions.contextEvidence(listOf(info("mı"), heliMi), "mı"))
+        assertEquals(heliMi, KBoardSuggestions.contextEvidence(listOf(heliMi, info("mı")), "mı"))
+    }
 }
