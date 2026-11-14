@@ -23,7 +23,7 @@ on:
       - .github/ci/emu-lib.sh
 
 concurrency:
-  group: cihaz-olcum-${{ github.ref }}
+  group: cihaz-olcum-${{ github.ref }}-${{ inputs.gorev || 'yoklama' }}
   cancel-in-progress: true
 
 permissions:
