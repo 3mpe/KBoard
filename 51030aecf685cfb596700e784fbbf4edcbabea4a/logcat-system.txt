@@ -1,0 +1,3 @@
+--------- beginning of system
+11-14 12:08:40.795   545   914 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
+11-14 12:08:47.061   545   900 W ActivityManager: Unable to start service Intent { cmp=com.google.android.apps.tachyon/.clientapi.ClientApiService } U=0: not found
