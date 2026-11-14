@@ -18,7 +18,8 @@ modelde bağlam olarak kalır ama hiçbir zaman aday olarak önerilmez (bayrak 1
 
 Biçim 3 (vint = işaretsiz LEB128; q = u8 nicemlenmiş log10 olasılık, log10 P = -q · 8 / 255):
   "KBNG" u32be sürüm(3)
-  vint V; V kez: vint+utf8 kelime (küçük harf, sıralı) u8 bayrak (1 = önerme, 2 = gösterim farklı)
+  vint V; V kez: vint+utf8 kelime (küçük harf, sıralı) u8 bayrak (1 = önerme, 2 = gösterim farklı,
+                 4 = cümle ortasında hiç görülmedi: gösterim biçimi kanıtsız, küçük harf varsayılan)
                  q P_uni [bayrak 2 ise: vint+utf8 gösterim]
   vint bos_id                      (cümle başı belirteci "<s>")
   vint topUniN; topUniN kez vint id (P_uni'ye göre azalan; bağlam bilinmezken öneri)
@@ -254,7 +255,7 @@ def main() -> int:
     out += varint(len(words))
     for w in words:
         d = disp(w)
-        flags = (1 if w in blocked else 0) | (2 if d != w else 0)
+        flags = (1 if w in blocked else 0) | (2 if d != w else 0) | (4 if w != BOS and not surface.get(w) else 0)
         out += utf(w) + bytes([flags, q(p_uni[w])])
         if d != w:
             out += utf(d)

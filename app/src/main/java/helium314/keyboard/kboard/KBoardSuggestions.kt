@@ -286,7 +286,13 @@ object KBoardSuggestions {
         if (!correctionAllowed) return base
         val words = ngramContext?.let { contextWords(it) } ?: emptyList()
         val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
-        return when (val ac = autoCorrection(typedWord, locale, words, sentenceStart)) {
+        val ac = autoCorrection(typedWord, locale, words, sentenceStart)
+        // Yazılan kelime kullanıcı metnidir: sürüm derlemesinde hiç yazılmaz, debug derlemesinde de
+        // varsayılan olarak KAPALIDIR. Yalnız `adb shell setprop log.tag.KBoardSuggestions DEBUG`
+        // verilmişse (emülatör teşhisi) günlüğe düşer.
+        if (helium314.keyboard.latin.BuildConfig.DEBUG && Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG,
+            "düzeltme: yazılan=$typedWord bağlam=$words başlangıç=$sentenceStart temel=$base motor=$ac ilk=${suggestions.take(3).map { it.word }}")
+        return when (ac) {
             // Motorun düzeltmeye uygun işaretlemediği adaylar (ayrık bağlaç "dedim ki", yazım hatası, ek
             // zinciri, tamamlama) yalnız öneridir. HeliBoard ilk öneriyi bugün bu işarete bakarak düzeltir
             // (AutoCorrectionUtils); başka bir yoldan düzeltmeye karar verse de ilk öneri böyle bir adaysa
@@ -294,14 +300,22 @@ object KBoardSuggestions {
             AutoCorrection.NoOpinion -> if (base.second && suggestions.firstOrNull()?.let { isUnflaggedKBoard(it) } == true) {
                 if (helium314.keyboard.latin.BuildConfig.DEBUG) Log.w(TAG, "işaretsiz KBoard önerisi otomatik düzeltmeye gidiyordu, engellendi")
                 base.first to false
+            } else if (base.second && typedWordSourceType !in LIST_EXEMPT_SOURCES &&
+                suggestions.firstOrNull()?.let { isCaseOnlyCapitalization(typedWord, it.word) } == true &&
+                hasLowercaseForm(typedWord)) {
+                base.first to false
             } else base
             AutoCorrection.Keep -> base.first to false
             // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.
             is AutoCorrection.Replace -> if (typedWordSourceType in (if (ac.listRule) LIST_EXEMPT_SOURCES else USER_SOURCES)) base else {
-                val word = ac.word + "'".repeat(trailingQuotes)
+                // Aksan düzeltmesi sözlüğün yalnız büyük harfli girdisini getirebilir ("vazgectim" →
+                // "Vazgeçtim"); küçük harfle yazılmış ve korpusta cümle ortasında küçük yazılan kelime küçük kalır.
+                val acWord = if (typedWord.none { it.isUpperCase() } && ac.word != TurkishText.lower(ac.word) &&
+                    hasLowercaseForm(TurkishText.lower(ac.word))) TurkishText.lower(ac.word) else ac.word
+                val word = acWord + "'".repeat(trailingQuotes)
                 val target = TurkishText.lower(word)
                 val i = suggestions.indexOfFirst { TurkishText.lower(it.word) == target }
-                val info = if (i >= 0) suggestions.removeAt(i) else SuggestedWordInfo(
+                val info = if (i >= 0) suggestions.removeAt(i).let { if (it.word == word) it else it.withWord(word) } else SuggestedWordInfo(
                     word, "", SCORE_SCALE, SuggestedWordInfo.KIND_CORRECTION or
                         SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION,
                     dictionaries.getOrPut(locale) { KBoardDictionary(locale) },
@@ -409,6 +423,30 @@ object KBoardSuggestions {
         }
     }
 
+    /**
+     * [typed] küçük harfli ve [top] ondan yalnız harf büyüklüğüyle ayrılıyor mu ("yoruldum" → "Yoruldum").
+     * HeliBoard ana sözlükte yalnız büyük harfle duran bir kelimeye (sözlükte "Yoruldum" var, "yoruldum"
+     * yok) küçük harfle yazılanı büyük harfe düzeltir; özel adda doğru, sıradan kelimede yanlıştır.
+     */
+    internal fun isCaseOnlyCapitalization(typed: String, top: String): Boolean =
+        typed.isNotEmpty() && typed == TurkishText.lower(typed) && top != typed && TurkishText.lower(top) == typed
+
+    /**
+     * Dil modelinin bu kelime için kendi yazılışı küçük harfli mi (ya da kişisel modelde kullanıcının en az
+     * iki kez yazdığı biçim küçük harfli mi)? Yalnız varlığa bakılmaz: model "ankara"yı "Ankara" diye yazar,
+     * o zaman büyük harf düzeltmesi yerinde kalır. Korpusta yalnız cümle başında geçen kelimenin ("izmir",
+     * "japonya") küçük gösterimi kanıt sayılmaz, düzeltme yine yerinde kalır. Kelime sözlükte yalnız büyük
+     * harfle olsa da model onu cümle ortasında küçük harfle biliyorsa ("yoruldum", "neredesin") yazıldığı
+     * gibi bırakılır.
+     */
+    internal fun hasLowercaseForm(word: String): Boolean {
+        val lower = TurkishText.lower(word)
+        if (ngram?.lowercaseAttested(lower) == true) return true
+        if (!personalEnabled) return false
+        val w = personalModel.word(word) ?: return false
+        return w.uses >= 2 && w.display == lower
+    }
+
     /** NgramContext'teki önceki kelimeler, eskiden yeniye; cümle başında durur. */
     internal fun contextWords(ngramContext: NgramContext): List<String> {
         val words = ArrayList<String>()
@@ -427,6 +465,10 @@ object KBoardSuggestions {
      */
     internal fun startsSentence(ngramContext: NgramContext, count: Int): Boolean =
         ngramContext.isNthPrevWordBeginningOfSentence(count + 1)
+
+    private fun SuggestedWordInfo.withWord(w: String) = SuggestedWordInfo(
+        w, prevWordsContext, score, kindAndFlags, sourceDict, indexOfTouchPointOfSecondWord, autoCommitFirstWordConfidence,
+    )
 
     private fun Candidate.toWordInfo(query: Query, dict: Dictionary, appScore: Int): SuggestedWordInfo {
         var kind = when {

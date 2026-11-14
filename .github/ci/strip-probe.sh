@@ -96,5 +96,24 @@ if [ "$rc" != 0 ]; then
   adb shell cat /sdcard/d.xml 2>/dev/null | tr '>' '\n' | grep -oE '(package|type|text)="[^"]*"' | sort | uniq -c | head -40
   adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId" | head -3
 fi
+# #9 kanıtı: izler boş değil mi (olay sayısı, önerisi dolu olayların payı), koşu başına
+python3 - "$out/determinizm" <<'PY' | tee -a "$out/determinizm/drive.log"
+import json, sys
+from pathlib import Path
+def events(o):
+    if isinstance(o, dict):
+        if "suggestions" in o:
+            yield o
+        for v in o.values():
+            yield from events(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from events(v)
+for f in sorted(Path(sys.argv[1]).glob("kboard*.jsonl")):
+    ev = [e for l in f.read_text("utf-8").splitlines() if l.strip() for e in events(json.loads(l))]
+    full = sum(1 for e in ev if e["suggestions"])
+    ac = sum(1 for e in ev if e.get("autocorrect"))
+    print(f"iz özeti {f.name}: {len(ev)} olay, önerisi dolu {full} (%{100 * full / max(1, len(ev)):.0f}), otomatik düzeltmeli {ac}")
+PY
 echo "çıkış: $rc" | tee -a "$out/determinizm/drive.log"
 exit $rc

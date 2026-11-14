@@ -71,6 +71,14 @@ class NgramSource(
     /** Kelimenin modeldeki gösterim biçimi ("ankara" → "Ankara"); yoksa null. */
     fun display(word: String): String? = model.id(word).let { if (it >= 0 && model.suggestable(it)) model.display(it) else null }
 
+    /**
+     * Korpus kelimeyi cümle ortasında en sık küçük harfle mi yazıyor? Yalnız cümle başında görülen
+     * kelimenin ("İzmir'e gittik") küçük gösterimi kanıt değildir; false döner.
+     */
+    fun lowercaseAttested(word: String): Boolean = model.id(word).let {
+        it >= 0 && model.suggestable(it) && model.seenMidSentence(it) && model.display(it) == model.word(it)
+    }
+
     /** log10 P(w | sorgunun bağlamı), cümle başı bilgisiyle. Kelime modelde yoksa ya da önerilemezse null. */
     fun logProb(word: String, query: Query): Float? {
         val id = model.id(word)

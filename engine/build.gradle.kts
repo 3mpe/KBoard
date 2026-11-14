@@ -83,16 +83,18 @@ val buildNgramModel by tasks.registering(Exec::class) {
     // Yazım kuralları seti de (kural PR A)
     val ruleSet = file("../eval/testset/kural-v0.jsonl")
     val splitSet = file("../eval/testset/dedaki-v0.jsonl")
+    // Büyük harf ölçümünün doğal örneklemi (b-3): seçilen cümleler eğitimden çıkar
+    val caseHeld = file("../data/buyuk-harf-dogal-ayrilan.jsonl")
     val denylist = file("../data/ngram-denylist.txt")
     val out = kboardDir.map { it.file("kboard-tr.kbn") }
-    inputs.files(script, corpus, sohbet, testset, personalSet, ruleSet, splitSet, denylist)
+    inputs.files(script, corpus, sohbet, testset, personalSet, ruleSet, splitSet, caseHeld, denylist)
     outputs.file(out)
     commandLine(
         "python3", script.path, "--corpus", "cv=${corpus.path}",
         // Sohbet korpusu küçük (2 801 mesaj); dev yarısında 3 kat ağırlık en iyisi (2 ve 4 eşit/yakın)
         "--corpus", "sohbet=${sohbet.path}:3", "--exclude-jsonl", testset.path,
         "--exclude-jsonl", personalSet.path, "--exclude-jsonl", ruleSet.path,
-        "--exclude-jsonl", splitSet.path, "--denylist", denylist.path,
+        "--exclude-jsonl", splitSet.path, "--exclude-jsonl", caseHeld.path, "--denylist", denylist.path,
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
     )
 }
