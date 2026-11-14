@@ -1,0 +1,6 @@
+GECTI parola alanında mikrofon yok: iki dokunuştan sonra klavye hâlâ KBoard
+BILGI toast günlüğü: 11-14 07:21:35.591   548  1902 W NotificationService: Toast already killed. pkg=io.github.kboard.tr.debug token=android.os.BinderProxy@c5709ed
+BILGI dokunuştan 0,5 sn sonra Toast penceresi satırı: 5
+GECTI ilk dokunuş yalnız bildirim gösterdi, klavye KBoard kaldı
+GECTI ikinci dokunuş sesle yazma yöntemine geçti: com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService
+GECTI geri tuşundan sonra KBoard'a kendiliğinden dönüldü
