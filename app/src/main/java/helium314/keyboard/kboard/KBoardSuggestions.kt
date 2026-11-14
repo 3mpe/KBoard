@@ -289,7 +289,7 @@ object KBoardSuggestions {
         val ac = autoCorrection(typedWord, locale, words, sentenceStart)
         // Yalnız debug: emülatör teşhisi (yazılan kelime kullanıcı metnidir, sürüm derlemesinde yazılmaz).
         if (helium314.keyboard.latin.BuildConfig.DEBUG) Log.d(TAG,
-            "düzeltme: yazılan=$typedWord başlangıç=$sentenceStart temel=$base motor=$ac ilk=${suggestions.take(3).map { it.word }}")
+            "düzeltme: yazılan=$typedWord bağlam=$words başlangıç=$sentenceStart temel=$base motor=$ac ilk=${suggestions.take(3).map { it.word }}")
         return when (ac) {
             // Motorun düzeltmeye uygun işaretlemediği adaylar (ayrık bağlaç "dedim ki", yazım hatası, ek
             // zinciri, tamamlama) yalnız öneridir. HeliBoard ilk öneriyi bugün bu işarete bakarak düzeltir
@@ -306,10 +306,14 @@ object KBoardSuggestions {
             AutoCorrection.Keep -> base.first to false
             // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.
             is AutoCorrection.Replace -> if (typedWordSourceType in (if (ac.listRule) LIST_EXEMPT_SOURCES else USER_SOURCES)) base else {
-                val word = ac.word + "'".repeat(trailingQuotes)
+                // Aksan düzeltmesi sözlüğün yalnız büyük harfli girdisini getirebilir ("vazgectim" →
+                // "Vazgeçtim"); küçük harfle yazılmış ve korpusta cümle ortasında küçük yazılan kelime küçük kalır.
+                val acWord = if (typedWord.none { it.isUpperCase() } && ac.word != TurkishText.lower(ac.word) &&
+                    hasLowercaseForm(TurkishText.lower(ac.word))) TurkishText.lower(ac.word) else ac.word
+                val word = acWord + "'".repeat(trailingQuotes)
                 val target = TurkishText.lower(word)
                 val i = suggestions.indexOfFirst { TurkishText.lower(it.word) == target }
-                val info = if (i >= 0) suggestions.removeAt(i) else SuggestedWordInfo(
+                val info = if (i >= 0) suggestions.removeAt(i).let { if (it.word == word) it else it.withWord(word) } else SuggestedWordInfo(
                     word, "", SCORE_SCALE, SuggestedWordInfo.KIND_CORRECTION or
                         SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION,
                     dictionaries.getOrPut(locale) { KBoardDictionary(locale) },
@@ -427,13 +431,15 @@ object KBoardSuggestions {
 
     /**
      * Dil modelinin bu kelime için kendi yazılışı küçük harfli mi (ya da kişisel modelde kullanıcının en az
-     * iki kez yazdığı biçim küçük harfli mi)? Yalnız varlığa bakılmaz: model "izmir"i "İzmir" diye yazar,
-     * o zaman büyük harf düzeltmesi yerinde kalır. Kelime sözlükte yalnız büyük harfle olsa da model onu
-     * küçük harfle biliyorsa ("yoruldum", "neredesin") yazıldığı gibi bırakılır.
+     * iki kez yazdığı biçim küçük harfli mi)? Yalnız varlığa bakılmaz: model "ankara"yı "Ankara" diye yazar,
+     * o zaman büyük harf düzeltmesi yerinde kalır. Korpusta yalnız cümle başında geçen kelimenin ("izmir",
+     * "japonya") küçük gösterimi kanıt sayılmaz, düzeltme yine yerinde kalır. Kelime sözlükte yalnız büyük
+     * harfle olsa da model onu cümle ortasında küçük harfle biliyorsa ("yoruldum", "neredesin") yazıldığı
+     * gibi bırakılır.
      */
     internal fun hasLowercaseForm(word: String): Boolean {
         val lower = TurkishText.lower(word)
-        if (ngram?.display(word) == lower) return true
+        if (ngram?.lowercaseAttested(lower) == true) return true
         if (!personalEnabled) return false
         val w = personalModel.word(word) ?: return false
         return w.uses >= 2 && w.display == lower
@@ -457,6 +463,10 @@ object KBoardSuggestions {
      */
     internal fun startsSentence(ngramContext: NgramContext, count: Int): Boolean =
         ngramContext.isNthPrevWordBeginningOfSentence(count + 1)
+
+    private fun SuggestedWordInfo.withWord(w: String) = SuggestedWordInfo(
+        w, prevWordsContext, score, kindAndFlags, sourceDict, indexOfTouchPointOfSecondWord, autoCommitFirstWordConfidence,
+    )
 
     private fun Candidate.toWordInfo(query: Query, dict: Dictionary, appScore: Int): SuggestedWordInfo {
         var kind = when {

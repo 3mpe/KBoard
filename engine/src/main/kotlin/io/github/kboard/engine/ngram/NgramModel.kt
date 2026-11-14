@@ -69,6 +69,9 @@ class NgramModel private constructor(
     /** Kelime öneri olarak gösterilebilir mi (cümle başı belirteci ve yasaklı kelimeler hariç). */
     fun suggestable(id: Int): Boolean = id != bosId && flags[id].toInt() and FLAG_BLOCKED == 0
 
+    /** Kelime eğitim korpusunda cümle ortasında görüldü mü (görülmediyse [display] küçük harf varsayımıdır). */
+    fun seenMidSentence(id: Int): Boolean = flags[id].toInt() and FLAG_NO_MID == 0
+
     fun id(word: String): Int {
         val key = TurkishText.lower(word)
         if (bosId in 0 until size && compareWord(bosId, key) == 0) return bosId
@@ -212,6 +215,7 @@ class NgramModel private constructor(
     companion object {
         private const val FLAG_BLOCKED = 1
         private const val FLAG_DISPLAY = 2
+        private const val FLAG_NO_MID = 4
         private const val QMAX = 8f
 
         private fun deq(q: Byte): Float = -(q.toInt() and 0xff) * QMAX / 255f

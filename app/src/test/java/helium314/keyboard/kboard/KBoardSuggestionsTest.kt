@@ -424,7 +424,7 @@ class KBoardSuggestionsTest {
     }
 
     /** Biçim 3 KBNG: kelimeler sözlük sırasında (<s> başta), [shown] kelimeleri büyük harfli yazılır; ikili/üçlü yok. */
-    private fun caseModel(words: List<String>, shown: Map<String, String>): NgramSource {
+    private fun caseModel(words: List<String>, shown: Map<String, String>, noMid: Set<String> = emptySet()): NgramSource {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).apply {
             fun vint(n: Int) { var x = n; while (true) { val b = x and 0x7f; x = x ushr 7; if (x != 0) writeByte(b or 0x80) else { writeByte(b); return } } }
@@ -435,7 +435,7 @@ class KBoardSuggestionsTest {
             for (w in all) {
                 utf(w)
                 val d = shown[w]
-                writeByte(if (d != null) 2 else 0); writeByte(40)
+                writeByte((if (d != null) 2 else 0) or (if (w in noMid) 4 else 0)); writeByte(40)
                 if (d != null) utf(d)
             }
             vint(0); vint(0); vint(0); vint(0)
@@ -467,6 +467,10 @@ class KBoardSuggestionsTest {
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("ahmet", mutableListOf(native("Ahmet")), tr, true, heli, ngramContext = mid))
         // Modelin bilmediği kelime: HeliBoard'un kararı değişmez
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("dinleniyorum", mutableListOf(native("Dinleniyorum")), tr, true, heli))
+        // Korpusta yalnız cümle başında görülen kelimenin küçük gösterimi kanıt değil: düzeltme yerinde kalır
+        KBoardSuggestions.setNgram(caseModel(listOf("japonya", "yoruldum"), emptyMap(), noMid = setOf("japonya")))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("japonya", mutableListOf(native("Japonya")), tr, true, heli, ngramContext = mid))
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("yoruldum", mutableListOf(native("Yoruldum")), tr, true, heli, ngramContext = mid))
         // Büyük harfle yazılmış ya da yalnız harf büyüklüğü değil başka harf de değişiyorsa kural uygulanmaz
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("YORULDUM", mutableListOf(native("Yoruldum")), tr, true, heli))
         assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("yoruldm", mutableListOf(native("Yoruldum")), tr, true, heli))
@@ -475,6 +479,30 @@ class KBoardSuggestionsTest {
             Dictionary.TYPE_USER))
         // HeliBoard düzeltmek istemiyorsa dokunulmaz
         assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("yoruldum", mutableListOf(native("Yoruldum")), tr, true, true to false))
+    }
+
+    @Test
+    fun deasciifiedCapitalOnlyEntryStaysLowercase() {
+        // Aksan dizini sözlükten gelir; orada yalnız "Vazgeçtim" var. Model kelimeyi cümle ortasında küçük biliyor.
+        KBoardSuggestions.setDeasciifier(DeasciifySource(DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("Vazgeçtim", 120), DeasciifyIndex.Companion.Entry("İzmir", 120),
+        ))))
+        KBoardSuggestions.setNgram(caseModel(listOf("izmir", "vazgeçtim"), mapOf("izmir" to "İzmir")))
+        val mid = NgramContext(NgramContext.WordInfo("bundan"))
+        val list = mutableListOf(native("Vazgeçtim"), native("vazgeçti"))
+        assertEquals(true to true, KBoardSuggestions.mergeAutoCorrection("vazgectim", list, tr, true, true to true, ngramContext = mid))
+        assertEquals("vazgeçtim", list[0].word)
+        assertTrue(list[0].isAppropriateForAutoCorrection)
+        assertEquals(2, list.size, "büyük harfli aday küçük harfli biçimle yer değiştirir, çoğalmaz")
+        // Büyük harfle yazılan (cümle başı) büyük kalır
+        val start = mutableListOf(native("Vazgeçtim"))
+        KBoardSuggestions.mergeAutoCorrection("Vazgectim", start, tr, true, true to true, ngramContext = NgramContext.BEGINNING_OF_SENTENCE)
+        assertEquals("Vazgeçtim", start[0].word)
+        // Model kelimeyi küçük harfle cümle ortasında görmediyse sözlüğün biçimi kalır
+        KBoardSuggestions.setNgram(caseModel(listOf("vazgeçtim"), emptyMap(), noMid = setOf("vazgeçtim")))
+        val unseen = mutableListOf(native("Vazgeçtim"))
+        KBoardSuggestions.mergeAutoCorrection("vazgectim", unseen, tr, true, true to true, ngramContext = mid)
+        assertEquals("Vazgeçtim", unseen[0].word)
     }
 
     @Test
