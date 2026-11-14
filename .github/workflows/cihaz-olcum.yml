@@ -6,19 +6,26 @@ name: Cihaz sürücüsü (emülatör)
 # Elle çalıştırırken `gorev` seçilir: yoklama (yukarıdaki), dogru-cumleler (sürüm öncesi 40 doğru
 # cümlede boşlukta değişen kelimeler) ya da surum-duman (geçici anahtarla imzalı release APK'nın
 # kurulup yazdığı, önerdiği, aksan düzelttiği ve öğrendiği; release APK'nın izin listesi) ya da
-# buyuk-harf (sözlükte yalnız büyük harfli kelimeler: main ile bu dal, önce/sonra).
+# buyuk-harf (sözlükte yalnız büyük harfli kelimeler: main ile bu dal, önce/sonra) ya da
+# taban (ölçüm tabanı: aynı debug APK ile seed-v0'ın sabit alt kümesi iki kez, motor açık ve
+# "HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı)"; tek emülatör, .github/ci/taban.sh,
+# docs/reports/baseline-v0.md).
 on:
   workflow_dispatch:
     inputs:
       gorev:
         description: Koşulacak görev
         type: choice
-        options: [yoklama, dogru-cumleler, surum-duman, buyuk-harf]
+        options: [yoklama, dogru-cumleler, surum-duman, buyuk-harf, taban]
         default: yoklama
       adet:
         description: dogru-cumleler için cümle sayısı
         type: string
         default: '40'
+      taban_grup:
+        description: taban için grup başına vaka (aksan, doğru yazım, yazım hatası; 4 = 12 vaka, ~47 dk)
+        type: string
+        default: '4'
   pull_request:
     paths:
       - eval/kboard_eval/adb_driver.py
@@ -48,6 +55,7 @@ jobs:
     env:
       GOREV: ${{ inputs.gorev || 'yoklama' }}
       DOGRU_ADET: ${{ inputs.adet || '40' }}
+      TABAN_GRUP: ${{ inputs.taban_grup || '4' }}
       BUYUK_SURUM: ${{ matrix.surum != '-' && matrix.surum || '' }}
       BUYUK_PARCA: ${{ matrix.surum != '-' && format('{0}/3', matrix.parca) || '0/1' }}
     steps:
@@ -79,6 +87,7 @@ jobs:
           set -euo pipefail
           ./gradlew assembleRelease
           bash .github/ci/izin-kontrol.sh "$(ls app/build/outputs/apk/release/*.apk | head -1)"
+          bash .github/ci/debug-anahtar-kontrol.sh "$(ls app/build/outputs/apk/release/*.apk | head -1)"
           bt=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
           ks="$RUNNER_TEMP/gecici.jks"
           keytool -genkeypair -keystore "$ks" -storepass gecici -keypass gecici -alias gecici \
@@ -107,7 +116,7 @@ jobs:
           cores: 4
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: bash .github/ci/${{ env.GOREV == 'dogru-cumleler' && 'dogru-cumleler' || (env.GOREV == 'surum-duman' && 'release-smoke' || (env.GOREV == 'buyuk-harf' && 'buyuk-harf' || 'strip-probe')) }}.sh
+          script: bash .github/ci/${{ env.GOREV == 'dogru-cumleler' && 'dogru-cumleler' || (env.GOREV == 'surum-duman' && 'release-smoke' || (env.GOREV == 'buyuk-harf' && 'buyuk-harf' || (env.GOREV == 'taban' && 'taban' || 'strip-probe'))) }}.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
