@@ -1,0 +1,97 @@
+name: Sürüm
+
+# İmzalı sürüm APK'sı ve GitHub sürümü (docs/SURUM.md). Yalnızca elle (main üzerinde) ya da main'deki
+# bir commit'e `v<sürüm>` etiketi itilince çalışır. İş, `release` ortamında koşar: ortam, depo
+# sahibinin onayını ister ve imza sırları yalnız orada tanımlıdır. Sırlar yalnız imzalama adımına
+# verilir; anahtar deposu geçici bir dosyaya yazılır ve aynı adımda silinir. Sır eksikse iş başarısız
+# olur (debug anahtarıyla imzalamaya düşülmez).
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: surum
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: İmzalı APK + GitHub sürümü
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write # sürüm oluşturmak için
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Sürüm adı ve main denetimi
+        run: |
+          set -euo pipefail
+          ver=$(sed -nE 's/^val kboardVersionName = "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' app/build.gradle.kts)
+          [ -n "$ver" ] || { echo "::error::app/build.gradle.kts içinde kboardVersionName bulunamadı"; exit 1; }
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$GITHUB_SHA main'de değil"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$ver" ]; then
+            echo "::error::etiket $GITHUB_REF_NAME, sürüm adı v$ver"; exit 1
+          fi
+          [ -f "docs/surum-notlari/v$ver.md" ] || { echo "::error::docs/surum-notlari/v$ver.md yok"; exit 1; }
+          echo "VER=$ver" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+      - run: chmod +x gradlew
+      - name: İmzasız release APK (sır yok)
+        run: ./gradlew assembleRelease
+      - name: İzin listesi
+        run: bash .github/ci/izin-kontrol.sh "$(ls app/build/outputs/apk/release/*.apk | head -1)"
+      - name: İmzala
+        env:
+          KS_B64: ${{ secrets.KBOARD_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.KBOARD_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KBOARD_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.KBOARD_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for v in KS_B64 KS_PASS KEY_ALIAS KEY_PASS; do
+            [ -n "${!v}" ] || { echo "::error::imza sırrı eksik: $v (docs/SURUM.md)"; exit 1; }
+          done
+          ks=$(mktemp -p "$RUNNER_TEMP" ks.XXXXXX)
+          trap 'rm -f "$ks"' EXIT
+          printf '%s' "$KS_B64" | base64 -d > "$ks"
+          bt=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          mkdir -p dist
+          "$bt/apksigner" sign --ks "$ks" --ks-pass env:KS_PASS --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASS \
+            --out "dist/KBoard-$VER.apk" "$(ls app/build/outputs/apk/release/*.apk | head -1)"
+      - name: Doğrula, özet ve sertifika parmak izi
+        run: |
+          set -euo pipefail
+          bt=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          apk="dist/KBoard-$VER.apk"
+          "$bt/apksigner" verify --print-certs "$apk" | tee certs.txt
+          grep -q "CN=Android Debug" certs.txt && { echo "::error::debug anahtarıyla imzalı"; exit 1; }
+          cert=$(sed -nE 's/^Signer #1 certificate SHA-256 digest: (.*)$/\1/p' certs.txt)
+          sha=$(sha256sum "$apk" | cut -d' ' -f1)
+          echo "$sha  KBoard-$VER.apk" > "dist/KBoard-$VER.apk.sha256"
+          { cat "docs/surum-notlari/v$VER.md"
+            echo
+            echo "## Doğrulama"
+            echo
+            echo "- APK SHA-256: \`$sha\`"
+            echo "- İmza sertifikası SHA-256: \`$cert\`"
+            echo "- Kaynak kod (GPL-3.0): https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA"
+          } > notes.md
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+      - name: GitHub sürümü
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v$VER" "dist/KBoard-$VER.apk" "dist/KBoard-$VER.apk.sha256" \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "KBoard $VER" --notes-file notes.md

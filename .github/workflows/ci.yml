@@ -130,19 +130,7 @@ jobs:
       - name: Debug APK
         run: ./gradlew assembleDebug
       - name: İzin listesi (ağ izni olmamalı)
-        run: |
-          set -euo pipefail
-          apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
-          aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
-          "$aapt2" dump permissions "$apk" | tee perms.txt
-          # İzin listesi: bunların dışındaki her izin (özellikle ağ) CI'ı kırar.
-          allowed='READ_USER_DICTIONARY|WRITE_USER_DICTIONARY|RECEIVE_BOOT_COMPLETED|VIBRATE|READ_CONTACTS'
-          extra=$(grep -oE "uses-permission: name='[^']+'" perms.txt | sed -E "s/.*name='([^']+)'/\1/" \
-            | grep -vE "^android\.permission\.($allowed)$" | grep -vE "\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION$" || true)
-          if [ -n "$extra" ]; then
-            echo "::error::İzin listesinde olmayan izin(ler): $extra"
-            exit 1
-          fi
+        run: bash .github/ci/izin-kontrol.sh "$(ls app/build/outputs/apk/debug/*.apk | head -1)"
       - name: Öneri motoru testleri
         run: ./gradlew :engine:test
       - name: KBoard uygulama testleri (Robolectric, yalnız kboard paketi)

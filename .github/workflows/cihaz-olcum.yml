@@ -3,14 +3,24 @@ name: Cihaz sürücüsü (emülatör)
 # #9: öneri çubuğunun erişilebilirlik ağacından okunup okunamadığını yoklar (KBoard ve imajdaki
 # Gboard) ve KBoard'da cihaz sürücüsünün aynı vakada 3 koşuda aynı izi verip vermediğini sınar.
 # Elle ya da sürücü dosyaları değişince çalışır; zorunlu kontrol değildir.
+# Elle çalıştırırken `gorev` seçilir: yoklama (yukarıdaki), dogru-cumleler (sürüm öncesi 40 doğru
+# cümlede boşlukta değişen kelimeler) ya da surum-duman (geçici anahtarla imzalı release APK'nın
+# kurulup yazdığı, önerdiği, aksan düzelttiği ve öğrendiği; release APK'nın izin listesi).
 on:
   workflow_dispatch:
+    inputs:
+      gorev:
+        description: Koşulacak görev
+        type: choice
+        options: [yoklama, dogru-cumleler, surum-duman]
+        default: yoklama
   pull_request:
     paths:
       - eval/kboard_eval/adb_driver.py
       - eval/keymaps/**
       - .github/ci/strip-probe.sh
       - .github/workflows/cihaz-olcum.yml
+      - .github/ci/emu-lib.sh
 
 concurrency:
   group: cihaz-olcum-${{ github.ref }}
@@ -21,9 +31,11 @@ permissions:
 
 jobs:
   probe:
-    name: Öneri çubuğu yoklama + determinizm
+    name: ${{ inputs.gorev || 'yoklama' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: ${{ inputs.gorev == 'dogru-cumleler' && 160 || 80 }}
+    env:
+      GOREV: ${{ inputs.gorev || 'yoklama' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,6 +48,20 @@ jobs:
       - run: chmod +x gradlew
       - name: Debug APK
         run: ./gradlew assembleDebug
+      - name: Release APK (geçici anahtarla imzalı; gerçek sürüm anahtarı burada kullanılmaz)
+        if: env.GOREV == 'surum-duman'
+        run: |
+          set -euo pipefail
+          ./gradlew assembleRelease
+          bash .github/ci/izin-kontrol.sh "$(ls app/build/outputs/apk/release/*.apk | head -1)"
+          bt=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          ks="$RUNNER_TEMP/gecici.jks"
+          keytool -genkeypair -keystore "$ks" -storepass gecici -keypass gecici -alias gecici \
+            -keyalg RSA -keysize 2048 -validity 1 -dname "CN=KBoard gecici" >/dev/null
+          "$bt/apksigner" sign --ks "$ks" --ks-pass pass:gecici --ks-key-alias gecici \
+            --out "$RUNNER_TEMP/KBoard-release-gecici.apk" "$(ls app/build/outputs/apk/release/*.apk | head -1)"
+          "$bt/apksigner" verify "$RUNNER_TEMP/KBoard-release-gecici.apk"
+          echo "RELEASE_APK=$RUNNER_TEMP/KBoard-release-gecici.apk" >> "$GITHUB_ENV"
       - name: Disk alanı aç
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/local/lib/android/sdk/ndk
@@ -56,7 +82,7 @@ jobs:
           cores: 4
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: bash .github/ci/strip-probe.sh
+          script: bash .github/ci/${{ env.GOREV == 'dogru-cumleler' && 'dogru-cumleler' || (env.GOREV == 'surum-duman' && 'release-smoke' || 'strip-probe') }}.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

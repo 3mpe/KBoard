@@ -6,6 +6,15 @@ plugins {
     kotlin("plugin.compose") version "2.4.0"
 }
 
+// KBOARD: versionCode sürüm adından türetilir ve hep artar: 1 000 000 + büyük·10 000 + küçük·100 + yama.
+// 0.1.0 → 1000100. Eski HeliBoard tabanlı 4300'den büyüktür; deneme sürümleri (.debug) üstüne kurulabilir.
+val kboardVersionName = "0.1.0"
+fun kboardVersionCode(name: String): Int {
+    val parts = name.split(".").map { it.toInt() }
+    require(parts.size == 3 && parts.all { it in 0..99 }) { "sürüm adı büyük.küçük.yama olmalı (her biri 0-99): $name" }
+    return 1_000_000 + parts[0] * 10_000 + parts[1] * 100 + parts[2]
+}
+
 android {
     compileSdk = 37
 
@@ -13,8 +22,8 @@ android {
         applicationId = "io.github.kboard.tr" // KBOARD: HeliBoard ile yan yana kurulabilsin
         minSdk = 21
         targetSdk = 37
-        versionCode = 4300
-        versionName = "0.1.0" // KBOARD: taban HeliBoard 4.3-beta1+, bkz. docs/UPSTREAM.md (versionCode upstream ile aynı tutulur)
+        versionCode = kboardVersionCode(kboardVersionName)
+        versionName = kboardVersionName // KBOARD: taban HeliBoard 4.3-beta1+, bkz. docs/UPSTREAM.md
         ndk {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
