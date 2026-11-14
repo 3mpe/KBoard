@@ -1,6 +1,11 @@
 # Emülatör betikleri için ortak yardımcılar (`source` edilir). Pixel 6 profili, 1080x2400.
 log() { echo "== $*"; }
-# Emülatörün ilk dakikalarındaki "... isn't responding" kutuları klavyeyi örtmesin (Android hata kutusu ayarı).
+# Emülatörde Pixel Launcher sık sık "isn't responding" kutusu açıp klavyeyi örtüyor (PR #53 koşuları:
+# Wait'e 8 kez dokunmak da kalıcı çözmedi). Etkinlikler doğrudan başlatıldığından başlatıcıya gerek yok:
+# kapatılır, hata kutuları da gizlenir.
+for l in com.google.android.apps.nexuslauncher com.android.launcher3; do
+  adb shell pm disable-user --user 0 "$l" >/dev/null 2>&1 || true
+done
 adb shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
 # "... isn't responding" kutusu varsa "Wait"e dokun.
 dismiss_anr() {
