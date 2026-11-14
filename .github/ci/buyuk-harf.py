@@ -13,10 +13,12 @@ parametresi yok, ölçüm ayar için değil):
     ve dil modelinin de büyük harfle yazdığı kelime; küçük harfle yazılır.
 Her kelime bir kez, önündeki küçük harfli sözcükle (bağlam) iki kelimelik vaka olur; tuş haritasıyla
 yazılamayanlar atlanır; crc32(kelime) sırasıyla ilk N1 / N2.
+olc: vakaları emülatörde yazar, boşluktan sonra alandaki hedef kelimeyi kaydeder.
 rapor: her grupta hedef kelime boşlukta ne oldu: yazıldığı gibi / yalnız büyük harf / başka.
 
 Kullanım: buyuk-harf.py secim <main_tr.tsv> <kboard-tr.kbn> <keymap> <N1> <N2> <çıktı.jsonl>
-          buyuk-harf.py rapor <iz.jsonl> <vakalar.jsonl>
+          buyuk-harf.py olc <vakalar.jsonl> <keymap> <kayıt.jsonl>
+          buyuk-harf.py rapor <kayıt.jsonl>
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "eval"))
 sys.path.insert(0, str(ROOT / "data/tools"))
-from kboard_eval import adb_driver, trace  # noqa: E402
+from kboard_eval import adb_driver  # noqa: E402
 import build_ngram as b  # noqa: E402
 import corpus_false_ac as cf  # noqa: E402
 
@@ -113,36 +115,63 @@ def secim(tsv: Path, kbn: Path, keymap: Path, n1: int, n2: int, dst: Path, held_
     dst.write_text("\n".join(lines) + "\n", "utf-8")
 
 
-def rapor(trace_path: Path, cases_path: Path) -> int:
-    tags = {}
-    for l in cases_path.read_text("utf-8").splitlines():
-        if l.strip():
-            c = json.loads(l)
-            tags[c["id"]] = c["tags"][0]
-    last: dict[str, trace.Event] = {}
-    for e in trace.read(trace_path):
-        if e.commit and e.word_index == 1:  # vakanın ikinci kelimesi hedeftir
-            last[e.case_id] = e
+def olc(cases_path: Path, keymap: Path, dst: Path) -> int:
+    """Her vakayı tuş dokunuşlarıyla yazar (iki kelime + boşluk) ve alandaki ikinci kelimeyi kaydeder.
+
+    Genel sürücüden (`kboard_eval drive`) farklı olarak her harften sonra ekran okunmaz: yalnız boşluktan
+    sonra ne yazıldığı ölçülür (vaka başına ~10 sn yerine ~80 sn)."""
+    km = adb_driver.KeyMap.load(keymap)
+    drv = adb_driver.DeviceDriver(adb_driver.Adb(), km, verify_field=False)
+    cases = [json.loads(l) for l in cases_path.read_text("utf-8").splitlines() if l.strip()]
+    rc = 0
+    drv.clear_field()
+    drv.warm_up()
+    with dst.open("w", encoding="utf-8") as out:
+        for n, c in enumerate(cases, 1):
+            typed = c.get("input", c["text"])
+            target = typed.split(" ")[1]
+            try:
+                drv.clear_field()
+                drv.read_screen(lambda sc: sc.field_text == "")
+                for ch in typed:
+                    drv.type_char(ch)
+                # Boşluktan önce öneri şeridinin bu kelime için dolmasını bekle (düzeltme şeride bakar)
+                drv.read_screen(lambda sc: lower(sc.field_text or "").endswith(target) and bool(sc.suggestions))
+                drv.type_char(" ")
+                sc = drv.read_screen(lambda sc: (sc.field_text or "").endswith(" ") and len((sc.field_text or "").split()) >= 2)
+                words = (sc.field_text or "").split()
+                got = words[1] if len(words) > 1 else None
+            except adb_driver.DriveError as exc:
+                print(f"[{n}/{len(cases)}] {c['id']}: sürücü hatası: {exc}", flush=True)
+                got, rc = None, 1
+            out.write(json.dumps({"id": c["id"], "grup": c["tags"][0], "typed": target, "got": got}, ensure_ascii=False) + "\n")
+            out.flush()
+            if n % 10 == 0:
+                print(f"[{n}/{len(cases)}]", flush=True)
+    return rc
+
+
+def rapor(records_path: Path) -> int:
+    recs = [json.loads(l) for l in records_path.read_text("utf-8").splitlines() if l.strip()]
     print("### Sözlükte yalnız büyük harfli kelimeler (boşlukta)\n")
-    print("| grup | vaka | yazıldığı gibi | yalnız büyük harf | başka |\n|---|---|---|---|---|")
+    print("| grup | vaka | yazıldığı gibi | yalnız büyük harf | başka | okunamadı |\n|---|---|---|---|---|---|")
     examples = []
     for g in ("ortak", "ozel"):
-        ids = [i for i, t in tags.items() if t == g]
-        kept = cap = other = 0
-        for i in ids:
-            e = last.get(i)
-            if e is None:
-                continue
-            got = e.autocorrect if e.autocorrect is not None else e.typed
-            if got == e.typed:
+        rows = [r for r in recs if r["grup"] == g]
+        kept = cap = other = none = 0
+        for r in rows:
+            got, typed = r["got"], r["typed"]
+            if got is None:
+                none += 1
+            elif got == typed:
                 kept += 1
-            elif lower(got) == lower(e.typed):
+            elif lower(got) == lower(typed):
                 cap += 1
-                examples.append(f"- `{i}`: {e.typed} → {got}")
+                examples.append(f"- `{r['id']}`: {typed} → {got}")
             else:
                 other += 1
-                examples.append(f"- `{i}`: {e.typed} → {got} (başka)")
-        print(f"| {g} | {kept + cap + other} | {kept} | {cap} | {other} |")
+                examples.append(f"- `{r['id']}`: {typed} → {got} (başka)")
+        print(f"| {g} | {len(rows)} | {kept} | {cap} | {other} | {none} |")
     print()
     print("\n".join(examples))
     return 0
@@ -151,5 +180,7 @@ def rapor(trace_path: Path, cases_path: Path) -> int:
 if __name__ == "__main__":
     if sys.argv[1] == "secim":
         secim(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), Path(sys.argv[7]))
+    elif sys.argv[1] == "olc":
+        sys.exit(olc(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4])))
     else:
-        sys.exit(rapor(Path(sys.argv[2]), Path(sys.argv[3])))
+        sys.exit(rapor(Path(sys.argv[2])))

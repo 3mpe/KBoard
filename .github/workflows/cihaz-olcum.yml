@@ -38,7 +38,7 @@ jobs:
   probe:
     name: ${{ inputs.gorev || 'yoklama' }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.gorev == 'dogru-cumleler' && 160 || 80 }}
+    timeout-minutes: ${{ (inputs.gorev == 'dogru-cumleler' || inputs.gorev == 'buyuk-harf') && 160 || 80 }}
     env:
       GOREV: ${{ inputs.gorev || 'yoklama' }}
       DOGRU_ADET: ${{ inputs.adet || '40' }}
