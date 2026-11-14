@@ -124,7 +124,12 @@ def fark(cases_path: Path, on: Path, off: Path, logcat_on: Path | None = None) -
 
     print("\n### Yanlış otomatik düzeltme sayılan kelimeler\n")
     print("Doğru yazılmış kelime (yazılan = hedef, büyük/küçük harf ayrımı yok) boşlukta başka bir kelimeye döndü.\n")
-    wrong_on: list[str] = []
+    def strips(path: Path) -> dict[tuple[str, int], list[str]]:
+        return {(e.case_id, e.word_index): e.suggestions[:3]
+                for e in trace.read(path) if e.commit and e.case_id in cases}
+
+    sa, sb = strips(on), strips(off)
+    wrong_on: list[tuple[str, int]] = []
     for name, got in ((ON, a), (OFF, b)):
         correct = [k for k in keys if same(cases[k[0]].typed_words[k[1]], cases[k[0]].aligned_targets[k[1]])]
         bad = [k for k in correct if not same(got[k], cases[k[0]].typed_words[k[1]])]
@@ -134,13 +139,37 @@ def fark(cases_path: Path, on: Path, off: Path, logcat_on: Path | None = None) -
         print("  - yalnız büyük/küçük harf değişen (sayılmaz): "
               + ("; ".join(f"`{k[0]}` {cases[k[0]].typed_words[k[1]]} → {got[k]}" for k in case_only) or "yok"))
         if got is a:
-            wrong_on = [cases[k[0]].typed_words[k[1]] for k in bad]
+            wrong_on = bad
+    union = sorted({k for got in (a, b) for k in keys
+                    if same(cases[k[0]].typed_words[k[1]], cases[k[0]].aligned_targets[k[1]])
+                    and got[k] != cases[k[0]].typed_words[k[1]]})
+    if union:
+        print("\nBu kelimelerde boşluk anındaki öneri şeridi (ilk 3), iki geçiş:\n")
+        print(f"| Vaka | Kelime | {ON} | {OFF} |\n|---|---|---|---|")
+        for k in union:
+            print(f"| `{k[0]}` | {cases[k[0]].typed_words[k[1]]} | {' · '.join(sa.get(k, [])) or '–'} | "
+                  f"{' · '.join(sb.get(k, [])) or '–'} |")
     if logcat_on is not None and logcat_on.exists() and wrong_on:
-        print(f"\nMotor açıkken bu kelimeler için teşhis satırları (`{logcat_on.name}`, kelime başına son 2):\n\n```")
-        lines = [l.rstrip("\r\n") for l in logcat_on.open(encoding="utf-8", errors="replace") if "düzeltme:" in l]
-        for w in dict.fromkeys(wrong_on):
-            for l in [l for l in lines if f"yazılan={w} " in l][-2:]:
-                print(l[l.index("düzeltme:"):])
+        # Teşhis satırları kelimeyle değil sırayla eşlenir: vakalar geçişteki sırasıyla, kelimeler dizinle
+        # yürünür; her kelime için işaretçiden sonraki ilk `yazılan=<kelime>` satırı alınır.
+        import re
+        pat = re.compile(r"düzeltme: yazılan=(\S*) bağlam=")
+        lines = [(m.group(1), l[m.start():].rstrip("\r\n"))
+                 for l in logcat_on.open(encoding="utf-8", errors="replace") for m in [pat.search(l)] if m]
+        want = {k[0] for k in wrong_on}
+        ptr = 0
+        print(f"\nMotor açıkken bu vakaların teşhis satırları (`{logcat_on.name}`; sırayla eşlendi: vaka sırası, "
+              "sonra kelime dizini; kelime başına tam yazımın ilk satırı):\n\n```")
+        for cid, c in cases.items():
+            for i, w in enumerate(c.typed_words):
+                hit = next((n for n in range(ptr, len(lines)) if lines[n][0] == w), None)
+                if hit is None:
+                    if cid in want:
+                        print(f"{cid}[{i}] {w}: satır bulunamadı")
+                    continue
+                ptr = hit + 1
+                if cid in want:
+                    print(f"{cid}[{i}] {lines[hit][1]}")
         print("```")
     return 0
 
