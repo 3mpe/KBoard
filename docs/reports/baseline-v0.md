@@ -151,6 +151,12 @@ Koşu: [43600969904](https://github.com/3mpe/KBoard/actions/runs/43600969904) (i
 açık geçişte `motor anahtarı: açık`, 275 `düzeltme:` satırı; kapalı geçişte `motor anahtarı: kapalı`,
 0 `düzeltme:` satırı. Aşağıdaki tablolar koşunun günlüğünden değiştirilmeden alınmıştır.
 
+Aynı 12 vaka commit `6eacc253` üzerinde bir kez daha koşuldu
+([43607069456](https://github.com/3mpe/KBoard/actions/runs/43607069456), iş 132483959072): iki tablo ve
+ayrışma listesi ilk koşuyla satır satır aynıdır. Bu koşu ek olarak yanlış otomatik düzeltme sayılan
+kelimeleri, boşluk anındaki öneri şeridini ve motor açıkken teşhis satırlarını yazar; aşağıdaki
+"Yanlış otomatik düzeltme sayılan kelimeler" bölümü o koşudandır.
+
 **Okurken:** 12 vaka yön gösterir, eşik belirlemeye yetmez; kırılımların çoğunda n tek hanelidir.
 Bu örneklemde öne çıkanlar:
 
@@ -161,14 +167,14 @@ Bu örneklemde öne çıkanlar:
   (`eval/kboard_eval/metrics.py`, `same_word`): yalnız büyük/küçük harfi değişen kelime yanlış
   düzeltme sayılmaz. Bu yüzden motor kapalıyken görülen `dinlendim` → `Dinlendim` (`aksan-0034`)
   bu sayıda yoktur; kullanıcı açısından yine de istenmeyen bir değişikliktir.
-  - Motor açık (2): `mi` → `mı` (`yazim-0038`) ve `yazim-0020`'deki ortak kelime.
-  - Motor kapalı (2): `oturduk` → `oturdukları` (`aksan-0069`) ve `yazim-0020`'deki ortak kelime.
-  - Ortak kelime: `yazim-0020`'de ("Egzos muayenesinden geçti.") doğru yazılmış iki kelimeden
-    (`muayenesinden`, `geçti`) biri iki geçişte de aynı biçimde değişmiştir; ayrışma tablosunda bu
-    yüzden görünmez. Etiket satırları bunu gösterir (`yaygin_hata` iki geçişte de 1/2, `harf_fazla`
-    motor açıkken 1/2, `belirsiz` motor kapalıyken 1/1). Hangisi olduğu bu koşunun günlüğünden
-    çıkarılamaz (iz dosyaları yalnız koşu ekindedir); `gorev=taban` artık bu kelimeleri özetine
-    yazar, sonraki koşuda adı buraya işlenir.
+  - Motor açık (2): `muayenesinden` → `muayenesinde` (`yazim-0020`) ve `mi` → `mı` (`yazim-0038`).
+  - Motor kapalı (2): `muayenesinden` → `muayenesinde` (`yazim-0020`) ve `oturduk` → `oturdukları`
+    (`aksan-0069`).
+  - `muayenesinden` → `muayenesinde` iki geçişte de aynıdır, ayrışma tablosunda bu yüzden görünmez.
+    Motor bu kelimede görüş bildirmez (`motor=NoOpinion`); düzeltmeyi HeliBoard'un kendi yolu yapar.
+  - `mi` → `mı`: şeridin ilk önerisi iki geçişte de `mı`'dır. Motor açıkken boşlukta metne geçer
+    (`temel=(true, true)`, `motor=NoOpinion`), motor kapalıyken geçmez. Nedeni #59'da
+    incelenir.
 - Aksan düzeltme 8/10'a karşı 6/10, yazım hatası düzeltme 2/4'e karşı 1/4: farklar birkaç kelimeden ibarettir.
 
 ### KBoard (motor açık)
@@ -219,6 +225,35 @@ Gecikme: p50 – · p95 – · max – (0 ölçüm)
 | `aksan-0086` | Boyle | Böyle | Böyle | Boyle |
 | `yazim-0020` | Egzos | Egzoz | Egzoz | Egzos |
 | `yazim-0038` | mi | mi | mı | mi |
+
+### Yanlış otomatik düzeltme sayılan kelimeler
+
+Doğru yazılmış kelime (yazılan = hedef, büyük/küçük harf ayrımı yok) boşlukta başka bir kelimeye döndü.
+
+- **KBoard (motor açık):** 2 / 30: `yazim-0020` muayenesinden → muayenesinde; `yazim-0038` mi → mı
+  - yalnız büyük/küçük harf değişen (sayılmaz): yok
+- **HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı):** 2 / 30: `aksan-0069` oturduk → oturdukları; `yazim-0020` muayenesinden → muayenesinde
+  - yalnız büyük/küçük harf değişen (sayılmaz): `aksan-0034` dinlendim → Dinlendim
+
+Bu kelimelerde boşluk anındaki öneri şeridi (ilk 3), iki geçiş:
+
+| Vaka | Kelime | KBoard (motor açık) | HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı) |
+|---|---|---|---|
+| `aksan-0034` | dinlendim | Dinlendim · dinledim · dinlendi | Dinlendim · dinlendim · dinledim |
+| `aksan-0069` | oturduk | oturduktan · oturdukları · oturdukça | oturdukları · oturduk · oturduktan |
+| `yazim-0020` | muayenesinden | muayenesinde · muayenesinden · muayen…sinden | muayenesinde · muayenesinden · muayen…sinden |
+| `yazim-0038` | mi | mı · mi · misin | mı · milyon · milli |
+
+Motor açıkken bu vakaların teşhis satırları (`logcat-acik.txt`; sırayla eşlendi: vaka sırası, sonra kelime dizini; kelime başına tam yazımın ilk satırı):
+
+```
+yazim-0020[0] düzeltme: yazılan=Egzos bağlam=[] başlangıç=true temel=(true, true) motor=Replace(word=Egzoz, listRule=true) ilk=[Egzoz, Egzotik, Egosu]
+yazim-0020[1] düzeltme: yazılan=muayenesinden bağlam=[Egzoz] başlangıç=true temel=(true, true) motor=NoOpinion ilk=[muayenesinde, muayene sinden, muayenesinde en]
+yazim-0020[2] düzeltme: yazılan=geçti bağlam=[Egzoz, muayenesinde] başlangıç=true temel=(false, false) motor=NoOpinion ilk=[geçtim, geçtiği, geçtikten]
+yazim-0038[0] düzeltme: yazılan=Kapıyı bağlam=[] başlangıç=true temel=(false, false) motor=NoOpinion ilk=[Kapıyım, Kapıyız, Kapıya]
+yazim-0038[1] düzeltme: yazılan=killitledin bağlam=[Kapıyı] başlangıç=true temel=(true, false) motor=NoOpinion ilk=[kilitlendi, kil kitlenin, kıl kitlenin]
+yazim-0038[2] düzeltme: yazılan=mi bağlam=[Kapıyı, killitledin] başlangıç=true temel=(true, true) motor=NoOpinion ilk=[mı, misin, mısın]
+```
 
 Gecikme bu koşuda ölçülmez (sürücü iz kaydına süre yazmıyor).
 
