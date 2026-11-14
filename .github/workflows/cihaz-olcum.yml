@@ -36,12 +36,18 @@ permissions:
 
 jobs:
   probe:
-    name: ${{ inputs.gorev || 'yoklama' }}
+    name: ${{ inputs.gorev || 'yoklama' }}${{ matrix.surum != '-' && format(' ({0})', matrix.surum) || '' }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ (inputs.gorev == 'dogru-cumleler' || inputs.gorev == 'buyuk-harf') && 160 || 80 }}
+    timeout-minutes: ${{ inputs.gorev == 'buyuk-harf' && 180 || (inputs.gorev == 'dogru-cumleler' && 160 || 80) }}
+    strategy:
+      fail-fast: false
+      # buyuk-harf: önce (main) ve sonra (bu dal) iki ayrı emülatörde paralel
+      matrix:
+        surum: ${{ inputs.gorev == 'buyuk-harf' && fromJSON('["once","sonra"]') || fromJSON('["-"]') }}
     env:
       GOREV: ${{ inputs.gorev || 'yoklama' }}
       DOGRU_ADET: ${{ inputs.adet || '40' }}
+      BUYUK_SURUM: ${{ matrix.surum != '-' && matrix.surum || '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,5 +109,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cihaz-olcum
+          name: cihaz-olcum${{ matrix.surum != '-' && format('-{0}', matrix.surum) || '' }}
           path: screenshots/

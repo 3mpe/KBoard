@@ -144,7 +144,8 @@ def olc(cases_path: Path, keymap: Path, dst: Path) -> int:
             except adb_driver.DriveError as exc:
                 print(f"[{n}/{len(cases)}] {c['id']}: sürücü hatası: {exc}", flush=True)
                 got, rc = None, 1
-            out.write(json.dumps({"id": c["id"], "grup": c["tags"][0], "typed": target, "got": got}, ensure_ascii=False) + "\n")
+            out.write(json.dumps({"id": c["id"], "grup": c["tags"][0], "typed": target, "beklenen": c["text"].split(" ")[1],
+                                  "got": got}, ensure_ascii=False) + "\n")
             out.flush()
             if n % 10 == 0:
                 print(f"[{n}/{len(cases)}]", flush=True)
@@ -152,26 +153,31 @@ def olc(cases_path: Path, keymap: Path, dst: Path) -> int:
 
 
 def rapor(records_path: Path) -> int:
+    """Grup başına: beklenen yazılış (ortak/aksan: küçük harf; ozel: büyük harf), yalnız harf büyüklüğü
+    farklı, başka kelime, okunamadı. Eski kayıtlarda beklenen yoksa ortak için yazılan, ozel için büyük
+    harfli biçim beklenir."""
     recs = [json.loads(l) for l in records_path.read_text("utf-8").splitlines() if l.strip()]
     print("### Sözlükte yalnız büyük harfli kelimeler (boşlukta)\n")
-    print("| grup | vaka | yazıldığı gibi | yalnız büyük harf | başka | okunamadı |\n|---|---|---|---|---|---|")
+    print("| grup | vaka | beklenen | yalnız büyük/küçük harf farkı | başka | okunamadı |\n|---|---|---|---|---|---|")
     examples = []
-    for g in ("ortak", "ozel"):
+    groups = list(dict.fromkeys(r["grup"] for r in recs))
+    for g in groups:
         rows = [r for r in recs if r["grup"] == g]
-        kept = cap = other = none = 0
+        ok = case = other = none = 0
         for r in rows:
-            got, typed = r["got"], r["typed"]
+            got = r["got"]
+            exp = r.get("beklenen") or r["typed"]
             if got is None:
                 none += 1
-            elif got == typed:
-                kept += 1
-            elif lower(got) == lower(typed):
-                cap += 1
-                examples.append(f"- `{r['id']}`: {typed} → {got}")
+            elif got == exp or ("beklenen" not in r and g == "ozel" and got != r["typed"] and lower(got) == lower(exp)):
+                ok += 1
+            elif lower(got) == lower(exp):
+                case += 1
+                examples.append(f"- `{r['id']}`: {r['typed']} → {got} (beklenen {exp})")
             else:
                 other += 1
-                examples.append(f"- `{r['id']}`: {typed} → {got} (başka)")
-        print(f"| {g} | {len(rows)} | {kept} | {cap} | {other} | {none} |")
+                examples.append(f"- `{r['id']}`: {r['typed']} → {got} (başka; beklenen {exp})")
+        print(f"| {g} | {len(rows)} | {ok} | {case} | {other} | {none} |")
     print()
     print("\n".join(examples))
     return 0
