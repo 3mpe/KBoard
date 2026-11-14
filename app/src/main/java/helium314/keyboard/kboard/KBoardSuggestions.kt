@@ -3,6 +3,7 @@ package helium314.keyboard.kboard
 
 import android.util.Log
 import helium314.keyboard.latin.NgramContext
+import helium314.keyboard.latin.RichInputMethodManager
 import helium314.keyboard.latin.common.ComposedData
 import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.suggestions.SuggestedWordInfo
@@ -213,6 +214,8 @@ object KBoardSuggestions {
         personal = p
         // Aksan düzeltici belirsiz kelimede bağlama göre dil modeline danışır ("uc" → üç)
         deasc?.contextScorer = lm
+        // Ağır kayma ("idyrfşö" → istedim): bağlama göre sıralama ve sözlükte olmayan çekimler
+        typo?.contextScorer = lm
         // Ayrı soru eki önceki kelimenin düzeltilmiş biçimine uyar ("orjinal mi" → mi kalır)
         deasc?.previousWordFix = { rules.replacement(it) }
         // Ek zinciri: kök kütlesi ve bilinen biçim için ham dil modeli (kişisel kaynaktan bağımsız)
@@ -337,6 +340,17 @@ object KBoardSuggestions {
      * aynı kelime varsa eklenmez. Yoksa düzeltmeye uygun olmayan aday ilk sıraya çıkıp HeliBoard'un
      * kendi yazım hatası düzeltmesini kapatabilirdi.
      */
+    /** Ağır kayma aramasının komşu tablosu bu ana düzen içindir (Türkçe Q). */
+    const val SPATIAL_LAYOUT = "turkish"
+
+    /** Etkin alt türün ana düzeni (ör. "turkish"); başlatılmamışsa null. Testler değiştirir. */
+    @Volatile
+    var mainLayoutName: () -> String? = {
+        if (RichInputMethodManager.isInitialized()) {
+            runCatching { RichInputMethodManager.getInstance().currentSubtype.mainLayoutName }.getOrNull()
+        } else null
+    }
+
     fun getSuggestions(
         composedData: ComposedData, ngramContext: NgramContext, locale: Locale,
         native: Collection<SuggestedWordInfo> = emptyList(),
@@ -348,6 +362,8 @@ object KBoardSuggestions {
         val words = contextWords(ngramContext)
         val query = Query(words, composedData.mTypedWord, startsSentence(ngramContext, words.size))
         val dict = dictionaries.getOrPut(locale) { KBoardDictionary(locale) }
+        // Ağır kayma yalnız Türkçe Q'da: başka düzende komşu tuşlar farklı, öneriler gürültü olurdu
+        typo?.spatialEnabled = mainLayoutName() == SPATIAL_LAYOUT
         var candidates = e.suggest(query).candidates
         if (candidates.any { it.source == Source.TYPO }) {
             val nativeFixes = native.any { it.isAppropriateForAutoCorrection }

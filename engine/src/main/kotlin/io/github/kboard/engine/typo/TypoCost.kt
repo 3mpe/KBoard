@@ -59,6 +59,20 @@ object TypoCost {
         return hypot(pa.first - pb.first, pa.second - pb.second) <= 1.5
     }
 
+    /** Q düzenindeki tüm harf tuşları. */
+    val KEYS: String = ROWS.joinToString("") { it.first }
+
+    /**
+     * Ağır kayma çözümü için tek konum maliyeti: aynı tuş 0, aksan farkı [ACCENT], komşu tuş
+     * [NEIGHBOR] (aksanlı hedefin aksansız tuşuna komşuluk da), diğerleri null (bu konumda olamaz).
+     */
+    fun shift(t: Char, w: Char): Double? {
+        if (t == w) return 0.0
+        if (fold(t) == fold(w)) return ACCENT
+        if (neighbors(t, w) || neighbors(t, fold(w))) return NEIGHBOR
+        return null
+    }
+
     private fun pair(set: Set<String>, a: Char, b: Char): Boolean = "$a$b" in set || "$b$a" in set
 
     /** Yazılan [t] harfi yerine hedef [w] harfi. */

@@ -116,6 +116,9 @@ source .github/ci/transfer-e2e.sh
 # Bitişik bağlaç ayrımı (öneri, iki kelime yazılması, geri silme, tuzak).
 source .github/ci/dedaki-e2e.sh
 
+# Ağır kayma ("kontrol etmek idyrfşö" → istedim; yalnız öneri).
+source .github/ci/heavy-e2e.sh
+
 # Mikrofon: parola alanında gizli, ilk dokunuş bildirim, ikinci dokunuş geçiş, dönüş.
 source .github/ci/voice-e2e.sh
 
@@ -134,6 +137,8 @@ grep -q "^KALDI" "$out/silme-e2e.txt" && exit 1
 grep -q "^KALDI" "$out/aktarim-e2e.txt" && exit 1
 [ -f "$out/dedaki-e2e.txt" ] || { echo "dedaki-e2e.txt yok"; exit 1; }
 grep -q "^KALDI" "$out/dedaki-e2e.txt" && exit 1
+[ -f "$out/agir-e2e.txt" ] || { echo "agir-e2e.txt yok"; exit 1; }
+grep -q "^KALDI" "$out/agir-e2e.txt" && exit 1
 [ -f "$out/ses-e2e.txt" ] || { echo "ses-e2e.txt yok"; exit 1; }
 grep -q "^KALDI" "$out/ses-e2e.txt" && exit 1
 exit 0

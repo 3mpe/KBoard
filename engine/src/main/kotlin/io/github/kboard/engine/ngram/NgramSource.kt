@@ -98,6 +98,8 @@ class NgramSource(
 
     override fun follows(word: String, previous: String): Boolean = model.hasBigram(model.id(word), model.id(previous))
 
+    override fun hasFoldPrefix(foldedPrefix: String): Boolean = model.withPrefix(foldedPrefix, 1).isNotEmpty()
+
     override fun sameFold(fold: String): List<String> =
         model.withFold(fold).filter { model.suggestable(it) }.map { model.display(it) }
 
