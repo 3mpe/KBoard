@@ -75,10 +75,19 @@ open_field "$kboard" || log "determinizm: KBoard etkinleşmedi"
 adb shell dumpsys input_method | grep -E "mCurMethodId" | head -1
 mkdir -p "$out/determinizm"
 adb exec-out screencap -p > "$out/determinizm/once.png"
-adb shell uiautomator dump --windows /sdcard/d.xml >/dev/null 2>&1; adb shell cat /sdcard/d.xml > "$out/determinizm/once.xml" 2>/dev/null
+adb shell uiautomator dump --windows /sdcard/d.xml 2>&1 | tail -1; adb shell cat /sdcard/d.xml > "$out/determinizm/once.xml" 2>/dev/null
+log "koşu öncesi döküm (paket / pencere türü sayıları):"
+tr '>' '\n' < "$out/determinizm/once.xml" | grep -oE '(package|type)="[^"]*"' | sort | uniq -c
+adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId|mServedView" | head -4
 ( cd eval && timeout 1500 python3 -m kboard_eval drive testset/seed-v0.jsonl \
     -k keymaps/kboard-pixel6-emulator.json -o "../$out/determinizm/kboard.jsonl" --limit 5 --runs 3 \
     --skip-user-words ) 2>&1 | tee "$out/determinizm/drive.log"
 rc=${PIPESTATUS[0]}
+if [ "$rc" != 0 ]; then
+  log "hata sonrası döküm:"
+  adb shell uiautomator dump --windows /sdcard/d.xml 2>&1 | tail -1
+  adb shell cat /sdcard/d.xml 2>/dev/null | tr '>' '\n' | grep -oE '(package|type|text)="[^"]*"' | sort | uniq -c | head -40
+  adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId" | head -3
+fi
 echo "çıkış: $rc" | tee -a "$out/determinizm/drive.log"
 exit $rc

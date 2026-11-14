@@ -318,6 +318,8 @@ class Adb:
             # İkisi de başarısızsa geçici bir hatadır (ör. "could not get idle state"), karar ertelenir.
             if _has_xml(plain):
                 self._plain_dump = self._probed = True
+                print("uyarı: `uiautomator dump --windows` çalışmadı, düz döküme geçildi (klavye penceresi görünmez)",
+                      file=sys.stderr)
             return plain
         return self.exec_out(_dump_cmd(""))
 
