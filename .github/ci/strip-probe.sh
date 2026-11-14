@@ -21,7 +21,13 @@ open_field() {
     adb shell am start -W -n "$test_activity" >/dev/null; sleep 4; dismiss_anr
     adb shell input tap 540 400; sleep 3; dismiss_anr
     adb shell input keyevent KEYCODE_MOVE_END $(printf 'KEYCODE_DEL %.0s' $(seq 12)) # önceki yoklamanın metni
-    adb shell dumpsys input_method | grep -q "mCurMethodId=$1" && return 0
+    if adb shell dumpsys input_method | grep -q "mCurMethodId=$1"; then
+      # ANR kutusuna dokunmak klavyeyi kapatabiliyor: görünmüyorsa alana yeniden dokun
+      adb shell dumpsys input_method | grep -q "mInputShown=true" || { adb shell input tap 540 400; sleep 3; }
+      adb shell dumpsys input_method | grep -q "mInputShown=true" && return 0
+      echo "   klavye görünmüyor ($n)"
+      continue
+    fi
     echo "   etkin klavye $1 değil, yeniden seçiliyor ($n)"
   done
   return 1
@@ -68,6 +74,8 @@ fi
 open_field "$kboard" || log "determinizm: KBoard etkinleşmedi"
 adb shell dumpsys input_method | grep -E "mCurMethodId" | head -1
 mkdir -p "$out/determinizm"
+adb exec-out screencap -p > "$out/determinizm/once.png"
+adb shell uiautomator dump --windows /sdcard/d.xml >/dev/null 2>&1; adb shell cat /sdcard/d.xml > "$out/determinizm/once.xml" 2>/dev/null
 ( cd eval && timeout 1500 python3 -m kboard_eval drive testset/seed-v0.jsonl \
     -k keymaps/kboard-pixel6-emulator.json -o "../$out/determinizm/kboard.jsonl" --limit 5 --runs 3 \
     --skip-user-words ) 2>&1 | tee "$out/determinizm/drive.log"
