@@ -7,8 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: KBoard-debug-apk üreten ci.yml koşusunun kimliği
-        required: true
+        description: KBoard-debug-apk üreten ci.yml koşusunun kimliği (sil doluysa boş bırakılır)
+        required: false
+        type: string
+      sil:
+        description: Silinecek eski önizleme etiketleri, boşlukla ayrılmış (ör. apk-1234abc). Doluysa yalnız silme yapılır.
+        required: false
         type: string
 
 permissions:
@@ -17,6 +21,7 @@ permissions:
 
 jobs:
   onizleme:
+    if: ${{ inputs.sil == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -43,3 +48,26 @@ jobs:
             --title "KBoard debug önizleme ($short)" \
             --notes "Telefonda denemek için debug APK (imzalı sürüm değil). APK'nın kaynağı: $sha (etiket APK'nın commit'ine değil, iş akışının çalıştığı dalın ucuna işaret eder). Önceki önizlemenin üstüne kurulmaz: önce Ayarlar → Yedekle ile dışa aktar, eskisini kaldır, sonra kur. Bu derleme yazdığın hiçbir şeyi günlüğe yazmaz (teşhis günlüğü yalnız adb ile log.tag.KBoardSuggestions özelliği DEBUG yapılırsa açılır)."
           echo "https://github.com/$GITHUB_REPOSITORY/releases/download/apk-$short/$f" >> "$GITHUB_STEP_SUMMARY"
+
+  # Eski önizlemeyi kaldırır (ör. yazılanı günlüğe yazan eski bir derleme). Yalnız bu iş akışının açtığı
+  # türden sürümlere dokunur: etiket apk-<7 onaltılık> biçiminde ve sürüm ön sürüm (pre-release) olmalı.
+  sil:
+    if: ${{ inputs.sil != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Eski önizlemeleri sil
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIL: ${{ inputs.sil }}
+        run: |
+          set -euo pipefail
+          for t in $SIL; do
+            [[ "$t" =~ ^apk-[0-9a-f]{7}$ ]] || { echo "::error::beklenmeyen etiket: $t"; exit 1; }
+            pre=$(gh release view "$t" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)
+            [ "$pre" = "true" ] || { echo "::error::$t ön sürüm değil, silinmedi"; exit 1; }
+          done
+          for t in $SIL; do
+            gh release delete "$t" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+            echo "silindi: $t" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
