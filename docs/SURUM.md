@@ -52,7 +52,7 @@ Anahtarı yalnız depo sahibi üretir ve saklar; anahtar ve parolalar başka hi�
 
 ## Sürümden önce
 
-1. **Sözlük lisansı (ilk sürümde bir kez):** `main_tr.dict`'in lisansı `data/KAYNAKLAR.md`'de
+1. **Sözlük lisansı (ilk sürümde bir kez; 0.1.0 için yapıldı, GPL-3.0):** `main_tr.dict`'in lisansı `data/KAYNAKLAR.md`'de
    "doğrulanacak". Depo sahibi https://codeberg.org/Helium314/aosp-dictionaries README'sini ve lisans
    notlarını tarayıcıda açıp Türkçe sözlük için ne yazdığını okur. İzin verici bir lisanssa (ör.
    Apache-2.0): `data/KAYNAKLAR.md`'de sözlük, `main_tr.tsv` ve `stems-tr.tsv` için "doğrulanacak"

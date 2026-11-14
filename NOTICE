@@ -3,6 +3,11 @@ Copyright (C) KBoard katkıcıları. Uygulama kodu GPL-3.0-only (LICENSE).
 
 Bu dağıtım üçüncü taraf bileşenlerden türetilmiş veriler içerir:
 
+app/src/main/assets/dicts/main_tr.dict ve ondan türetilen veriler (assets/kboard/deasciify-tr.kbd,
+  data/suffix/stems-tr.tsv'nin kelime seçimi)
+  aosp-dictionaries (HeliBoard sözlükleri): https://codeberg.org/Helium314/aosp-dictionaries
+  GPL-3.0 altında dağıtılır (LICENSE). Kelime listesinin kaynağı bu depodur.
+
 data/suffix/stems-tr.tsv ve ondan derlenen kök bayrakları (assets/kboard/deasciify-tr.kbd)
   Zemberek-NLP 0.17.1 kök sözlüğünden (lexicon) türetilmiştir.
   Zemberek-NLP: https://github.com/ahmetaa/zemberek-nlp
