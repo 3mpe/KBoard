@@ -191,9 +191,10 @@ abstract class KBoardAssetsTask : DefaultTask() {
 }
 
 val kboardAssets = tasks.register<KBoardAssetsTask>("kboardAssets") {
-    dependsOn(":engine:buildDeasciifyIndex", ":engine:buildNgramModel", ":engine:buildSuffixModel")
+    // Dil modeli: dağıtılan (süzgeçsiz) derleme; ölçüm modeli (kboard-tr.kbn) APK'ya girmez
+    dependsOn(":engine:buildDeasciifyIndex", ":engine:buildNgramModelShip", ":engine:buildSuffixModel")
     deasciifyIndex.set(rootProject.layout.projectDirectory.file("engine/build/kboard/deasciify-tr.kbd"))
-    ngramModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/kboard-tr.kbn"))
+    ngramModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/kboard-tr-ship.kbn"))
     suffixModel.set(rootProject.layout.projectDirectory.file("engine/build/kboard/suffix-tr.kbs"))
     denylist.set(rootProject.layout.projectDirectory.file("data/ngram-denylist.txt"))
 }

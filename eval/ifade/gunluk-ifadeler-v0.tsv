@@ -1,0 +1,53 @@
+# Günlük ifade listesi (v0): bağlam<TAB>beklenen sonraki kelime (| ile ayrılmış kabul edilen seçenekler).
+# Dağıtılan dil modelinin en sık kalıpları taşıyıp taşımadığını gösterir (docs/EVALUATION.md, "İki model").
+# Elle, motor çıktısına bakılmadan yazıldı (2026-11-14); seed-v0'dan alınmadı. Ayar için kullanılmaz, eşik değildir.
+# "sabit" işaretli üç satır hatanın bulunduğu örneklerdir (çıktısı görüldükten sonra eklendi) ve dağıtılan
+# modelde ilk 3'te olmaları CI'da zorunludur; oran hesabına girmezler.
+çok teşekkür	ederim
+rica	ederim
+özür	dilerim
+kusura	bakma
+afiyet	olsun
+hoş	geldin|geldiniz
+hoşça	kal
+kendine iyi	bak
+iyi ki	varsın|doğdun
+nasıl	gidiyor
+ne zaman	geleceksin|geliyorsun|gelirsin
+seni çok	seviyorum|özledim
+başın sağ	olsun
+allah rahmet	eylesin
+allah razı	olsun
+eline	sağlık
+ellerine	sağlık
+bir şey	değil|yok
+önemli	değil
+sorun	değil|yok
+eve	geldim|geliyorum|gidiyorum
+birazdan	oradayım|geliyorum|gelirim
+şimdi	geliyorum|çıkıyorum
+yarın	görüşürüz
+sonra	görüşürüz|konuşuruz
+mutlu	yıllar
+yeni yılın	kutlu
+bayramın	kutlu|mübarek
+çok geçmiş	olsun
+bol	şans
+başarılar	dilerim
+haber	ver|veririm
+dikkat	et
+acele	etme
+merak	etme
+hava çok	güzel|sıcak|soğuk
+geç	kaldım|kalacağım|kalma
+yardım	eder|et|edebilir
+emin	misin|değilim
+ne demek	istiyorsun|istedin
+aynen	öyle
+tabii	ki
+fark	etmez
+canın	sağ|sıkılmasın
+geçen	hafta|sene|gün|yıl
+teşekkür	ederim	sabit
+görüşmek	üzere	sabit
+doğum günün	kutlu	sabit

@@ -41,7 +41,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - name: Motor + aksan dizini + ek zinciri modeli
-        run: ./gradlew :engine:installDist :engine:buildDeasciifyIndex :engine:buildNgramModel :engine:buildSuffixModel
+        # İki dil modeli: kboard-tr.kbn (ölçüm; test cümleleri süzülmüş, tüm kalite eşikleri bunu okur) ve
+        # kboard-tr-ship.kbn (dağıtılan; süzgeçsiz, APK'ya giren). Bkz. docs/EVALUATION.md "İki dil modeli".
+        run: ./gradlew :engine:installDist :engine:buildDeasciifyIndex :engine:buildNgramModel :engine:buildNgramModelShip :engine:buildSuffixModel
       - name: 327 vakalık sette ölçüm
         working-directory: eval
         run: |
@@ -90,6 +92,17 @@ jobs:
             --gate varsayilan=0.003 --gate varsayilan+ctx=0.003 \
             --compare varsayilan:kuralsiz=0.0001 --compare varsayilan+ctx:kuralsiz+ctx=0.0001 \
             --json eval/out/corpus-false-ac.json
+      - name: Dağıtılan dil modeli, korpusta yanlış oto. düzeltme (süzgeçsiz derleme; aynı eşikler)
+        run: |
+          python data/tools/corpus_false_ac.py --no-exclude --engine engine/build/install/engine/bin/engine \
+            --deasciify engine/build/kboard/deasciify-tr.kbd \
+            --run "varsayilan=--suffix engine/build/kboard/suffix-tr.kbs" --context \
+            --gate varsayilan=0.003 --gate varsayilan+ctx=0.003 \
+            --json eval/out/corpus-false-ac-ship.json
+      - name: Dağıtılan dil modeli güvenlik denetimleri (yanlış düzeltme, kural ve de/da/ki tuzakları, gecikme, boyut, sabit ifadeler)
+        run: |
+          set -o pipefail
+          bash .github/ci/dagitilan-model.sh | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Kişisel öğrenme ölçümü (kisisel-v0 test kullanıcıları + seed-v0, öğrenme açık/kapalı)
         working-directory: eval
         run: |
@@ -151,10 +164,19 @@ jobs:
           unzip -l "$apk" | grep -E 'assets/kboard/kboard-tr\.kbn' || { echo "::error::assets/kboard/kboard-tr.kbn APK'da yok"; exit 1; }
           unzip -l "$apk" | grep -E 'assets/kboard/denylist-tr\.txt' || { echo "::error::assets/kboard/denylist-tr.txt APK'da yok"; exit 1; }
           unzip -l "$apk" | grep -E 'assets/kboard/suffix-tr\.kbs' || { echo "::error::assets/kboard/suffix-tr.kbs APK'da yok"; exit 1; }
+          # APK'daki dil modeli DAĞITILAN (süzgeçsiz) derleme olmalı, ölçüm modeli olmamalı.
+          ./gradlew -q :engine:buildNgramModel
+          mkdir -p build/apk-model && unzip -o -q "$apk" assets/kboard/kboard-tr.kbn -d build/apk-model
+          apk_sha=$(sha256sum build/apk-model/assets/kboard/kboard-tr.kbn | cut -d' ' -f1)
+          ship_sha=$(sha256sum engine/build/kboard/kboard-tr-ship.kbn | cut -d' ' -f1)
+          eval_sha=$(sha256sum engine/build/kboard/kboard-tr.kbn | cut -d' ' -f1)
+          echo "APK modeli $apk_sha; dağıtılan $ship_sha; ölçüm $eval_sha"
+          [ "$apk_sha" = "$ship_sha" ] || { echo "::error::APK'daki kboard-tr.kbn dağıtılan model (kboard-tr-ship.kbn) değil"; exit 1; }
+          [ "$apk_sha" != "$eval_sha" ] || { echo "::error::APK'daki kboard-tr.kbn ölçüm modeliyle aynı"; exit 1; }
           # Dil modeli boyut bütçesi: <= 1,1 MB (biçim 3; sohbet korpusuyla 1,08 MB)
-          size=$(stat -c %s engine/build/kboard/kboard-tr.kbn)
-          echo "kboard-tr.kbn: $size bayt"
-          [ "$size" -le 1100000 ] || { echo "::error::kboard-tr.kbn $size bayt, bütçe 1 100 000"; exit 1; }
+          size=$(stat -c %s engine/build/kboard/kboard-tr-ship.kbn)
+          echo "kboard-tr-ship.kbn: $size bayt"
+          [ "$size" -le 1100000 ] || { echo "::error::kboard-tr-ship.kbn $size bayt, bütçe 1 100 000"; exit 1; }
           # Ek zinciri modeli boyut bütçesi: <= 100 KB (faz-ek-zinciri.md)
           size=$(stat -c %s engine/build/kboard/suffix-tr.kbs)
           echo "suffix-tr.kbs: $size bayt"
