@@ -1,0 +1,10 @@
+GECTI 'dedimki' → şeritte 'dedim ki' (yuva 0), dokununca alan: "Dedim ki"
+GECTI öneri seçildikten sonra geri silme yazılanı geri getirdi: "Dedimki"
+GECTI 'dedimki' + boşluk yazıldığı gibi kaldı (otomatik düzeltme yok)
+GECTI 'bu akşam bizde' ilk öneri ayrım değil: "Bu akşam bizden"
+   'gidiyprum' + boşluk → alan: "Gidiyorum "
+   'kitapalr' + boşluk → alan: "Kitaplar "
+   'telefonumy' + boşluk → alan: "Telefonunu "
+   'okulsa' + boşluk → alan: "Okulsa "
+   'bilgisayarm' + boşluk → alan: "Bilgisayarm "
+BILGI işaretsiz KBoard adayının otomatik düzeltmeye gitmesi engellendi: 0 kez (5 kelime)
