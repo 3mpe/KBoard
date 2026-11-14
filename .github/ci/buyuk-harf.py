@@ -16,9 +16,19 @@ yazılamayanlar atlanır; crc32(kelime) sırasıyla ilk N1 / N2.
 olc: vakaları emülatörde yazar, boşluktan sonra alandaki hedef kelimeyi kaydeder.
 rapor: her grupta hedef kelime boşlukta ne oldu: yazıldığı gibi / yalnız büyük harf / başka.
 
+dogal: kimsenin seçmediği örneklem (Fable koşulu). Yalnız Common Voice (sohbet korpusu küçük harfle
+yazıldığı için doğru yazılış ölçüsü olamaz): her 150. dolu satır; satırda cümle başı olmayan, kendisi ve
+önündeki sözcük yalnız harften oluşan, en az 3 harfli, tümü büyük harf olmayan, tuş haritasıyla yazılabilen
+kelimelerden crc32(satır) ile biri. Beklenen: korpustaki yazılış; iki kelime de küçük harfle yazılır. Seçilen
+cümleler dil modelinin eğitiminden çıkarılır (data/buyuk-harf-dogal-ayrilan.jsonl, build_ngram --exclude-jsonl).
+liste: kuralın "cümle ortasında küçük harfle görüldü" saydığı, sözlükte yalnız büyük harfli kelimeler.
+
 Kullanım: buyuk-harf.py secim <main_tr.tsv> <kboard-tr.kbn> <keymap> <N1> <N2> <çıktı.jsonl>
           buyuk-harf.py olc <vakalar.jsonl> <keymap> <kayıt.jsonl>
-          buyuk-harf.py rapor <kayıt.jsonl>
+          buyuk-harf.py dogal <keymap> <N> <vakalar.jsonl> <ayrılan-cümleler.jsonl>
+          buyuk-harf.py liste <main_tr.tsv> <kboard-tr.kbn> <çıktı.txt>
+          buyuk-harf.py olc <vakalar.jsonl> <keymap> <kayıt.jsonl> [i/n]   (i/n: vakaların n parçadan i.si)
+          buyuk-harf.py rapor <kayıt.jsonl>...
 """
 
 from __future__ import annotations
@@ -41,8 +51,8 @@ def lower(s: str) -> str:
     return s.replace("I", "ı").replace("İ", "i").lower()
 
 
-def lm_display(path: Path) -> dict[str, str]:
-    """KBNG biçim 3: kelime → modelin yazılışı (yalnız kelime tablosu okunur)."""
+def _lm_words(path: Path):
+    """KBNG biçim 3 kelime tablosu: (kelime, bayrak, gösterim)."""
     data = path.read_bytes()
     assert data[:4] == b"KBNG" and struct.unpack(">i", data[4:8])[0] == 3
     pos = 8
@@ -63,14 +73,19 @@ def lm_display(path: Path) -> dict[str, str]:
         s = data[pos:pos + n].decode("utf-8"); pos += n
         return s
 
-    out = {}
     for _ in range(vint()):
         w = utf()
         flags = data[pos]; pos += 2
-        shown = utf() if flags & 2 else w
-        if not flags & 1:
-            out[w] = shown
-    return out
+        yield w, flags, (utf() if flags & 2 else w)
+
+
+def lm_display(path: Path) -> dict[str, str]:
+    """Kelime → modelin yazılışı (önerilmeyenler hariç)."""
+    return {w: shown for w, flags, shown in _lm_words(path) if not flags & 1}
+
+
+def lm_flag(path: Path, bit: int) -> set[str]:
+    return {w for w, flags, _ in _lm_words(path) if flags & bit}
 
 
 def secim(tsv: Path, kbn: Path, keymap: Path, n1: int, n2: int, dst: Path, held_only: bool = False) -> None:
@@ -115,7 +130,47 @@ def secim(tsv: Path, kbn: Path, keymap: Path, n1: int, n2: int, dst: Path, held_
     dst.write_text("\n".join(lines) + "\n", "utf-8")
 
 
-def olc(cases_path: Path, keymap: Path, dst: Path) -> int:
+def dogal(keymap: Path, n: int, dst: Path, held_dst: Path) -> None:
+    km = adb_driver.KeyMap.load(keymap)
+    path = next(p for name, p, _w in cf.CORPORA if name == "cv")
+    cases, held, k = [], [], 0
+    for line in path.read_text("utf-8").splitlines():
+        if not line.strip():
+            continue
+        k += 1
+        if k % 150 or len(cases) >= n:
+            continue
+        toks = b.tokens(line)
+        cand = [i for i in range(1, len(toks))
+                if toks[i].isalpha() and toks[i - 1].isalpha() and len(toks[i]) >= 3
+                and toks[i][1:] == lower(toks[i][1:])
+                and not km.missing_chars(f"{lower(toks[i - 1])} {lower(toks[i])}")]
+        if not cand:
+            continue
+        i = cand[zlib.crc32(line.encode("utf-8")) % len(cand)]
+        prev, t = lower(toks[i - 1]), toks[i]
+        cases.append(json.dumps({"id": f"buyuk-dogal-{len(cases) + 1:03d}", "text": f"{prev} {t}", "category": "buyuk-harf",
+                                 "source": "korpus-ayrilan", "license": "CC0-1.0", "tags": ["dogal"],
+                                 "input": f"{prev} {lower(t)}"}, ensure_ascii=False))
+        held.append(json.dumps({"text": line.strip()}, ensure_ascii=False))
+    dst.write_text("\n".join(cases) + "\n", "utf-8")
+    held_dst.write_text("\n".join(held) + "\n", "utf-8")
+    print(f"dogal: {len(cases)} vaka")
+
+
+def liste(tsv: Path, kbn: Path, dst: Path) -> None:
+    """Sözlükte yalnız büyük harfli olup modelin cümle ortasında küçük harfle gördüğü kelimeler (bayrak 4 yok)."""
+    words = {l.split("\t")[0] for l in tsv.read_text("utf-8").splitlines() if l}
+    lows = {w for w in words if w == lower(w)}
+    cap_only = {lower(w) for w in words if w != lower(w)} - lows
+    lm = lm_display(kbn)
+    no_mid = lm_flag(kbn, 4)
+    out = sorted(w for w in cap_only if lm.get(w) == w and w not in no_mid)
+    dst.write_text("\n".join(out) + "\n", "utf-8")
+    print(f"{len(out)} kelime; kanıtsız (bayrak 4) {sum(1 for w in cap_only if lm.get(w) == w and w in no_mid)}")
+
+
+def olc(cases_path: Path, keymap: Path, dst: Path, part: str = "0/1") -> int:
     """Her vakayı tuş dokunuşlarıyla yazar (iki kelime + boşluk) ve alandaki ikinci kelimeyi kaydeder.
 
     Genel sürücüden (`kboard_eval drive`) farklı olarak her harften sonra ekran okunmaz: yalnız boşluktan
@@ -123,6 +178,8 @@ def olc(cases_path: Path, keymap: Path, dst: Path) -> int:
     km = adb_driver.KeyMap.load(keymap)
     drv = adb_driver.DeviceDriver(adb_driver.Adb(), km, verify_field=False)
     cases = [json.loads(l) for l in cases_path.read_text("utf-8").splitlines() if l.strip()]
+    pi, pn = (int(x) for x in part.split("/"))
+    cases = cases[pi::pn]
     rc = 0
     drv.clear_field()
     drv.warm_up()
@@ -152,11 +209,11 @@ def olc(cases_path: Path, keymap: Path, dst: Path) -> int:
     return rc
 
 
-def rapor(records_path: Path) -> int:
+def rapor(*records_paths: Path) -> int:
     """Grup başına: beklenen yazılış (ortak/aksan: küçük harf; ozel: büyük harf), yalnız harf büyüklüğü
     farklı, başka kelime, okunamadı. Eski kayıtlarda beklenen yoksa ortak için yazılan, ozel için büyük
     harfli biçim beklenir."""
-    recs = [json.loads(l) for l in records_path.read_text("utf-8").splitlines() if l.strip()]
+    recs = [json.loads(l) for p in records_paths for l in p.read_text("utf-8").splitlines() if l.strip()]
     print("### Sözlükte yalnız büyük harfli kelimeler (boşlukta)\n")
     print("| grup | vaka | beklenen | yalnız büyük/küçük harf farkı | başka | okunamadı |\n|---|---|---|---|---|---|")
     examples = []
@@ -184,9 +241,14 @@ def rapor(records_path: Path) -> int:
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "secim":
-        secim(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), Path(sys.argv[7]))
-    elif sys.argv[1] == "olc":
-        sys.exit(olc(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4])))
+    cmd, a = sys.argv[1], sys.argv[2:]
+    if cmd == "secim":
+        secim(Path(a[0]), Path(a[1]), Path(a[2]), int(a[3]), int(a[4]), Path(a[5]))
+    elif cmd == "dogal":
+        dogal(Path(a[0]), int(a[1]), Path(a[2]), Path(a[3]))
+    elif cmd == "liste":
+        liste(Path(a[0]), Path(a[1]), Path(a[2]))
+    elif cmd == "olc":
+        sys.exit(olc(Path(a[0]), Path(a[1]), Path(a[2]), *a[3:4]))
     else:
-        sys.exit(rapor(Path(sys.argv[2])))
+        sys.exit(rapor(*(Path(x) for x in a)))
