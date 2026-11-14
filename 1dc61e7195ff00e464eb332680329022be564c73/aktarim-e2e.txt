@@ -1,0 +1,17 @@
+BILGI ayar işareti eklendi (io.github.kboard.tr.debug_preferences.xml)
+BILGI öğrenilenler dosyada
+BILGI sözlüğe 'kboardaktarim' eklendi
+GECTI dışa aktarıldı: KBoard_aktarim_2026-11-14.zip (1352 bayt)
+GECTI öğrenilen kelimeler bir dokunuşla eklendi (varsayılan işaretsiz)
+GECTI ayarlar ve sözlük varsayılan olarak dosyada
+GECTI pm clear sonrası öğrenilenler yok
+GECTI temiz kurulumda 'mavi' sonrası 'kaplumbağa' önerilmiyor
+GECTI ayarlar içe aktarıldı (işaret geldi)
+GECTI sözlük kelimesi içe aktarıldı (kboardaktarim)
+GECTI bu cihazdaki sözlük kelimesi silinmedi (eklendi, yerine geçmedi)
+GECTI öğrenilenler seçilmeyince dosya gelmedi
+GECTI öğrenilenler seçilmeyince 'kaplumbağa' önerilmiyor
+GECTI öğrenilenler içe aktarıldı (dosya geldi)
+GECTI içe aktarmadan sonra 'mavi' sonrası 'kaplumbağa' öneriliyor (yuva 0)
+GECTI bozuk dosya reddedildi (hata iletisi)
+GECTI bozuk dosya öğrenilenlere dokunmadı
