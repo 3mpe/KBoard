@@ -11,11 +11,18 @@ sleep 40
 open_field "$ime" "$pkg/helium314.keyboard.kboard.TestFieldActivity" || log "KBoard etkinleşmedi"
 set_prefs "$pkg" auto_cap=false use_personalized_dicts=false
 open_field "$ime" "$pkg/helium314.keyboard.kboard.TestFieldActivity" || log "KBoard etkinleşmedi (ayar sonrası)"
-python3 .github/ci/dogru-cumleler.py secim eval/testset/seed-v0.jsonl eval/keymaps/kboard-pixel6-emulator.json 40 "$out/vakalar.jsonl"
+adet=${DOGRU_ADET:-40}
+python3 .github/ci/dogru-cumleler.py secim eval/testset/seed-v0.jsonl eval/keymaps/kboard-pixel6-emulator.json "$adet" "$out/vakalar.jsonl"
+# Teşhis (ilk vakada büyük harf, (b) madde 3): ilk tuştan önce ayar değeri, ekran ve shift durumu.
+pf=$(adb shell run-as "$pkg" ls /data/user_de/0/$pkg/shared_prefs/ 2>/dev/null | tr -d '\r' | grep -m1 "_preferences\.xml$")
+log "ilk tuştan önce auto_cap: $(adb shell run-as "$pkg" cat "/data/user_de/0/$pkg/shared_prefs/$pf" | grep -oE '<boolean name="auto_cap" value="[a-z]+"' )"
+adb exec-out screencap -p > "$out/ilk-tus-oncesi.png"
+adb logcat -c
 ( cd eval && timeout 7800 python3 -m kboard_eval drive "../$out/vakalar.jsonl" \
     -k keymaps/kboard-pixel6-emulator.json -o "../$out/kboard.jsonl" ) 2>&1 | tee "$out/drive.log"
 rc=${PIPESTATUS[0]}
 adb exec-out screencap -p > "$out/son.png"
+adb logcat -d -s KBoardSuggestions:D > "$out/logcat-duzeltme.txt" 2>&1 || true
 if [ -s "$out/kboard.jsonl" ]; then
   ( cd eval && python3 -m kboard_eval score "../$out/vakalar.jsonl" -t "../$out/kboard.jsonl" \
       --markdown "../$out/puan.md" --title "Doğru cümleler (emülatör)" ) >/dev/null

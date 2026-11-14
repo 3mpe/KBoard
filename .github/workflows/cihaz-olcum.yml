@@ -14,6 +14,10 @@ on:
         type: choice
         options: [yoklama, dogru-cumleler, surum-duman]
         default: yoklama
+      adet:
+        description: dogru-cumleler için cümle sayısı
+        type: string
+        default: '40'
   pull_request:
     paths:
       - eval/kboard_eval/adb_driver.py
@@ -36,6 +40,7 @@ jobs:
     timeout-minutes: ${{ inputs.gorev == 'dogru-cumleler' && 160 || 80 }}
     env:
       GOREV: ${{ inputs.gorev || 'yoklama' }}
+      DOGRU_ADET: ${{ inputs.adet || '40' }}
     steps:
       - uses: actions/checkout@v4
         with:

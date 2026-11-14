@@ -286,7 +286,11 @@ object KBoardSuggestions {
         if (!correctionAllowed) return base
         val words = ngramContext?.let { contextWords(it) } ?: emptyList()
         val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
-        return when (val ac = autoCorrection(typedWord, locale, words, sentenceStart)) {
+        val ac = autoCorrection(typedWord, locale, words, sentenceStart)
+        // Yalnız debug: emülatör teşhisi (yazılan kelime kullanıcı metnidir, sürüm derlemesinde yazılmaz).
+        if (helium314.keyboard.latin.BuildConfig.DEBUG) Log.d(TAG,
+            "düzeltme: yazılan=$typedWord başlangıç=$sentenceStart temel=$base motor=$ac ilk=${suggestions.take(3).map { it.word }}")
+        return when (ac) {
             // Motorun düzeltmeye uygun işaretlemediği adaylar (ayrık bağlaç "dedim ki", yazım hatası, ek
             // zinciri, tamamlama) yalnız öneridir. HeliBoard ilk öneriyi bugün bu işarete bakarak düzeltir
             // (AutoCorrectionUtils); başka bir yoldan düzeltmeye karar verse de ilk öneri böyle bir adaysa
