@@ -6,7 +6,7 @@ adb shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
 dismiss_anr() {
   local xml b
   adb shell uiautomator dump /sdcard/anr.xml >/dev/null 2>&1; xml=$(adb shell cat /sdcard/anr.xml 2>/dev/null | tr '>' '\n')
-  echo "$xml" | grep -qiE "isn.t responding|yanıt vermiyor" || return 0
+  grep -qiE "isn.t responding|yanıt vermiyor" <<<"$xml" || return 0
   b=$(echo "$xml" | grep -m1 -E 'text="(Wait|Bekle)"' | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')
   log "ANR kutusu kapatılıyor: $b"
   if [ -n "$b" ]; then set -- $b; adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); else adb shell input keyevent BACK; fi
@@ -19,9 +19,10 @@ open_field() { # $1 = IME, $2 = etkinlik (paket/sınıf)
     adb shell ime enable "$1" >/dev/null 2>&1; adb shell ime set "$1" >/dev/null 2>&1
     adb shell am start -W -n "$2" >/dev/null; sleep 4; dismiss_anr
     adb shell input tap 540 400; sleep 3; dismiss_anr
-    if adb shell dumpsys input_method | grep -q "mCurMethodId=$1"; then
-      adb shell dumpsys input_method | grep -q "mInputShown=true" || { adb shell input tap 540 400; sleep 3; }
-      adb shell dumpsys input_method | grep -q "mInputShown=true" && return 0
+    # Çıktı önce alınır: `grep -q` boruyu erken kapatınca pipefail SIGPIPE'ı hata sayardı.
+    if grep -q "mCurMethodId=$1" <<<"$(adb shell dumpsys input_method)"; then
+      grep -q "mInputShown=true" <<<"$(adb shell dumpsys input_method)" || { adb shell input tap 540 400; sleep 3; }
+      grep -q "mInputShown=true" <<<"$(adb shell dumpsys input_method)" && return 0
       echo "   klavye görünmüyor ($n)"
       continue
     fi
