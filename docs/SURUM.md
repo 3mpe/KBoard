@@ -50,6 +50,17 @@ Anahtarı yalnız depo sahibi üretir ve saklar; anahtar ve parolalar başka hi�
    SHA-256 parmak izini sürüm notuna ekler.
 5. `v<sürüm>` sürümünü oluşturur: `KBoard-<sürüm>.apk` ve `.sha256` dosyası doğrudan indirilebilir.
 
-Sürümden önce emülatörde: `cihaz-olcum.yml` → `gorev: surum-duman` (geçici anahtarla imzalı release
+## Sürümden önce
+
+1. **Sözlük lisansı (ilk sürümde bir kez):** `main_tr.dict`'in lisansı `data/KAYNAKLAR.md`'de
+   "doğrulanacak". Depo sahibi https://codeberg.org/Helium314/aosp-dictionaries README'sini ve lisans
+   notlarını tarayıcıda açıp Türkçe sözlük için ne yazdığını okur. İzin verici bir lisanssa (ör.
+   Apache-2.0): `data/KAYNAKLAR.md`'de sözlük, `main_tr.tsv` ve `stems-tr.tsv` için "doğrulanacak"
+   kaldırılır, `NOTICE`'a atıf eklenir, sürüm notundaki "henüz doğrulanmadı" satırı silinir. Başka bir
+   şey yazıyorsa sürüm yayımlanmaz, karar yeniden verilir.
+2. Emülatörde: `cihaz-olcum.yml` → `gorev: surum-duman` (geçici anahtarla imzalı release
 APK'nın kurulması, yazması, önerisi, aksan düzeltmesi, öğrenmesi) ve `gorev: dogru-cumleler`
-(doğru yazılmış 40 cümlede boşlukta değişen kelimeler).
+(doğru yazılmış 40 cümlede boşlukta değişen kelimeler). Yeşil iş "değişen kelime yok" demek değildir;
+   rapordaki sayı okunur.
+3. İmzalı APK yayımlandıktan sonra depo sahibi onu kendi telefonuna kurup dener (duman testi geçici
+   anahtarla imzalanmış yapıyı sınar, son imzalı dosyayı değil).

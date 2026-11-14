@@ -7,7 +7,8 @@ plugins {
 }
 
 // KBOARD: versionCode sürüm adından türetilir ve hep artar: 1 000 000 + büyük·10 000 + küçük·100 + yama.
-// 0.1.0 → 1000100. Eski HeliBoard tabanlı 4300'den büyüktür; deneme sürümleri (.debug) üstüne kurulabilir.
+// 0.1.0 → 1000100. Önceki 4300'den büyüktür, böylece deneme paketi (.debug) de güncelleme olarak kurulur;
+// deneme (io.github.kboard.tr.debug) ve sürüm (io.github.kboard.tr) ayrı uygulamalardır.
 val kboardVersionName = "0.1.0"
 fun kboardVersionCode(name: String): Int {
     val parts = name.split(".").map { it.toInt() }
