@@ -376,6 +376,7 @@ class DeviceDriver:
         self.sleep = sleep
         self.verify_field = verify_field
         self.log = log or (lambda msg: print(msg, file=sys.stderr))
+        self._warm = False
 
     # -- ekran
     def read_screen(self, ready: Callable[[Screen], bool] | None = None) -> Screen:
@@ -463,6 +464,9 @@ class DeviceDriver:
             raise DriveError(f"{case.id}: tuş haritasında olmayan karakter(ler): {''.join(sorted(missing))}")
         if case.user_words:
             self.log(f"uyarı: {case.id}: user_words cihazda eklenmiyor ({', '.join(case.user_words)})")
+        if not self._warm:
+            self.warm_up()
+            self._warm = True
         self.clear_field()
         screen = self.read_screen(lambda sc: sc.field_text == "")
         self._check_field(screen, "", f"{case.id} başlangıç")
@@ -498,6 +502,19 @@ class DeviceDriver:
             return None
         # Düzeltme birden çok kelime olabilir ("birşey" → "bir şey"); tamamı alınır.
         return None if _same_text(tail) == _same_text(typed) else tail
+
+    def warm_up(self, reads: int = 20) -> None:
+        """Boş alanda öneri şeridi dolana kadar bekler (en çok `reads` okuma). Klavye yeni
+        açıldığında dil modeli arka planda yüklenir; ilk vakanın ilk olayı yükleme bitmeden
+        okunursa boş şerit kaydedilir ve koşular farklı çıkar (PR #53 yoklaması). Şeridi hiç
+        dolmayan klavyede yalnızca biraz bekletir, ize bir şey yazmaz."""
+        self.clear_field()
+        for _ in range(reads):
+            screen = self._dump()
+            if screen.field_text == "" and screen.suggestions:
+                return
+            self.sleep(0.5)
+        self.log("uyarı: boş alanda öneri şeridi dolmadı (ısınma)")
 
     def drive(self, cases: list[Case]) -> Iterator[Event]:
         for n, case in enumerate(cases, 1):

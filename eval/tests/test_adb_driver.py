@@ -329,6 +329,25 @@ class DriverTest(unittest.TestCase):
         with self.assertRaisesRegex(DriveError, "klavye paketi"):
             list(drv.drive([case()]))
 
+    def test_warm_up_waits_for_strip(self):
+        """Şerit ilk okumalarda boşsa (dil modeli yükleniyor) ilk olay boş kaydedilmez."""
+        drv, dev, log = make_driver()
+        stable = list(make_driver()[0].drive([case()]))
+        real_dump = dev._dump
+        cold = {"n": 3}
+        def dump(windows):
+            if cold["n"]:
+                cold["n"] -= 1
+                text, shown = dev._shown
+                dev._shown = (text, [])
+                try:
+                    return real_dump(windows)
+                finally:
+                    dev._shown = (text, shown)
+            return real_dump(windows)
+        dev._dump = dump
+        self.assertEqual(list(drv.drive([case()])), stable)
+
     def test_anr_dialog_dismissed(self):
         drv, dev, log = make_driver()
         stable = list(make_driver()[0].drive([case()]))
