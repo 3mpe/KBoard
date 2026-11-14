@@ -23,7 +23,7 @@ on:
         type: string
         default: '40'
       taban_grup:
-        description: taban için grup başına vaka (aksan, doğru yazım, yazım hatası; 4 = 12 vaka, ~47 dk)
+        description: taban için grup başına vaka (aksan, doğru yazım, yazım hatası; 4 = 12 vaka, ~65 dk)
         type: string
         default: '4'
   pull_request:

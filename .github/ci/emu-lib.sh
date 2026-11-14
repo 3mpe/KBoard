@@ -40,14 +40,15 @@ set_prefs() {
   local pkg=$1 pf kv k v dosyalar son eksik=0; shift
   adb shell am force-stop "$pkg"
   dosyalar=$(adb shell run-as "$pkg" ls /data/user_de/0/$pkg/shared_prefs/ 2>/dev/null | tr -d '\r')
-  # Klavyenin kendi dosyası <paket>_preferences.xml'dir; çalışma sırasında başka *_preferences.xml
-  # dosyaları oluşabildiği için önce tam ad aranır (ilk eşleşene yazmak yanlış dosyaya yazabiliyordu).
+  # Klavyenin kendi dosyası <paket>_preferences.xml'dir; önce tam ad aranır.
   pf=$(grep -m1 -x -F "${pkg}_preferences.xml" <<<"$dosyalar" || true)
   [ -n "$pf" ] || pf=$(grep -m1 "_preferences\.xml$" <<<"$dosyalar" || true)
   [ -n "$pf" ] || { log "tercih dosyası yok ($pkg): $(tr '\n' ' ' <<<"$dosyalar")"; return 1; }
   for kv in "$@"; do
     k=${kv%%=*}; v=${kv#*=}
-    adb shell "run-as $pkg sed -i '/name=\"$k\"/d' /data/user_de/0/$pkg/shared_prefs/$pf"
+    # Satır değil yalnız öğe silinir: önceki çağrının eklediği öğeler </map> ile aynı satırdadır, satırı
+    # silmek </map>'i de götürüp dosyayı bozuyordu (uygulama varsayılanlara dönüyordu).
+    adb shell "run-as $pkg sed -i 's|<boolean name=\"$k\" value=\"[a-z]*\" */>||' /data/user_de/0/$pkg/shared_prefs/$pf"
     adb shell "run-as $pkg sed -i 's|</map>|<boolean name=\"$k\" value=\"$v\" /></map>|' /data/user_de/0/$pkg/shared_prefs/$pf"
   done
   son=$(adb shell run-as "$pkg" cat "/data/user_de/0/$pkg/shared_prefs/$pf" | tr -d '\r')

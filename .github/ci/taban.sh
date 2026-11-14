@@ -12,7 +12,9 @@
 # Boyut: genel sürücü her harften sonra ekranı okur, vaka başına ~80 sn (dogru-cumleler koşuları;
 # ~26 dokunuşluk vaka, yani ~3 sn/dokunuş). 12 vaka x 2 geçiş x 80 sn ~ 32 dk; derleme, emülatör
 # açılışı ve iki ayar turu ~15 dk ile iş ~47 dk. Grup başına 5 vakada (15 vaka) ~55 dk olurdu, pay kalmazdı.
-# Geçiş başına süre sınırı TABAN_SURE (varsayılan 1260 sn): dolunca yeni vakaya başlanmaz; ikinci geçiş
+# Ölçülen (koşu 43595663455): ilk vaka ısınmayla ~4 dk, sonrakiler ~2,3 dk; 1260 sn'de 12 vakanın 9'u
+# yazılabildi. Sınır bu yüzden 1560 sn; iş ~65 dk sürer (iş zaman aşımı 80 dk).
+# Geçiş başına süre sınırı TABAN_SURE (varsayılan 1560 sn): dolunca yeni vakaya başlanmaz; ikinci geçiş
 # yalnız ilkinde eksiksiz yazılan vakaları yazar ve puanlar yalnız iki geçişte de eksiksiz vakalardan çıkar.
 set -uo pipefail
 source .github/ci/emu-lib.sh
@@ -50,8 +52,8 @@ gecis() {
   # Teşhis: geçiş başında odak, etkin klavye ve motor anahtarı (ikinci geçişte ekranın durulmadığı görüldü).
   log "$ad başlangıç: $(adb shell dumpsys window | tr -d '\r' | grep -m1 -E 'mCurrentFocus' | sed 's/^ *//'); $(adb shell dumpsys input_method | tr -d '\r' | grep -m1 -oE 'mCurMethodId=[^ ]+'); $(adb shell dumpsys input_method | tr -d '\r' | grep -m1 -oE 'mInputShown=[a-z]+')"
   log "$ad başlangıç anahtar satırı: $(tr -d '\r' < "$out/logcat-$ad.txt" | grep -F 'motor anahtarı:' | tail -1 | sed 's/^.*motor anahtarı:/motor anahtarı:/')"
-  timeout $(( ${TABAN_SURE:-1260} + 300 )) python3 .github/ci/taban.py sur "$out/vakalar.jsonl" "$keymap" \
-      "$out/$ad.jsonl" "${TABAN_SURE:-1260}" ${3:+"$3"} 2>&1 | tee "$out/$ad-drive.log"
+  timeout $(( ${TABAN_SURE:-1560} + 300 )) python3 .github/ci/taban.py sur "$out/vakalar.jsonl" "$keymap" \
+      "$out/$ad.jsonl" "${TABAN_SURE:-1560}" ${3:+"$3"} 2>&1 | tee "$out/$ad-drive.log"
   r=${PIPESTATUS[0]}; [ "$r" -eq 0 ] || { log "sürücü çıkışı $r ($ad)"; rc=1; }
   adb exec-out screencap -p > "$out/$ad-son.png"
   if grep -qF "HATA " "$out/$ad-drive.log"; then

@@ -120,8 +120,9 @@ geçişte anahtar onu da etkisiz kılar.
   (`ksoz-`) vakaları dışarıdadır: sürücü cihaza kişisel sözlük kurmuyor.
 - Boyut gerekçesi: genel sürücü her harften sonra ekranı okur; önceki `dogru-cumleler` koşularında
   vaka başına yaklaşık 80 sn. 12 vaka × 2 geçiş × 80 sn ≈ 32 dk; derleme, emülatör açılışı ve iki
-  ayar turu için yaklaşık 15 dk varsayımıyla iş yaklaşık 47 dk. Bu tahmindir, ölçülmedi.
-  Geçiş başına 1260 sn süre sınırı var; dolunca yeni vakaya başlanmaz.
+  ayar turu için yaklaşık 15 dk varsayımıyla iş yaklaşık 47 dk diye tahmin edilmişti. İlk koşuda
+  (43595663455) ilk vaka ısınmayla yaklaşık 4 dk, sonrakiler yaklaşık 2,3 dk sürdü ve 1260 sn'de 12 vakanın
+  9'u yazılabildi; süre sınırı bu yüzden geçiş başına 1560 sn yapıldı (iş yaklaşık 65 dk), dolunca yeni vakaya başlanmaz.
 - Sürücü: `kboard_eval.adb_driver.DeviceDriver` (`python -m kboard_eval drive` ile aynı kod). Fark:
   iz her vakadan sonra diske yazılır ve hata veren vaka atlanır. İkinci geçiş yalnız ilkinde eksiksiz
   yazılan vakaları yazar; puanlar yalnız iki geçişte de eksiksiz vakalardan hesaplanır.
