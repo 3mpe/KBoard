@@ -287,8 +287,10 @@ object KBoardSuggestions {
         val words = ngramContext?.let { contextWords(it) } ?: emptyList()
         val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
         val ac = autoCorrection(typedWord, locale, words, sentenceStart)
-        // Yalnız debug: emülatör teşhisi (yazılan kelime kullanıcı metnidir, sürüm derlemesinde yazılmaz).
-        if (helium314.keyboard.latin.BuildConfig.DEBUG) Log.d(TAG,
+        // Yazılan kelime kullanıcı metnidir: sürüm derlemesinde hiç yazılmaz, debug derlemesinde de
+        // varsayılan olarak KAPALIDIR. Yalnız `adb shell setprop log.tag.KBoardSuggestions DEBUG`
+        // verilmişse (emülatör teşhisi) günlüğe düşer.
+        if (helium314.keyboard.latin.BuildConfig.DEBUG && Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG,
             "düzeltme: yazılan=$typedWord bağlam=$words başlangıç=$sentenceStart temel=$base motor=$ac ilk=${suggestions.take(3).map { it.word }}")
         return when (ac) {
             // Motorun düzeltmeye uygun işaretlemediği adaylar (ayrık bağlaç "dedim ki", yazım hatası, ek

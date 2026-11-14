@@ -17,6 +17,8 @@ python3 .github/ci/dogru-cumleler.py secim eval/testset/seed-v0.jsonl eval/keyma
 pf=$(adb shell run-as "$pkg" ls /data/user_de/0/$pkg/shared_prefs/ 2>/dev/null | tr -d '\r' | grep -m1 "_preferences\.xml$")
 log "ilk tuştan önce auto_cap: $(adb shell run-as "$pkg" cat "/data/user_de/0/$pkg/shared_prefs/$pf" | grep -oE '<boolean name="auto_cap" value="[a-z]+"' )"
 adb exec-out screencap -p > "$out/ilk-tus-oncesi.png"
+# Teşhis günlüğü (yazılan kelimeler) varsayılan kapalıdır; yalnız bu emülatör koşusunda açılır.
+adb shell setprop log.tag.KBoardSuggestions DEBUG
 adb logcat -c
 ( cd eval && timeout 7800 python3 -m kboard_eval drive "../$out/vakalar.jsonl" \
     -k keymaps/kboard-pixel6-emulator.json -o "../$out/kboard.jsonl" ) 2>&1 | tee "$out/drive.log"
