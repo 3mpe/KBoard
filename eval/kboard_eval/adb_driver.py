@@ -263,6 +263,24 @@ def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
     return Screen(suggestions[: keymap.max_suggestions], field_text, keyboard_seen)
 
 
+_ANR_RE = re.compile(r"isn(?:.|&apos;)t responding|yanıt vermiyor")
+
+
+def anr_wait_point(xml_text: str) -> tuple[int, int] | None:
+    """Dökümde "... isn't responding" kutusu varsa "Wait"/"Bekle" düğmesinin ortası."""
+    if not _ANR_RE.search(xml_text):
+        return None
+    for m in re.finditer(r"<node\b[^>]*>", xml_text):
+        tag = m.group(0)
+        if re.search(r'\btext="(Wait|Bekle)"', tag):
+            b = re.search(r'bounds="(\[[^"]+)"', tag)
+            mb = _BOUNDS_RE.fullmatch(b.group(1)) if b else None
+            if mb:
+                x1, y1, x2, y2 = map(int, mb.groups())
+                return (x1 + x2) // 2, (y1 + y2) // 2
+    return None
+
+
 # --------------------------------------------------------------------------- adb
 
 Runner = Callable[[Sequence[str]], str]
@@ -384,17 +402,30 @@ class DeviceDriver:
         self.log(f"uyarı: ekran {km.max_reads} okumada durulmadı, son okuma kullanıldı")
         return last  # type: ignore[return-value]
 
-    def _dump(self, retries: int = 3) -> Screen:
-        """Tek okuma; geçici uiautomator hataları ("could not get idle state", boş çıktı) yeniden denenir."""
-        for attempt in range(retries):
-            try:
-                screen = parse_dump(self.adb.dump_ui(self.keymap.dump_command), self.keymap)
+    def _dump(self, retries: int = 3, anr_taps: int = 3) -> Screen:
+        """Tek okuma; geçici uiautomator hataları ("could not get idle state", boş çıktı) yeniden denenir.
+        Klavyeyi örten bir "... isn't responding" kutusu (emülatörde Pixel Launcher) varsa "Wait"e
+        dokunulup yeniden okunur."""
+        while True:
+            for attempt in range(retries):
+                try:
+                    raw = self.adb.dump_ui(self.keymap.dump_command)
+                    screen = parse_dump(raw, self.keymap)
+                    break
+                except DriveError as exc:
+                    if attempt == retries - 1:
+                        raise
+                    self.log(f"uyarı: ekran okunamadı, yeniden deneniyor ({exc})")
+                    self.sleep(0.5)
+            if screen.keyboard_seen or anr_taps <= 0:
                 break
-            except DriveError as exc:
-                if attempt == retries - 1:
-                    raise
-                self.log(f"uyarı: ekran okunamadı, yeniden deneniyor ({exc})")
-                self.sleep(0.5)
+            wait = anr_wait_point(raw)
+            if wait is None:
+                break
+            anr_taps -= 1
+            self.log(f"uyarı: 'yanıt vermiyor' kutusu klavyeyi örtüyor, 'Wait'e dokunuluyor {wait}")
+            self.adb.tap(*wait)
+            self.sleep(1)
         if not screen.keyboard_seen:
             raise DriveError(
                 f"dökümde klavye paketi ({self.keymap.package}) yok: klavye açık değil ya da bu Android "

@@ -1,5 +1,7 @@
 # Emülatör betikleri için ortak yardımcılar (`source` edilir). Pixel 6 profili, 1080x2400.
 log() { echo "== $*"; }
+# Emülatörün ilk dakikalarındaki "... isn't responding" kutuları klavyeyi örtmesin (Android hata kutusu ayarı).
+adb shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
 # "... isn't responding" kutusu varsa "Wait"e dokun.
 dismiss_anr() {
   local xml b
