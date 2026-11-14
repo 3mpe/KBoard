@@ -1,8 +1,7 @@
 # Ölçüm tabanı v0 (kısmi)
 
-Durum: **kısmi, iskelet.** Bu belgede henüz ölçülmüş sayı yoktur; tablolardaki `—` yer tutucudur.
-Emülatör görevi (`taban`) hazırlandı ama bu belge yazıldığında bir kez bile koşulmadı. Gboard yarısı
-gerçek cihaz bekliyor (aşağıda). İlgili işler: #10 (taban ölçümünün bu yarısı), #2, #3; #19 için
+Durum: **kısmi.** Emülatör yarısı bir kez koşuldu (koşu 43600969904, commit `a0e0c65d`, 2026-11-14,
+12 vaka); sayılar "Sonuçlar" bölümündedir. Gboard yarısı gerçek cihaz bekliyor (aşağıda). İlgili işler: #10 (taban ölçümünün bu yarısı), #2, #3; #19 için
 kullanılıp kullanılmayacağı açık.
 
 ## Ne ölçülüyor
@@ -147,20 +146,72 @@ geçişte anahtar onu da etkisiz kılar.
 
 ## Sonuçlar
 
-Koşu: — (tarih, commit ve iş bağlantısı koşudan sonra yazılacak). İki geçişte de eksiksiz vaka: — / 12.
+Koşu: [43600969904](https://github.com/3mpe/KBoard/actions/runs/43600969904) (iş 132465424442),
+2026-11-14, commit `a0e0c65d`. İki geçişte de eksiksiz vaka: 12 / 12 (44 kelime). Motor durumu kanıtı:
+açık geçişte `motor anahtarı: açık`, 275 `düzeltme:` satırı; kapalı geçişte `motor anahtarı: kapalı`,
+0 `düzeltme:` satırı. Aşağıdaki tablolar koşunun günlüğünden değiştirilmeden alınmıştır.
 
-| Kırılım | Metrik | KBoard (motor açık) | HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı) |
-|---|---|---|---|
-| Genel | İlk-3 @0 (sonraki kelime) | — | — |
-| Genel | İlk-3 @1 / @2 / @3 | — | — |
-| Genel | KSR | — | — |
-| etiket: deasciify | Aksan düzeltme (n) | — | — |
-| kategori: dogru_yazim | Yanlış oto. düzeltme (n) | — | — |
-| etiket: yazim_hatasi | Yazım hatası düzeltme (n) | — | — |
-| etiket: yazim_hatasi | Yazım hatası ilk-3 | — | — |
+**Okurken:** 12 vaka yön gösterir, eşik belirlemeye yetmez; kırılımların çoğunda n tek hanelidir.
+Bu örneklemde öne çıkanlar:
 
-Tam tablolar (bütün kategori ve etiketler) koşudan sonra `puan-acik.md` ve `puan-kapali.md`'den buraya
-aktarılacak. Boşlukta ayrışan kelimeler: — (`fark.md`).
+- Sonraki kelime (İlk-3 @0) motor kapalıyken %0'dır. Olası neden öğrenme kapalıyken HeliBoard'un boş
+  alanda öneri vermemesidir (bu koşuda ayrıca doğrulanmadı); öyleyse bu sayı ayarın sonucudur ve
+  kullanıcının kendi geçmişiyle çalışan stok HeliBoard için alt sınır sayılmalıdır.
+- Yanlış otomatik düzeltme iki geçişte de 2/30'dur. Ayrışma tablosunda doğru yazılmış kelimenin
+  değiştiği satırlar: motor açıkken `mi` → `mı` (`yazim-0038`); motor kapalıyken `dinlendim` →
+  `Dinlendim` ve `oturduk` → `oturdukları`.
+- Aksan düzeltme 8/10'a karşı 6/10, yazım hatası düzeltme 2/4'e karşı 1/4: farklar birkaç kelimeden ibarettir.
+
+### KBoard (motor açık)
+
+| Kırılım | Kelime | İlk-3 @0 (sonraki kelime) | İlk-3 @1 | İlk-3 @2 | İlk-3 @3 | KSR | Aksan düzeltme (n) | Yanlış oto. düzeltme (n) | Yazım hatası düzeltme (n) | Yazım hatası ilk-3 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Genel** | 44 | %21.9 | %25.0 | %34.9 | %56.4 | %34.6 | %80.0 (10) | %6.7 (30) | %50.0 (4) | %75.0 |
+| kategori: dogru_yazim | 16 | %8.3 | %18.8 | %31.2 | %62.5 | %35.2 | – (0) | %0.0 (16) | – (0) | – |
+| kategori: sohbet | 28 | %30.0 | %28.6 | %37.0 | %52.2 | %34.3 | %80.0 (10) | %14.3 (14) | %50.0 (4) | %75.0 |
+| etiket: belirsiz | 4 | %0.0 | %0.0 | %0.0 | %33.3 | %21.9 | %66.7 (3) | %0.0 (1) | – (0) | – |
+| etiket: deasciify | 15 | %27.3 | %26.7 | %33.3 | %46.2 | %34.7 | %80.0 (10) | %0.0 (5) | – (0) | – |
+| etiket: harf_fazla | 3 | %0.0 | %33.3 | %0.0 | %50.0 | %19.0 | – (0) | %50.0 (2) | %0.0 (1) | %0.0 |
+| etiket: komsu_tus | 7 | %60.0 | %42.9 | %71.4 | %60.0 | %46.7 | – (0) | %0.0 (5) | %50.0 (2) | %100.0 |
+| etiket: sik_hata | 4 | %0.0 | %0.0 | %0.0 | %25.0 | %35.5 | – (0) | %0.0 (4) | – (0) | – |
+| etiket: yabanci | 4 | %33.3 | %25.0 | %50.0 | %75.0 | %38.1 | – (0) | %0.0 (4) | – (0) | – |
+| etiket: yaygin_hata | 3 | %0.0 | %0.0 | %0.0 | %66.7 | %23.1 | – (0) | %50.0 (2) | %100.0 (1) | %100.0 |
+| etiket: yazim_hatasi | 13 | %33.3 | %30.8 | %41.7 | %60.0 | %33.7 | – (0) | %22.2 (9) | %50.0 (4) | %75.0 |
+
+Gecikme: p50 – · p95 – · max – (0 ölçüm)
+
+### HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı)
+
+| Kırılım | Kelime | İlk-3 @0 (sonraki kelime) | İlk-3 @1 | İlk-3 @2 | İlk-3 @3 | KSR | Aksan düzeltme (n) | Yanlış oto. düzeltme (n) | Yazım hatası düzeltme (n) | Yazım hatası ilk-3 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Genel** | 44 | %0.0 | %6.8 | %9.3 | %35.9 | %18.2 | %60.0 (10) | %6.7 (30) | %25.0 (4) | %75.0 |
+| kategori: dogru_yazim | 16 | %0.0 | %0.0 | %0.0 | %37.5 | %18.1 | – (0) | %0.0 (16) | – (0) | – |
+| kategori: sohbet | 28 | %0.0 | %10.7 | %14.8 | %34.8 | %18.3 | %60.0 (10) | %14.3 (14) | %25.0 (4) | %75.0 |
+| etiket: belirsiz | 4 | %0.0 | %0.0 | %0.0 | %33.3 | %18.8 | %66.7 (3) | %100.0 (1) | – (0) | – |
+| etiket: deasciify | 15 | %0.0 | %6.7 | %13.3 | %38.5 | %17.4 | %60.0 (10) | %20.0 (5) | – (0) | – |
+| etiket: harf_fazla | 3 | %0.0 | %0.0 | %0.0 | %0.0 | %4.8 | – (0) | %0.0 (2) | %0.0 (1) | %0.0 |
+| etiket: komsu_tus | 7 | %0.0 | %28.6 | %28.6 | %40.0 | %31.1 | – (0) | %0.0 (5) | %50.0 (2) | %100.0 |
+| etiket: sik_hata | 4 | %0.0 | %0.0 | %0.0 | %0.0 | %19.4 | – (0) | %0.0 (4) | – (0) | – |
+| etiket: yabanci | 4 | %0.0 | %0.0 | %0.0 | %25.0 | %4.8 | – (0) | %0.0 (4) | – (0) | – |
+| etiket: yaygin_hata | 3 | %0.0 | %0.0 | %0.0 | %33.3 | %11.5 | – (0) | %50.0 (2) | %0.0 (1) | %100.0 |
+| etiket: yazim_hatasi | 13 | %0.0 | %15.4 | %16.7 | %30.0 | %19.6 | – (0) | %11.1 (9) | %25.0 (4) | %75.0 |
+
+Gecikme: p50 – · p95 – · max – (0 ölçüm)
+
+### Boşlukta metne geçen kelime: iki geçişin ayrıştığı yerler
+
+12 vaka, 44 kelime; farklı: 6
+
+| Vaka | Yazılan | Hedef | KBoard (motor açık) | HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı) |
+|---|---|---|---|---|
+| `aksan-0030` | ugrayacagim | uğrayacağım | uğrayacağım | uğrayacağı |
+| `aksan-0034` | dinlendim | dinlendim | dinlendim | Dinlendim |
+| `aksan-0069` | oturduk | oturduk | oturduk | oturdukları |
+| `aksan-0086` | Boyle | Böyle | Böyle | Boyle |
+| `yazim-0020` | Egzos | Egzoz | Egzoz | Egzos |
+| `yazim-0038` | mi | mi | mı | mi |
+
+Gecikme bu koşuda ölçülmez (sürücü iz kaydına süre yazmıyor).
 
 ## Gboard yarısı: gerçek cihaz bekliyor
 
