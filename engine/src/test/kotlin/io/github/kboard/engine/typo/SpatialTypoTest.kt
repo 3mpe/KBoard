@@ -68,6 +68,24 @@ class SpatialTypoTest {
     }
 
     @Test
+    fun singleOccurrenceModelWordOnlyInItsContext() {
+        // Modelde bir kez görülmüş, sözlükte olmayan kelime (sıklık 0): genel olasılığı düşük, yalnız
+        // görüldüğü bağlamda yüksek. Kalite eşiği onu yalnız o bağlamda ağır kayma hedefi yapar.
+        val once = object : ContextScorer {
+            override fun logProb(word: String, context: List<String>, sentenceStart: Boolean): Float? =
+                if (word != "kabakçı") null else if (context.lastOrNull() == "usta") -2.5f else -6.5f
+            override fun sameFold(fold: String): List<String> = if (fold == "kabakci") listOf("kabakçı") else emptyList()
+            override fun hasFoldPrefix(foldedPrefix: String): Boolean = "kabakci".startsWith(foldedPrefix)
+        }
+        val t = TypoSource(index).also { it.contextScorer = once }
+        // l(k)-s(a)-b-a-k-ç-u(ı): yalnız 3 harf komşu tuşta, kelime modelde bir kez geçiyor
+        val typed = "lsbakçu"
+        assertTrue(t.spatial(typed, listOf("usta"), false).any { it.word == "kabakçı" })
+        assertTrue(t.spatial(typed, emptyList(), true).none { it.word == "kabakçı" })
+        assertTrue(t.spatial(typed, listOf("bir"), false).none { it.word == "kabakçı" })
+    }
+
+    @Test
     fun layoutSwitchDisablesSearch() {
         val t = TypoSource(index).also { it.contextScorer = lm }
         t.spatialEnabled = false
