@@ -131,6 +131,13 @@ jobs:
         run: ./gradlew assembleDebug
       - name: İzin listesi (ağ izni olmamalı)
         run: bash .github/ci/izin-kontrol.sh "$(ls app/build/outputs/apk/debug/*.apk | head -1)"
+      - name: Debug anahtarı denetiminin olumsuz kontrolü (debug APK'da izi bulmalı)
+        run: |
+          # Denetim release APK içindir; anahtarı içeren debug APK'da BAŞARISIZ olmalı. Geçerse denetim
+          # boşa çalışıyor demektir (ör. dex paketlemesi değişti).
+          if bash .github/ci/debug-anahtar-kontrol.sh "$(ls app/build/outputs/apk/debug/*.apk | head -1)" >/dev/null; then
+            echo "::error::debug-anahtar-kontrol.sh debug APK'da anahtar izini bulamadı"; exit 1
+          fi
       - name: Öneri motoru testleri
         run: ./gradlew :engine:test
       - name: KBoard uygulama testleri (Robolectric, yalnız kboard paketi)

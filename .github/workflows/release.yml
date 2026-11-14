@@ -52,6 +52,8 @@ jobs:
         run: ./gradlew assembleRelease
       - name: İzin listesi
         run: bash .github/ci/izin-kontrol.sh "$(ls app/build/outputs/apk/release/*.apk | head -1)"
+      - name: Debug ölçüm anahtarı release APK'da olmamalı
+        run: bash .github/ci/debug-anahtar-kontrol.sh "$(ls app/build/outputs/apk/release/*.apk | head -1)"
       - name: İmzala
         env:
           KS_B64: ${{ secrets.KBOARD_KEYSTORE_BASE64 }}

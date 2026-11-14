@@ -57,6 +57,26 @@ object KBoardSuggestions {
     @Volatile
     var engine: SuggestionEngine = SuggestionEngine(listOf(userMorph))
 
+    /**
+     * Ölçüm tabanı ("HeliBoard eşdeğeri: KBoard derlemesi, motor kapalı", docs/reports/baseline-v0.md):
+     * açıkken motorun öneri hattındaki dört bağlantısı ([getSuggestions], [mergeAutoCorrection],
+     * [replaceMisspellings], [noteRevert]) hiçbir şey yapmaz; öneri ve otomatik düzeltme HeliBoard'un
+     * kendi sözlüklerine kalır. Kullanıcı ayarı değildir: yalnız debug kaynak kümesindeki
+     * `TestFieldActivity` açar ([setEngineOffForDebug]); release derlemesinde açan kod yoktur.
+     * `internal`: birim testleri doğrudan yazar (testler debuggable olmayan `runTests` türünde koşar).
+     */
+    @Volatile
+    internal var engineOff = false
+
+    /**
+     * Yalnız debug derlemesinde etkilidir: `BuildConfig.DEBUG` release'te derleme zamanı `false`
+     * sabitidir, orada bu çağrı hiçbir şey değiştirmez ve motor kapatılamaz.
+     */
+    @JvmStatic
+    fun setEngineOffForDebug(off: Boolean) {
+        if (helium314.keyboard.latin.BuildConfig.DEBUG) engineOff = off
+    }
+
     /** Etkin aksan düzeltici; otomatik düzeltme kararı ([autoCorrection]) bundan alınır. */
     @Volatile
     private var deasciifier: DeasciifySource? = null
@@ -149,6 +169,7 @@ object KBoardSuggestions {
      */
     @JvmStatic
     fun noteRevert(typedWord: String, committedWord: String) {
+        if (engineOff) return
         if (deasciifier != null && rules.noteRevert(typedWord, committedWord)) KBoardPersonal.saveReverts(rules.reverts())
     }
 
@@ -283,7 +304,7 @@ object KBoardSuggestions {
         correctionAllowed: Boolean, base: Pair<Boolean, Boolean>,
         typedWordSourceType: String? = null, trailingQuotes: Int = 0, ngramContext: NgramContext? = null,
     ): Pair<Boolean, Boolean> {
-        if (!correctionAllowed) return base
+        if (!correctionAllowed || engineOff) return base
         val words = ngramContext?.let { contextWords(it) } ?: emptyList()
         val sentenceStart = ngramContext?.let { startsSentence(it, words.size) } ?: true
         val ac = autoCorrection(typedWord, locale, words, sentenceStart)
@@ -370,6 +391,7 @@ object KBoardSuggestions {
         native: Collection<SuggestedWordInfo> = emptyList(),
     ): List<SuggestedWordInfo> {
         calls.incrementAndGet()
+        if (engineOff) return emptyList()
         val e = engine
         // Motor yalnızca Türkçe için; diğer dil gruplarına (ör. yazım denetleyicisinin kendi örneği) aday eklemez.
         if (e.isEmpty || composedData.mIsBatchMode || locale.language != "tr") return emptyList()
@@ -405,7 +427,7 @@ object KBoardSuggestions {
      * (kullanıcı o yazımı seçti). Motorun kendi adayları için aynısını `SuggestionEngine` yapar.
      */
     fun replaceMisspellings(typedWord: String, suggestions: MutableList<SuggestedWordInfo>, locale: Locale) {
-        if (locale.language != "tr" || deasciifier == null || suggestions.isEmpty()) return
+        if (engineOff || locale.language != "tr" || deasciifier == null || suggestions.isEmpty()) return
         val typed = TurkishText.lower(typedWord)
         val present = suggestions.mapTo(HashSet()) { TurkishText.lower(it.word) }
         val iter = suggestions.listIterator()
