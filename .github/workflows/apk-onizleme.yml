@@ -37,9 +37,9 @@ jobs:
           short=${sha:0:7}
           f="KBoard-debug-$short.apk"
           cp "$(ls apk/*.apk | head -1)" "$f"
-          # Etiket varsayılan dalın ucuna konur: GITHUB_TOKEN, iş akışı dosyası değiştiren bir PR
+          # Etiket iş akışının çalıştığı dalın ucuna konur: GITHUB_TOKEN, iş akışı dosyası değiştiren bir PR
           # commit'ine etiket açamıyor (403). APK'nın kaynağı dosya adında ve notta yazılı.
           gh release create "apk-$short" "$f" --repo "$GITHUB_REPOSITORY" --prerelease \
             --title "KBoard debug önizleme ($short)" \
-            --notes "Telefonda denemek için debug APK (imzalı sürüm değil). APK'nın kaynağı: $sha (etiket main'e işaret eder). Önceki önizlemenin üstüne kurulmaz: önce Ayarlar → Yedekle ile dışa aktar, eskisini kaldır, sonra kur."
+            --notes "Telefonda denemek için debug APK (imzalı sürüm değil). APK'nın kaynağı: $sha (etiket APK'nın commit'ine değil, iş akışının çalıştığı dalın ucuna işaret eder). Önceki önizlemenin üstüne kurulmaz: önce Ayarlar → Yedekle ile dışa aktar, eskisini kaldır, sonra kur."
           echo "https://github.com/$GITHUB_REPOSITORY/releases/download/apk-$short/$f" >> "$GITHUB_STEP_SUMMARY"
