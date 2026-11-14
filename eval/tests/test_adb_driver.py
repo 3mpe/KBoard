@@ -243,6 +243,20 @@ class ParseDumpTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "order"):
             KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"order": "rastgele"}})
 
+    def test_field_in_keyboard_package(self):
+        # KBoard'un kendi test alanı (TestFieldActivity) klavyeyle aynı pakette
+        km = KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"bounds": [0, 0, 300, 50]}})
+        xml = ("<displays><display id=\"0\"><window index=\"0\" type=\"APPLICATION\"><hierarchy rotation=\"0\">"
+               f'<node text="mer" class="android.widget.EditText" package="{km.package}" content-desc="" '
+               'focused="true" bounds="[0,500][300,900]" /></hierarchy></window>'
+               "<window index=\"1\" type=\"INPUT_METHOD\"><hierarchy rotation=\"0\">"
+               f'<node text="merhaba" class="android.widget.TextView" package="{km.package}" content-desc="" '
+               'bounds="[0,0][100,50]" /></hierarchy></window></display></displays>')
+        s = parse_dump(xml, km)
+        self.assertEqual(s.field_text, "mer")
+        self.assertEqual(s.suggestions, ["merhaba"])
+        self.assertTrue(s.keyboard_seen)
+
     def test_leading_noise_and_garbage(self):
         km = KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"bounds": [0, 1560, 1080, 1680]}})
         xml = (DATA / "heliboard_kad.xml").read_text(encoding="utf-8")

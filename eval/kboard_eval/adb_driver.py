@@ -228,13 +228,16 @@ def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
     keyboard_seen = False
     for node in root.iter("node"):
         pkg = node.get("package", "")
+        # Odaktaki metin kutusu klavyeyle aynı pakette olabilir (KBoard'un kendi test alanı,
+        # TestFieldActivity); klavye penceresinde odaklı EditText olmaz.
+        if field_text is None and node.get("focused") == "true" and "EditText" in node.get("class", ""):
+            text = node.get("text", "")
+            # Bazı Android sürümleri boş kutuda ipucunu (hint) metin olarak verir.
+            field_text = "" if text and text == node.get("hint") else nfc(text)
+            continue
         if pkg == keymap.package:
             keyboard_seen = True
         if pkg != keymap.package:
-            if field_text is None and node.get("focused") == "true" and "EditText" in node.get("class", ""):
-                text = node.get("text", "")
-                # Bazı Android sürümleri boş kutuda ipucunu (hint) metin olarak verir.
-                field_text = "" if text and text == node.get("hint") else nfc(text)
             continue
         label = node.get("text") or (node.get("content-desc") if rid else "") or ""
         label = nfc(label.strip())

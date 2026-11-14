@@ -20,6 +20,7 @@ open_field() {
     adb shell ime enable "$1" >/dev/null 2>&1; adb shell ime set "$1" >/dev/null 2>&1
     adb shell am start -W -n "$test_activity" >/dev/null; sleep 4; dismiss_anr
     adb shell input tap 540 400; sleep 3; dismiss_anr
+    adb shell input keyevent KEYCODE_MOVE_END $(printf 'KEYCODE_DEL %.0s' $(seq 12)) # önceki yoklamanın metni
     adb shell dumpsys input_method | grep -q "mCurMethodId=$1" && return 0
     echo "   etkin klavye $1 değil, yeniden seçiliyor ($n)"
   done
