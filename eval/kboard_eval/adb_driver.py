@@ -85,6 +85,7 @@ class KeyMap:
     stable_reads: int = 2                  # ardışık aynı okuma sayısı (öneri çubuğu durulsun)
     max_reads: int = 8
     dump_command: str | None = None        # varsayılan: uiautomator dump --windows, olmazsa düz dump
+    field_hint: str | None = None          # boş metin kutusunun ipucu; döküm `hint` vermeyip metin olarak verirse boş sayılır
 
     @classmethod
     def from_dict(cls, data: dict) -> "KeyMap":
@@ -119,6 +120,7 @@ class KeyMap:
             stable_reads=int(data.get("stable_reads", 2)),
             max_reads=int(data.get("max_reads", 8)),
             dump_command=data.get("dump_command"),
+            field_hint=data.get("field_hint"),
         )
 
     @classmethod
@@ -228,13 +230,16 @@ def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
     keyboard_seen = False
     for node in root.iter("node"):
         pkg = node.get("package", "")
+        # Odaktaki metin kutusu klavyeyle aynı pakette olabilir (KBoard'un kendi test alanı,
+        # TestFieldActivity); klavye penceresinde odaklı EditText olmaz.
+        if field_text is None and node.get("focused") == "true" and "EditText" in node.get("class", ""):
+            text = node.get("text", "")
+            # Bazı Android sürümleri boş kutuda ipucunu (hint) metin olarak verir.
+            field_text = "" if text and (text == node.get("hint") or text == keymap.field_hint) else nfc(text)
+            continue
         if pkg == keymap.package:
             keyboard_seen = True
         if pkg != keymap.package:
-            if field_text is None and node.get("focused") == "true" and "EditText" in node.get("class", ""):
-                text = node.get("text", "")
-                # Bazı Android sürümleri boş kutuda ipucunu (hint) metin olarak verir.
-                field_text = "" if text and text == node.get("hint") else nfc(text)
             continue
         label = node.get("text") or (node.get("content-desc") if rid else "") or ""
         label = nfc(label.strip())
@@ -315,6 +320,8 @@ class Adb:
             # İkisi de başarısızsa geçici bir hatadır (ör. "could not get idle state"), karar ertelenir.
             if _has_xml(plain):
                 self._plain_dump = self._probed = True
+                print("uyarı: `uiautomator dump --windows` çalışmadı, düz döküme geçildi (klavye penceresi görünmez)",
+                      file=sys.stderr)
             return plain
         return self.exec_out(_dump_cmd(""))
 

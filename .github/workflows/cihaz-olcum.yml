@@ -1,0 +1,64 @@
+name: Cihaz sürücüsü (emülatör)
+
+# #9: öneri çubuğunun erişilebilirlik ağacından okunup okunamadığını yoklar (KBoard ve imajdaki
+# Gboard) ve KBoard'da cihaz sürücüsünün aynı vakada 3 koşuda aynı izi verip vermediğini sınar.
+# Elle ya da sürücü dosyaları değişince çalışır; zorunlu kontrol değildir.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - eval/kboard_eval/adb_driver.py
+      - eval/keymaps/**
+      - .github/ci/strip-probe.sh
+      - .github/workflows/cihaz-olcum.yml
+
+concurrency:
+  group: cihaz-olcum-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Öneri çubuğu yoklama + determinizm
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Debug APK
+        run: ./gradlew assembleDebug
+      - name: Disk alanı aç
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/local/lib/android/sdk/ndk
+          rm -rf app/build/intermediates app/build/tmp
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emülatör + yoklama
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disk-size: 3000M
+          cores: 4
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash .github/ci/strip-probe.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cihaz-olcum
+          path: screenshots/

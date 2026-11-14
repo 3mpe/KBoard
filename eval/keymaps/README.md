@@ -67,6 +67,7 @@ olduğu, klavye + cihaz başına bir JSON dosyasında tutulur.
 | `suggestion_strip.order` | `left-to-right` (varsayılan) ya da `center-first`: ortadaki öneri ilk, sonra ortaya yakınlığa göre. HeliBoard ve Gboard en olası öneriyi ortaya koyar; puanlayıcı ilk öneriyi ilk-1 saydığı için bu klavyelerde `center-first` kullanın |
 | `suggestion_strip.max` | en fazla kaç öneri okunur (soldan sağa) |
 | `settle_ms`, `stable_reads`, `max_reads` | dokunuştan sonra bekleme; öneri çubuğu art arda `stable_reads` okumada aynı kalınca durulmuş sayılır |
+| `field_hint` | (isteğe bağlı) boş metin kutusunun ipucu metni. Bazı Android sürümleri (API 34 emülatörü) dökümde `hint` vermeden ipucunu metin olarak verir; bu metin boş kutu sayılır. KBoard test alanında `"Mesaj yaz"` |
 | `dump_command` | (isteğe bağlı) ekranı XML olarak basan `adb exec-out` komutu. Varsayılan: önce `uiautomator dump --windows` (Android 11+, klavye penceresi dahil), desteklenmiyorsa düz `uiautomator dump` |
 
 ## Sınırlar
