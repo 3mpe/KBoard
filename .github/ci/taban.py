@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "eval"))
 from kboard_eval import adb_driver, testset, trace  # noqa: E402
+from kboard_eval.turkish import normalize  # noqa: E402
 
 GROUPS = ("aksan", "dogru", "yazim")
 ON = "KBoard (motor açık)"
@@ -97,7 +98,7 @@ def ortak(cases_path: Path, on: Path, off: Path, dst: Path) -> int:
     return 0 if both else 1
 
 
-def fark(cases_path: Path, on: Path, off: Path) -> int:
+def fark(cases_path: Path, on: Path, off: Path, logcat_on: Path | None = None) -> int:
     cases = {c.id: c for c in testset.load([cases_path])}
 
     def commits(path: Path) -> dict[tuple[str, int], str]:
@@ -114,6 +115,33 @@ def fark(cases_path: Path, on: Path, off: Path) -> int:
     for cid, i in diff:
         c = cases[cid]
         print(f"| `{cid}` | {c.typed_words[i]} | {c.aligned_targets[i]} | {a[(cid, i)]} | {b[(cid, i)]} |")
+
+    # Puanlayıcının (kboard_eval.metrics) yanlış otomatik düzeltme saydığı kelimeler: yazılan hedefle aynı
+    # (büyük/küçük harf ayrımı yok), metne geçen kelime yazılandan farklı. Yalnız büyük/küçük harf
+    # değişimi sayılmaz; ayrıca listelenir.
+    def same(x: str, y: str) -> bool:
+        return normalize(x) == normalize(y)
+
+    print("\n### Yanlış otomatik düzeltme sayılan kelimeler\n")
+    print("Doğru yazılmış kelime (yazılan = hedef, büyük/küçük harf ayrımı yok) boşlukta başka bir kelimeye döndü.\n")
+    wrong_on: list[str] = []
+    for name, got in ((ON, a), (OFF, b)):
+        correct = [k for k in keys if same(cases[k[0]].typed_words[k[1]], cases[k[0]].aligned_targets[k[1]])]
+        bad = [k for k in correct if not same(got[k], cases[k[0]].typed_words[k[1]])]
+        case_only = [k for k in correct if k not in bad and got[k] != cases[k[0]].typed_words[k[1]]]
+        print(f"- **{name}:** {len(bad)} / {len(correct)}: "
+              + ("; ".join(f"`{k[0]}` {cases[k[0]].typed_words[k[1]]} → {got[k]}" for k in bad) or "yok"))
+        print("  - yalnız büyük/küçük harf değişen (sayılmaz): "
+              + ("; ".join(f"`{k[0]}` {cases[k[0]].typed_words[k[1]]} → {got[k]}" for k in case_only) or "yok"))
+        if got is a:
+            wrong_on = [cases[k[0]].typed_words[k[1]] for k in bad]
+    if logcat_on is not None and logcat_on.exists() and wrong_on:
+        print(f"\nMotor açıkken bu kelimeler için teşhis satırları (`{logcat_on.name}`, kelime başına son 2):\n\n```")
+        lines = [l.rstrip("\r\n") for l in logcat_on.open(encoding="utf-8", errors="replace") if "düzeltme:" in l]
+        for w in dict.fromkeys(wrong_on):
+            for l in [l for l in lines if f"yazılan={w} " in l][-2:]:
+                print(l[l.index("düzeltme:"):])
+        print("```")
     return 0
 
 
@@ -127,6 +155,6 @@ if __name__ == "__main__":
     elif cmd == "ortak":
         sys.exit(ortak(Path(args[0]), Path(args[1]), Path(args[2]), Path(args[3])))
     elif cmd == "fark":
-        sys.exit(fark(Path(args[0]), Path(args[1]), Path(args[2])))
+        sys.exit(fark(Path(args[0]), Path(args[1]), Path(args[2]), Path(args[3]) if len(args) > 3 else None))
     else:
         sys.exit(f"bilinmeyen komut: {cmd}")

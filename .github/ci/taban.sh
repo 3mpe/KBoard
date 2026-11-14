@@ -96,7 +96,7 @@ if [ -s "$out/acik.jsonl" ] && [ -s "$out/kapali.jsonl" ] \
       --json "../$out/puan-acik.json" --markdown "../$out/puan-acik.md" --title "$acik_ad" ) >/dev/null || rc=1
   ( cd eval && python3 -m kboard_eval score "../$out/ortak.jsonl" -t "../$out/kapali.jsonl" \
       --json "../$out/puan-kapali.json" --markdown "../$out/puan-kapali.md" --title "$kapali_ad" ) >/dev/null || rc=1
-  python3 .github/ci/taban.py fark "$out/ortak.jsonl" "$out/acik.jsonl" "$out/kapali.jsonl" > "$out/fark.md" || rc=1
+  python3 .github/ci/taban.py fark "$out/ortak.jsonl" "$out/acik.jsonl" "$out/kapali.jsonl" "$out/logcat-acik.txt" > "$out/fark.md" || rc=1
   # Başlıklar özet içinde ikinci düzeye iner (`# ad` → `### ad`)
   for f in puan-acik puan-kapali fark; do sed 's/^# /### /' "$out/$f.md"; echo; done >> "$out/rapor.md"
 else

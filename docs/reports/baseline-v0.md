@@ -157,9 +157,18 @@ Bu örneklemde öne çıkanlar:
 - Sonraki kelime (İlk-3 @0) motor kapalıyken %0'dır. Olası neden öğrenme kapalıyken HeliBoard'un boş
   alanda öneri vermemesidir (bu koşuda ayrıca doğrulanmadı); öyleyse bu sayı ayarın sonucudur ve
   kullanıcının kendi geçmişiyle çalışan stok HeliBoard için alt sınır sayılmalıdır.
-- Yanlış otomatik düzeltme iki geçişte de 2/30'dur. Ayrışma tablosunda doğru yazılmış kelimenin
-  değiştiği satırlar: motor açıkken `mi` → `mı` (`yazim-0038`); motor kapalıyken `dinlendim` →
-  `Dinlendim` ve `oturduk` → `oturdukları`.
+- Yanlış otomatik düzeltme iki geçişte de 2/30'dur. Puanlayıcı büyük/küçük harfi ayırmaz
+  (`eval/kboard_eval/metrics.py`, `same_word`): yalnız büyük/küçük harfi değişen kelime yanlış
+  düzeltme sayılmaz. Bu yüzden motor kapalıyken görülen `dinlendim` → `Dinlendim` (`aksan-0034`)
+  bu sayıda yoktur; kullanıcı açısından yine de istenmeyen bir değişikliktir.
+  - Motor açık (2): `mi` → `mı` (`yazim-0038`) ve `yazim-0020`'deki ortak kelime.
+  - Motor kapalı (2): `oturduk` → `oturdukları` (`aksan-0069`) ve `yazim-0020`'deki ortak kelime.
+  - Ortak kelime: `yazim-0020`'de ("Egzos muayenesinden geçti.") doğru yazılmış iki kelimeden
+    (`muayenesinden`, `geçti`) biri iki geçişte de aynı biçimde değişmiştir; ayrışma tablosunda bu
+    yüzden görünmez. Etiket satırları bunu gösterir (`yaygin_hata` iki geçişte de 1/2, `harf_fazla`
+    motor açıkken 1/2, `belirsiz` motor kapalıyken 1/1). Hangisi olduğu bu koşunun günlüğünden
+    çıkarılamaz (iz dosyaları yalnız koşu ekindedir); `gorev=taban` artık bu kelimeleri özetine
+    yazar, sonraki koşuda adı buraya işlenir.
 - Aksan düzeltme 8/10'a karşı 6/10, yazım hatası düzeltme 2/4'e karşı 1/4: farklar birkaç kelimeden ibarettir.
 
 ### KBoard (motor açık)
