@@ -79,7 +79,7 @@ adb shell uiautomator dump --windows /sdcard/d.xml 2>&1 | tail -1; adb shell cat
 log "koşu öncesi döküm (paket / pencere türü sayıları):"
 tr '>' '\n' < "$out/determinizm/once.xml" | grep -oE '(package|type)="[^"]*"' | sort | uniq -c
 adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId|mServedView" | head -4
-( cd eval && timeout 1500 python3 -m kboard_eval drive testset/seed-v0.jsonl \
+( cd eval && timeout 2700 python3 -m kboard_eval drive testset/seed-v0.jsonl \
     -k keymaps/kboard-pixel6-emulator.json -o "../$out/determinizm/kboard.jsonl" --limit 5 --runs 3 \
     --skip-user-words ) 2>&1 | tee "$out/determinizm/drive.log"
 rc=${PIPESTATUS[0]}

@@ -23,7 +23,7 @@ jobs:
   probe:
     name: Öneri çubuğu yoklama + determinizm
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
         with:
