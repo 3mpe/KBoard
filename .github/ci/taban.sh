@@ -29,6 +29,9 @@ open_field "$ime" "$alan" || log "KBoard etkinleşmedi"   # tercih dosyası ilk 
 python3 .github/ci/taban.py secim eval/testset/seed-v0.jsonl "$keymap" "${TABAN_GRUP:-4}" "$out/vakalar.jsonl" | tee "$out/secim.txt"
 rc=0
 gecersiz=""
+# "düzeltme:" teşhis satırı varsayılan kapalıdır (yazılan metin günlüğe düşmesin diye); motor durumu
+# kanıtı bu satırı saydığı için iki geçişten de önce yalnız bu emülatörde açılır.
+adb shell setprop log.tag.KBoardSuggestions DEBUG
 
 # gecis <ad: acik|kapali> <kboard_debug_engine_off değeri> [yalnız bu izde eksiksiz olan vakalar]
 gecis() {

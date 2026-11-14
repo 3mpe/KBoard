@@ -52,11 +52,13 @@ Bu yüzden yalnız debug derlemesinde çalışan tek bir anahtar eklendi:
   (HeliBoard'un önerilerine dokunmaz), `noteRevert` (geri alma kaydetmez). `isRevertiblePick` KBoard
   kaynaklı öneri kalmadığı için kendiliğinden hep `false` döner.
 - Kanıt: emülatör betiği her geçişte logcat'ten `motor anahtarı: açık|kapalı` satırını ve motorun
-  debug `düzeltme:` satırlarını sayar. Motor kapalı geçişte `düzeltme:` satırı sıfır olmalı, açık
+  debug `düzeltme:` satırlarını sayar. `düzeltme:` satırı varsayılan kapalıdır; betik iki geçişten de
+  önce `adb shell setprop log.tag.KBoardSuggestions DEBUG` ile yalnız emülatörde açar. Motor kapalı geçişte `düzeltme:` satırı sıfır olmalı, açık
   geçişte en az bir olmalı; değilse geçiş raporda **GEÇERSİZ** diye işaretlenir ve iş kırmızı biter.
 - Release denetimi: `.github/ci/debug-anahtar-kontrol.sh` release APK'nın dex'inde
   `kboard_debug_engine_off` ve `TestFieldActivity` adlarının geçmediğini denetler (`cihaz-olcum.yml`,
-  `gorev=surum-duman`). `release.yml`'e bağlanmadı; bağlanması önerilir.
+  `gorev=surum-duman`) ve imzalı sürüm iş akışında (`release.yml`) izin listesinden hemen sonra çalışır.
+  `ci.yml` aynı betiği debug APK'da çalıştırıp başarısız olmasını bekler (olumsuz kontrol).
 
 ## Stok HeliBoard'dan kalan farklar (motor kapalıyken)
 
@@ -132,7 +134,12 @@ geçişte anahtar onu da etkisiz kılar.
 ### Sınırlar
 
 - Örneklem çok küçük (12 vaka). Etiket kırılımlarının çoğunda n tek hanelidir; bu koşu yön gösterir,
-  eşik belirlemeye yetmez. Daha büyük taban için sürücünün hızlanması ya da birden çok koşu gerekir.
+  eşik belirlemeye yetmez. #10 ya da #11 için bu tabandan eşik türetilmeden önce daha büyük bir koşu
+  gerekir (sonraki adım: `buyuk-harf` görevi gibi birden çok emülatöre bölünmüş koşu).
+- Geçiş sırası sabittir: önce motor açık, sonra motor kapalı. Öğrenme kapalı olduğu için geçişler
+  arasında taşma beklenmez, ama sıra değiştirilerek sınanmadı.
+- "Fark" sütunu `otomatik düzeltme ya da yazılan` değerini karşılaştırır: hiç değiştirilmeyen kelime ile
+  kendisine "düzeltilen" kelime aynı görünür.
 - Emülatör ölçümüdür; dokunuşlar tuş merkezlerine `adb input tap` ile gönderilir, gerçek parmak
   dağılımı yoktur. Yazım hatası vakalarında HeliBoard'un yakınlık modeli bu yüzden en iyi koşulda çalışır.
 - Kaydırarak yazma, kişisel sözlük ve öğrenme ölçülmez.
