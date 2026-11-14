@@ -14,6 +14,8 @@ import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.personal.PersonalModel
+import io.github.kboard.engine.typo.TypoSource
 import android.app.Application
 import org.junit.After
 import org.junit.Before
@@ -52,6 +54,7 @@ class KBoardSuggestionsTest {
         KBoardSuggestions.setSuffix(null)
         KBoardSuggestions.setDenylist(io.github.kboard.engine.Denylist.EMPTY)
         KBoardSuggestions.setPersonalEnabled(false)
+        KBoardSuggestions.mainLayoutName = { KBoardSuggestions.SPATIAL_LAYOUT }
         reset()
     }
 
@@ -295,6 +298,54 @@ class KBoardSuggestionsTest {
         // İngilizce kişisel sözlük motoru etkilemez
         KBoardSuggestions.setUserWords(Locale.ENGLISH, emptyList())
         assertTrue(KBoardSuggestions.getSuggestions(composed("Kadikoy'd"), NgramContext.BEGINNING_OF_SENTENCE, tr).isNotEmpty())
+    }
+
+    /** Ağır kayma: "idyrfşö" (istedim, 7 harfin 6'sı komşu tuşta) uygulama katmanından. */
+    private fun heavySetup(): DeasciifyIndex {
+        // Dil modeli yok: destek yalnız sıklıktan gelir, eşiği geçsin diye sıklıklar yüksek
+        val idx = DeasciifyIndex.build(listOf(
+            DeasciifyIndex.Companion.Entry("istedim", 240), DeasciifyIndex.Companion.Entry("isterim", 235),
+            DeasciifyIndex.Companion.Entry("çok", 200),
+        ))
+        KBoardSuggestions.setDeasciifier(DeasciifySource(idx))
+        KBoardSuggestions.setTypo(TypoSource(idx, isKnownWord = KBoardSuggestions::isLmKnown))
+        return idx
+    }
+
+    @Test
+    fun heavySlipSuggestsOnlyWithoutAutocorrect() {
+        heavySetup()
+        val infos = KBoardSuggestions.getSuggestions(composed("idyrfşö"), NgramContext.BEGINNING_OF_SENTENCE, tr)
+        assertTrue(infos.map { it.word.lowercase(tr) }.containsAll(listOf("istedim", "isterim")), infos.map { it.word }.toString())
+        assertTrue(infos.none { it.isAppropriateForAutoCorrection })
+        val scores = infos.map { it.score }
+        assertEquals(scores.sortedDescending(), scores)
+        assertEquals(KBoardSuggestions.AutoCorrection.NoOpinion, KBoardSuggestions.autoCorrection("idyrfşö", tr))
+    }
+
+    @Test
+    fun heavySlipOffOnOtherLayouts() {
+        heavySetup()
+        KBoardSuggestions.mainLayoutName = { "turkish_f" }
+        assertTrue(KBoardSuggestions.getSuggestions(composed("idyrfşö"), NgramContext.BEGINNING_OF_SENTENCE, tr).isEmpty())
+        KBoardSuggestions.mainLayoutName = { null }
+        assertTrue(KBoardSuggestions.getSuggestions(composed("idyrfşö"), NgramContext.BEGINNING_OF_SENTENCE, tr).isEmpty())
+    }
+
+    @Test
+    fun heavySlipNeverSearchesPersonalWords() {
+        heavySetup()
+        // Kişisel sözlükteki kelime bilinir: aranmaz
+        KBoardSuggestions.setUserWords(tr, listOf("idyrfşö"))
+        assertTrue(KBoardSuggestions.getSuggestions(composed("idyrfşö"), NgramContext.BEGINNING_OF_SENTENCE, tr)
+            .none { it.word.lowercase(tr) == "istedim" })
+        KBoardSuggestions.setUserWords(tr, emptyList())
+        // Kişisel modelde (öğrenilmiş) kelime de bilinir
+        val m = PersonalModel()
+        repeat(5) { m.learn(PersonalModel.BOS, "idyrfşö", sentenceStart = true) }
+        KBoardSuggestions.setPersonalEnabled(true, m)
+        assertTrue(KBoardSuggestions.getSuggestions(composed("idyrfşö"), NgramContext.BEGINNING_OF_SENTENCE, tr)
+            .none { it.word.lowercase(tr) == "istedim" })
     }
 
     @Test

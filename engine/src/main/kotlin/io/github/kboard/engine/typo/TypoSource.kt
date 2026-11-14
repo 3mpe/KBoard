@@ -79,7 +79,48 @@ class TypoSource(
         val completionOverrideMargin: Int = 1,
         /** Tamamlaması olan önekte arama bütçesi (yalnızca uzaklık 1). */
         val completionOverrideMaxProbes: Int = 150,
+        /**
+         * Ağır kayma çözümü: uzaklık 1–2 hiçbir şey bulamazsa, harflerin çoğu komşu tuşa kaymış
+         * kelimeler ("idyrfşö" → "istedim") aynı uzunlukta, her konumda yazılan tuş ya da komşusu
+         * olacak biçimde aranır. Yalnız öneri, oto. düzeltme yok. 0: kapalı.
+         */
+        val spatialMax: Int = 3,
+        val spatialMinLength: Int = 4,
+        val spatialMaxLength: Int = 14,
+        val spatialMaxProbes: Int = 50000,
+        val spatialBeam: Int = 750,
+        /**
+         * Sorgu başına en uzun süre (ms; 0 = sınırsız). Aşılırsa ağır kayma adayı çıkmaz (diğer adaylar
+         * etkilenmez). Telefonda en kötü durumu sınırlar; ölçüm aracı belirlenimcilik için kapatır.
+         */
+        val spatialDeadlineMs: Int = 15,
+        /** d1/d2 düzeltmesi bulunduğunda da ağır kayma adaylarını kalan yuvalara kat. */
+        val spatialMerge: Boolean = true,
+        /** İlk düzeltme oto. düzeltilmeyecekse ilk yuva da bağlamlı sıraya girer. */
+        val spatialReorder: Boolean = true,
+        /** Sıralama: freqWeight × sıklık/255 − maliyet + lmWeight × (log10 P(kelime | bağlam) − lmFloor). */
+        val spatialLmWeight: Double = 1.0,
+        val spatialLmFloor: Double = -7.0,
+        /** Kaymış konum başına ek ceza (maliyetin üstüne). */
+        val spatialShiftPenalty: Double = 0.0,
+        /**
+         * Kalite eşiği: destek (freqWeight × sıklık/255 + dil modeli payı, kayma maliyeti hariç) bunun
+         * altındaki ağır kayma adayı gösterilmez; sözlük dışı geçerli kelimelerde (isim, marka, yabancı)
+         * çöp öneri olmasın. Dev yarısında tuzak setiyle ayarlandı.
+         */
+        val spatialMinSupport: Double = 2.5,
     )
+
+    /** Ağır kayma adaylarını bağlama göre sıralamak için dil modeli (yoksa yalnız sıklık). */
+    @Volatile
+    var contextScorer: io.github.kboard.engine.deasciify.ContextScorer? = null
+
+    /**
+     * Ağır kayma araması açık mı. Komşu tablosu ([TypoCost]) Türkçe Q içindir; uygulama başka klavye
+     * düzeninde (Türkçe F, özel düzen) kapatır.
+     */
+    @Volatile
+    var spatialEnabled: Boolean = true
 
     override val name = "typo"
 
@@ -100,7 +141,12 @@ class TypoSource(
         val typed = query.prefix
         if (typed.isEmpty() || limit <= 0) return emptyList()
         val (corrections, completionFreq) = analyze(typed)
-        if (corrections.isEmpty()) return emptyList()
+        if (corrections.isEmpty()) {
+            if (completionFreq != SPATIAL_OK || config.spatialMax <= 0 || !spatialEnabled) return emptyList()
+            return spatial(typed, query.context, query.sentenceStart).take(minOf(limit, config.spatialMax)).map { c ->
+                Candidate(DeasciifySource.applyCase(typed, c.word), score(c.rank), Source.TYPO)
+            }
+        }
         if (completionFreq >= 0) {
             // Tamamlaması olan önek: yalnızca tüm tamamlamalardan sık düzeltmeler; puanları sözlük
             // tamamlamalarının hepsinin altında (yalnızca boş kalan yerlere girer), oto. düzeltme yok.
@@ -109,9 +155,38 @@ class TypoSource(
             }
         }
         val auto = autocorrectIndex(typed, corrections)
-        return corrections.take(limit).mapIndexed { n, c ->
+        val out = corrections.take(limit).mapIndexed { n, c ->
             Candidate(DeasciifySource.applyCase(typed, c.word), score(c.rank), Source.TYPO, autocorrectable = n == auto)
         }
+        if (!config.spatialMerge || config.spatialMax <= 0 || !spatialEnabled || limit <= 1) return out
+        // Ağır kayma adayları da: ilk düzeltme (ve oto. düzeltme kararı) yerinde kalır, kalan yuvalar
+        // iki listenin bağlamlı sırasıyla (dil modeli payı eklenmiş) dolar.
+        val sp = spatial(typed, query.context, query.sentenceStart)
+        if (sp.isEmpty()) return out
+        val lm = contextScorer
+        fun bonus(w: String): Double {
+            val lp = lm?.logProb(TurkishText.lower(w), query.context, query.sentenceStart)?.toDouble() ?: config.spatialLmFloor
+            return config.spatialLmWeight * (maxOf(lp, config.spatialLmFloor) - config.spatialLmFloor)
+        }
+        val seen = HashSet<String>()
+        val rest = ArrayList<Pair<Double, Candidate>>()
+        out.drop(1).forEachIndexed { n, c -> rest += (corrections[n + 1].rank + bonus(c.word)) to c }
+        seen += out.map { TurkishText.lower(it.word) }
+        for (c in sp.take(config.spatialMax)) {
+            if (!seen.add(TurkishText.lower(c.word))) continue
+            rest += c.rank to Candidate(DeasciifySource.applyCase(typed, c.word), minOf(score(c.rank), out[0].score), Source.TYPO)
+        }
+        // Motor kaynakları puanla birleştirir: sıra korunsun diye puanlar azalan yapılır (yalnız düşer)
+        val merged = ArrayList<Candidate>(limit)
+        // Harf ekleme/silme düzeltmesi (uzunluk farklı) yerinde kalır: ağır kayma yalnız değiştirmedir
+        val keepFirst = out[0].autocorrectable || !config.spatialReorder || corrections[0].word.length != typed.length
+        if (keepFirst) merged += out[0] else rest += (corrections[0].rank + bonus(out[0].word)) to out[0]
+        for ((_, c) in rest.sortedByDescending { it.first }) {
+            if (merged.isEmpty()) { merged += c.copy(score = minOf(c.score, out[0].score)); continue }
+            if (merged.size >= limit) break
+            merged += c.copy(score = minOf(c.score, merged.last().score - 1e-5))
+        }
+        return merged
     }
 
     /**
@@ -130,7 +205,7 @@ class TypoSource(
         if (!key.all { it in 'a'..'z' }) return none
         if (isKnown(lower, key) || isKnownWord(typed)) return none
         val cf = completionFreq(lower, key)
-        if (cf < 0) return search(lower, key, config.maxProbes, distance2 = true) to -1
+        if (cf < 0) return search(lower, key, config.maxProbes, distance2 = true).let { it to if (it.isEmpty()) SPATIAL_OK else -1 }
         if (cf >= BLOCKED || config.completionOverrideMax <= 0 || key.length < config.completionOverrideMinLength) return none
         return search(lower, key, config.completionOverrideMaxProbes, distance2 = false).filter { it.freq >= cf + config.completionOverrideMargin } to cf
     }
@@ -209,6 +284,84 @@ class TypoSource(
         val c = Correction(word, freq, cost, dist, config.freqWeight * freq / 255.0 - cost)
         val prev = best[wl]
         if (prev == null || c.rank > prev.rank || (c.rank == prev.rank && c.distance < prev.distance)) best[wl] = c
+    }
+
+    /**
+     * Ağır kayma adayları: yazılanla aynı uzunlukta, her konumda yazılan tuş, aksan farkı ya da komşu
+     * tuş olan sözlük ya da dil modeli ([contextScorer]) kelimeleri; bağlam dil modeliyle sıralanır.
+     * Yazılanın bilinmediği ve tamamlaması olmadığı varsayılır ([candidates] yalnız o zaman çağırır).
+     */
+    fun spatial(typed: String, context: List<String> = emptyList(), sentenceStart: Boolean = true): List<Correction> {
+        val lower = TurkishText.lower(typed)
+        val n = lower.length
+        if (n < config.spatialMinLength || n > config.spatialMaxLength) return emptyList()
+        // Konum başına katlanmış seçenekler: yazılan tuş ve komşuları
+        val opts = Array(n) { i ->
+            val t = lower[i]
+            val sb = StringBuilder()
+            sb.append(TurkishText.asciify(t.toString())[0])
+            for (c in TypoCost.KEYS) if (TypoCost.neighbors(t, c)) {
+                val f = TurkishText.asciify(c.toString())[0]
+                if (f in 'a'..'z' && sb.indexOf(f) < 0) sb.append(f)
+            }
+            sb.toString()
+        }
+        // Seviye seviye arama. Önek, sözlükte (aralığıyla; çocuk aralığı yalnız ebeveyn aralığında
+        // aranır) ya da dil modelinin sözcüklerinde (çekimli biçimler: "yatacağım") varsa yaşar.
+        // Seviye başına en fazla spatialBeam önek kalır: sözlükte daha çok kelimeyi kapsayanlar önce.
+        val lm = contextScorer
+        class P(val key: ByteArray, val range: IntRange, val shifts: Int)
+        var level = listOf(P(ByteArray(0), 0 until index.size, 0))
+        var probes = 0
+        val deadline = if (config.spatialDeadlineMs > 0) System.nanoTime() + config.spatialDeadlineMs * 1_000_000L else Long.MAX_VALUE
+        for (i in 0 until n) {
+            if (System.nanoTime() > deadline) return emptyList()
+            val next = ArrayList<P>()
+            val own = opts[i][0]
+            for (p in level) for (c in opts[i]) {
+                if (c.code >= 0x80) continue
+                if (probes >= config.spatialMaxProbes) break
+                probes++
+                val k = p.key.copyOf(p.key.size + 1)
+                k[p.key.size] = c.code.toByte()
+                val r = if (p.range.isEmpty()) IntRange.EMPTY else index.prefixRangeWithin(k, p.range)
+                if (r.isEmpty() && lm?.hasFoldPrefix(String(k, Charsets.US_ASCII)) != true) continue
+                next += P(k, r, p.shifts + if (c == own) 0 else 1)
+            }
+            if (next.isEmpty()) return emptyList()
+            level = if (next.size <= config.spatialBeam) next
+            else next.sortedWith(compareByDescending<P> { it.range.last - it.range.first + 1 }.thenBy { it.shifts })
+                .take(config.spatialBeam)
+        }
+        val best = HashMap<String, Correction>()
+        fun consider(w: String, freq: Int) {
+            val wl = TurkishText.lower(w)
+            if (wl.length != n || wl == lower) return
+            var cost = 0.0
+            var shifted = 0
+            for (j in 0 until n) {
+                val c = TypoCost.shift(lower[j], wl[j]) ?: return
+                cost += c
+                if (c >= TypoCost.NEIGHBOR) shifted++
+            }
+            cost += shifted * config.spatialShiftPenalty
+            val lp = lm?.logProb(wl, context, sentenceStart)?.toDouble() ?: config.spatialLmFloor
+            val rank = config.freqWeight * freq / 255.0 - cost + config.spatialLmWeight * (maxOf(lp, config.spatialLmFloor) - config.spatialLmFloor)
+            val prev = best[wl]
+            if (prev == null || rank > prev.rank) best[wl] = Correction(w, maxOf(freq, prev?.freq ?: 0), cost, shifted, rank)
+        }
+        for (p in level) {
+            for (i in index.exact(String(p.key, Charsets.US_ASCII))) {
+                if (index.flags(i) and DeasciifyIndex.FLAG_OFFENSIVE != 0) continue
+                consider(index.word(i), index.freq(i))
+            }
+            // Dil modelinin önerilebilir kelimeleri (sözlükte olmayan çekimler); sıklık bilinmez (0)
+            lm?.sameFold(String(p.key, Charsets.US_ASCII))?.forEach { w ->
+                if (!best.containsKey(TurkishText.lower(w))) consider(w, 0)
+            }
+        }
+        return best.values.filter { it.rank + it.cost >= config.spatialMinSupport }
+            .sortedWith(compareByDescending<Correction> { it.rank }.thenBy { it.word })
     }
 
     /** En iyi aday oto. düzeltmeye uygunsa 0, değilse -1. */
@@ -319,6 +472,8 @@ class TypoSource(
         private const val MAX_COMPLETION_SCAN = 2000
         private const val BLOCKED = Int.MAX_VALUE
         private const val OVERRIDE_SCORE = 1e-4
+        /** [analyze]: düzeltme yok, yazılan bilinmiyor ve tamamlaması yok; ağır kayma denenebilir. */
+        private const val SPATIAL_OK = -2
 
         /**
          * Yazılandaki her aksanlı harf adayda aynı konumda aynen olmalı (aksansız harfler serbest).

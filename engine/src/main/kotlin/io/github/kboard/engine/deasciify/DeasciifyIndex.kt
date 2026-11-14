@@ -64,6 +64,26 @@ class DeasciifyIndex private constructor(
         return from until lo
     }
 
+    /**
+     * [prefixRange] ile aynı, ama arama [within] aralığıyla sınırlı ve anahtar bayt olarak verilir.
+     * [within] k'nin bir önekinin aralığı olmalıdır (çocuk önek aramalarını ucuzlatır).
+     */
+    fun prefixRangeWithin(k: ByteArray, within: IntRange): IntRange {
+        var lo = within.first
+        var hi = within.last + 1
+        while (lo < hi) {
+            val mid = (lo + hi) ushr 1
+            if (compare(mid, k, prefix = false) < 0) lo = mid + 1 else hi = mid
+        }
+        val from = lo
+        hi = within.last + 1
+        while (lo < hi) {
+            val mid = (lo + hi) ushr 1
+            if (compare(mid, k, prefix = true) <= 0) lo = mid + 1 else hi = mid
+        }
+        return from until lo
+    }
+
     private fun lowerBound(k: ByteArray, prefix: Boolean): Int {
         var lo = 0
         var hi = size

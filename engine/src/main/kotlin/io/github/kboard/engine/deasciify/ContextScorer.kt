@@ -13,4 +13,7 @@ interface ContextScorer {
 
     /** Model [word]'ü [previous]'ın ardından görmüş mü (bigram kaydı var mı)? */
     fun follows(word: String, previous: String): Boolean = false
+
+    /** Katlanmış biçimi [foldedPrefix] ile başlayan bir model kelimesi var mı (ağır kayma araması)? */
+    fun hasFoldPrefix(foldedPrefix: String): Boolean = false
 }

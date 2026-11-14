@@ -183,7 +183,21 @@ fun main(args: Array<String>) {
         // Dil modelinin önerilebilir sözcükleri ve en az iki kez yazılmış kişisel kelimeler bilinen
         // kelimedir: hiç yazım hatası sayılmaz
         val lmKnown: (String) -> Boolean = { w -> lm?.isKnown(w) == true || ps?.isKnown(w) == true }
-        sources += TypoSource(index, TypoSource.Config(autocorrect = "--typo-autocorrect" in args), lmKnown)
+        var tc = TypoSource.Config(autocorrect = "--typo-autocorrect" in args)
+        if ("--no-spatial" in args) tc = tc.copy(spatialMax = 0)
+        if ("--no-spatial-merge" in args) tc = tc.copy(spatialMerge = false)
+        if ("--no-spatial-reorder" in args) tc = tc.copy(spatialReorder = false)
+        // --spatial-params lmWeight,shiftPenalty,lmFloor
+        argValue(args, "--spatial-params")?.split(',')?.map { it.toDouble() }?.let { p ->
+            tc = tc.copy(spatialLmWeight = p[0], spatialShiftPenalty = p[1], spatialLmFloor = p.getOrElse(2) { tc.spatialLmFloor })
+        }
+        // Süre sınırı ölçümde kapalı (belirlenimcilik); --spatial-budget beam,probes[,deadlineMs]
+        tc = tc.copy(spatialDeadlineMs = 0)
+        argValue(args, "--spatial-budget")?.split(',')?.map { it.toInt() }?.let { b ->
+            tc = tc.copy(spatialBeam = b[0], spatialMaxProbes = b[1], spatialDeadlineMs = b.getOrElse(2) { 0 })
+        }
+        argValue(args, "--spatial-floor")?.let { tc = tc.copy(spatialMinSupport = it.toDouble()) }
+        sources += TypoSource(index, tc, lmKnown).also { it.contextScorer = lm }
     }
     var rules: SpellingRuleSource? = null
     if (deasciify != null && "--no-rules" !in args) {
