@@ -20,6 +20,7 @@
     "shift": {"from_base": "upper", "enter": ["shift"]}
   },
   "suggestion_strip": {"bounds": [60, 1400, 980, 1510], "max": 3, "order": "center-first"},
+  "field_hint": "Mesaj yaz",
   "settle_ms": 300,
   "stable_reads": 2,
   "max_reads": 10

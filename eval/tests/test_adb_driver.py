@@ -257,6 +257,13 @@ class ParseDumpTest(unittest.TestCase):
         self.assertEqual(s.suggestions, ["merhaba"])
         self.assertTrue(s.keyboard_seen)
 
+    def test_field_hint_as_text_is_empty(self):
+        km = KeyMap.from_dict({**KEYMAP, "field_hint": "Mesaj yaz"})
+        xml = ('<hierarchy><node text="Mesaj yaz" class="android.widget.EditText" package="org.example" '
+               'content-desc="" focused="true" bounds="[0,500][300,900]" /></hierarchy>')
+        self.assertEqual(parse_dump(xml, km).field_text, "")
+        self.assertEqual(parse_dump(xml, KeyMap.from_dict(KEYMAP)).field_text, "Mesaj yaz")
+
     def test_leading_noise_and_garbage(self):
         km = KeyMap.from_dict({**KEYMAP, "suggestion_strip": {"bounds": [0, 1560, 1080, 1680]}})
         xml = (DATA / "heliboard_kad.xml").read_text(encoding="utf-8")
