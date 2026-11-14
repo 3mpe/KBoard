@@ -14,6 +14,8 @@ import io.github.kboard.engine.Source
 import io.github.kboard.engine.SuggestionEngine
 import io.github.kboard.engine.deasciify.DeasciifyIndex
 import io.github.kboard.engine.deasciify.DeasciifySource
+import io.github.kboard.engine.ngram.NgramModel
+import io.github.kboard.engine.ngram.NgramSource
 import io.github.kboard.engine.personal.PersonalModel
 import io.github.kboard.engine.typo.TypoSource
 import android.app.Application
@@ -23,6 +25,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -416,5 +421,78 @@ class KBoardSuggestionsTest {
             .maxBy { it.score }
         assertEquals("yoğ", top.word)
         assertTrue(top.isAppropriateForAutoCorrection)
+    }
+
+    /** Biçim 3 KBNG: kelimeler sözlük sırasında (<s> başta), [shown] kelimeleri büyük harfli yazılır; ikili/üçlü yok. */
+    private fun caseModel(words: List<String>, shown: Map<String, String>): NgramSource {
+        val bytes = ByteArrayOutputStream()
+        DataOutputStream(bytes).apply {
+            fun vint(n: Int) { var x = n; while (true) { val b = x and 0x7f; x = x ushr 7; if (x != 0) writeByte(b or 0x80) else { writeByte(b); return } } }
+            fun utf(t: String) { val b = t.toByteArray(Charsets.UTF_8); vint(b.size); write(b) }
+            write("KBNG".toByteArray()); writeInt(3)
+            val all = listOf("<s>") + words.sorted()
+            vint(all.size)
+            for (w in all) {
+                utf(w)
+                val d = shown[w]
+                writeByte(if (d != null) 2 else 0); writeByte(40)
+                if (d != null) utf(d)
+            }
+            vint(0); vint(0); vint(0); vint(0)
+        }
+        return NgramSource(NgramModel.read(ByteArrayInputStream(bytes.toByteArray())))
+    }
+
+    private fun native(word: String) = SuggestedWordInfo(word, "", 100, SuggestedWordInfo.KIND_CORRECTION or
+        SuggestedWordInfo.KIND_FLAG_APPROPRIATE_FOR_AUTO_CORRECTION, Dictionary.DICTIONARY_USER_TYPED,
+        SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
+
+    @Test
+    fun capitalOnlyDictionaryEntryDoesNotCapitalizeCommonWord() {
+        // Ana sözlükte yalnız "Yoruldum" var; HeliBoard küçük harfle yazılanı ona düzeltmek ister.
+        KBoardSuggestions.setNgram(caseModel(listOf("izmir", "neredesin", "yoruldum", "ahmet"),
+            mapOf("izmir" to "İzmir", "ahmet" to "Ahmet")))
+        val heli = true to true
+        val mid = NgramContext(NgramContext.WordInfo("çok"), NgramContext.WordInfo("Bugün"))
+        for (w in listOf("yoruldum", "neredesin")) {
+            val list = mutableListOf(native(w.replaceFirstChar { it.titlecase(tr) }), native(w))
+            assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection(w, list, tr, true, heli, ngramContext = mid), w)
+            assertEquals(w.replaceFirstChar { it.titlecase(tr) }, list[0].word, "büyük harfli biçim şeritte kalır")
+            // Cümle başında da aynı: büyük harf otomatik büyük harf ayarının işidir, düzeltmenin değil
+            assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection(w, mutableListOf(native(w.replaceFirstChar { it.titlecase(tr) })),
+                tr, true, heli, ngramContext = NgramContext.BEGINNING_OF_SENTENCE), w)
+        }
+        // Model özel adı büyük harfle yazıyor: düzeltme yerinde kalır (izmir → İzmir, ahmet → Ahmet)
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("izmir", mutableListOf(native("İzmir")), tr, true, heli, ngramContext = mid))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("ahmet", mutableListOf(native("Ahmet")), tr, true, heli, ngramContext = mid))
+        // Modelin bilmediği kelime: HeliBoard'un kararı değişmez
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("dinleniyorum", mutableListOf(native("Dinleniyorum")), tr, true, heli))
+        // Büyük harfle yazılmış ya da yalnız harf büyüklüğü değil başka harf de değişiyorsa kural uygulanmaz
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("YORULDUM", mutableListOf(native("Yoruldum")), tr, true, heli))
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("yoruldm", mutableListOf(native("Yoruldum")), tr, true, heli))
+        // Kişisel sözlük kelimesi eski davranışı korur
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("yoruldum", mutableListOf(native("Yoruldum")), tr, true, heli,
+            Dictionary.TYPE_USER))
+        // HeliBoard düzeltmek istemiyorsa dokunulmaz
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("yoruldum", mutableListOf(native("Yoruldum")), tr, true, true to false))
+    }
+
+    @Test
+    fun personalLowercaseFormKeepsTypedWord() {
+        KBoardSuggestions.setNgram(caseModel(listOf("ahmet"), mapOf("ahmet" to "Ahmet")))
+        val heli = true to true
+        // Modelde büyük harfli ("Ahmet") ama kullanıcı küçük harfle öğretmiş (iki kez, cümle ortasında): yazıldığı gibi
+        val m = PersonalModel()
+        repeat(2) { m.learn("bir", "dinleniyorum", sentenceStart = false); m.learn("bir", "ahmet", sentenceStart = false) }
+        KBoardSuggestions.setPersonalEnabled(true, m)
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("dinleniyorum", mutableListOf(native("Dinleniyorum")), tr, true, heli))
+        assertEquals(true to false, KBoardSuggestions.mergeAutoCorrection("ahmet", mutableListOf(native("Ahmet")), tr, true, heli))
+        // Tek kullanım yetmez
+        val once = PersonalModel().apply { learn("bir", "vazgeçtim", sentenceStart = false) }
+        KBoardSuggestions.setPersonalEnabled(true, once)
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("vazgeçtim", mutableListOf(native("Vazgeçtim")), tr, true, heli))
+        // Kişiselleştirme kapalıyken kişisel model sayılmaz
+        KBoardSuggestions.setPersonalEnabled(false, m)
+        assertEquals(heli, KBoardSuggestions.mergeAutoCorrection("dinleniyorum", mutableListOf(native("Dinleniyorum")), tr, true, heli))
     }
 }

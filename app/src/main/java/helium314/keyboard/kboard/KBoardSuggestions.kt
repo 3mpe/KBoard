@@ -298,6 +298,10 @@ object KBoardSuggestions {
             AutoCorrection.NoOpinion -> if (base.second && suggestions.firstOrNull()?.let { isUnflaggedKBoard(it) } == true) {
                 if (helium314.keyboard.latin.BuildConfig.DEBUG) Log.w(TAG, "işaretsiz KBoard önerisi otomatik düzeltmeye gidiyordu, engellendi")
                 base.first to false
+            } else if (base.second && typedWordSourceType !in LIST_EXEMPT_SOURCES &&
+                suggestions.firstOrNull()?.let { isCaseOnlyCapitalization(typedWord, it.word) } == true &&
+                hasLowercaseForm(typedWord)) {
+                base.first to false
             } else base
             AutoCorrection.Keep -> base.first to false
             // Kullanıcının kelimesini motor düzeltmez; karar HeliBoard'a kalır.
@@ -411,6 +415,28 @@ object KBoardSuggestions {
                 present.add(TurkishText.lower(rep))
             }
         }
+    }
+
+    /**
+     * [typed] küçük harfli ve [top] ondan yalnız harf büyüklüğüyle ayrılıyor mu ("yoruldum" → "Yoruldum").
+     * HeliBoard ana sözlükte yalnız büyük harfle duran bir kelimeye (sözlükte "Yoruldum" var, "yoruldum"
+     * yok) küçük harfle yazılanı büyük harfe düzeltir; özel adda doğru, sıradan kelimede yanlıştır.
+     */
+    internal fun isCaseOnlyCapitalization(typed: String, top: String): Boolean =
+        typed.isNotEmpty() && typed == TurkishText.lower(typed) && top != typed && TurkishText.lower(top) == typed
+
+    /**
+     * Dil modelinin bu kelime için kendi yazılışı küçük harfli mi (ya da kişisel modelde kullanıcının en az
+     * iki kez yazdığı biçim küçük harfli mi)? Yalnız varlığa bakılmaz: model "izmir"i "İzmir" diye yazar,
+     * o zaman büyük harf düzeltmesi yerinde kalır. Kelime sözlükte yalnız büyük harfle olsa da model onu
+     * küçük harfle biliyorsa ("yoruldum", "neredesin") yazıldığı gibi bırakılır.
+     */
+    internal fun hasLowercaseForm(word: String): Boolean {
+        val lower = TurkishText.lower(word)
+        if (ngram?.display(word) == lower) return true
+        if (!personalEnabled) return false
+        val w = personalModel.word(word) ?: return false
+        return w.uses >= 2 && w.display == lower
     }
 
     /** NgramContext'teki önceki kelimeler, eskiden yeniye; cümle başında durur. */

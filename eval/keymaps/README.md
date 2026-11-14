@@ -82,3 +82,9 @@ olduğu, klavye + cihaz başına bir JSON dosyasında tutulur.
 - `latency_ms` yazılmaz: `uiautomator dump` yüzlerce ms sürdüğü için ölçüm anlamsız olur.
 - Otomatik düzeltme yanlış kelime geçirirse sonraki kelimelerin bağlamı o kelimeyle devam eder
   (masaüstü `simulate` doğru bağlamı varsayar). Bu, cihazdaki gerçek davranıştır.
+- Klavyeyi örten bir "... isn't responding" kutusu görülürse sürücü "Wait"e dokunup yeniden okur (en
+  çok 3 kez). İlk vakadan önce boş alanda öneri şeridinin dolması beklenir (dil modeli arka planda
+  yüklenir); şeridi hiç dolmayan klavyede bu yalnız birkaç saniye bekletir.
+- CI emülatörü (`.github/ci/emu-lib.sh`, `strip-probe.sh`) Pixel Launcher'ı kapatır ve Android hata
+  kutularını gizler; sık çıkan başlatıcı ANR'ı klavyeyi örtüyordu. Bu yönden o koşular sıradan bir
+  telefona benzemez.

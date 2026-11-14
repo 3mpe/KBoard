@@ -5,14 +5,15 @@ name: Cihaz sürücüsü (emülatör)
 # Elle ya da sürücü dosyaları değişince çalışır; zorunlu kontrol değildir.
 # Elle çalıştırırken `gorev` seçilir: yoklama (yukarıdaki), dogru-cumleler (sürüm öncesi 40 doğru
 # cümlede boşlukta değişen kelimeler) ya da surum-duman (geçici anahtarla imzalı release APK'nın
-# kurulup yazdığı, önerdiği, aksan düzelttiği ve öğrendiği; release APK'nın izin listesi).
+# kurulup yazdığı, önerdiği, aksan düzelttiği ve öğrendiği; release APK'nın izin listesi) ya da
+# buyuk-harf (sözlükte yalnız büyük harfli kelimeler: main ile bu dal, önce/sonra).
 on:
   workflow_dispatch:
     inputs:
       gorev:
         description: Koşulacak görev
         type: choice
-        options: [yoklama, dogru-cumleler, surum-duman]
+        options: [yoklama, dogru-cumleler, surum-duman, buyuk-harf]
         default: yoklama
       adet:
         description: dogru-cumleler için cümle sayısı
@@ -44,6 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: ${{ inputs.gorev == 'buyuk-harf' && 0 || 1 }}
           persist-credentials: false
       - uses: actions/setup-java@v4
         with:
@@ -53,6 +55,16 @@ jobs:
       - run: chmod +x gradlew
       - name: Debug APK
         run: ./gradlew assembleDebug
+      - name: Önce/sonra APK'ları (buyuk-harf)
+        if: env.GOREV == 'buyuk-harf'
+        run: |
+          set -euo pipefail
+          cp "$(ls app/build/outputs/apk/debug/*.apk | head -1)" "$RUNNER_TEMP/kboard-sonra.apk"
+          f=app/src/main/java/helium314/keyboard/kboard/KBoardSuggestions.kt
+          git show origin/main:$f > $f
+          ./gradlew assembleDebug
+          cp "$(ls app/build/outputs/apk/debug/*.apk | head -1)" "$RUNNER_TEMP/kboard-once.apk"
+          git checkout -- $f
       - name: Release APK (geçici anahtarla imzalı; gerçek sürüm anahtarı burada kullanılmaz)
         if: env.GOREV == 'surum-duman'
         run: |
@@ -87,7 +99,7 @@ jobs:
           cores: 4
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: bash .github/ci/${{ env.GOREV == 'dogru-cumleler' && 'dogru-cumleler' || (env.GOREV == 'surum-duman' && 'release-smoke' || 'strip-probe') }}.sh
+          script: bash .github/ci/${{ env.GOREV == 'dogru-cumleler' && 'dogru-cumleler' || (env.GOREV == 'surum-duman' && 'release-smoke' || (env.GOREV == 'buyuk-harf' && 'buyuk-harf' || 'strip-probe')) }}.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
