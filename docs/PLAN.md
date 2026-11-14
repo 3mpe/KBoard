@@ -206,6 +206,81 @@ Kırılım: kategori ve etikete göre.
 
 Her faz sonunda ölçüm yapılır, devam kararı skora göre verilir.
 
+### 6.1 Sayısal bitiş eşikleri (adım 0.6, #11)
+
+> **TASLAK: depo sahibinin onayı bekleniyor.** Aşağıdaki sayılar yeni karar değildir; depoda bugün
+> uygulanan CI eşiklerinin ve raporlarda ölçülen değerlerin dökümüdür. Onaylanana kadar bağlayıcı
+> bitiş kriteri sayılmaz. Gboard'a göre hedefler #10 (baseline ölçümü) bitmeden sayıya bağlanamaz.
+
+Ölçüm seti aksi yazılmadıkça `seed-v0` (327 vaka; 289 aksan vakası, 904 doğru yazılmış kelime), masaüstü
+simülasyonu. Tanımlar: `docs/EVALUATION.md`.
+
+**(a) Bugün CI'da uygulanan eşikler** ("Motor ölçüm eşiği" işi, `.github/workflows/ci.yml:30`; eşik
+aşılırsa PR kırılır)
+
+| Faz | Metrik | Eşik | Uygulandığı yer |
+|---|---|---|---|
+| 2 | Aksan düzeltme doğruluğu | ≥ %88 | `.github/ci/eval-gate.py:17` |
+| 2 | Yanlış otomatik düzeltme (seed-v0) | ≤ %0,3 | `.github/ci/eval-gate.py:18` |
+| 2 | Yanlış otomatik düzeltme (korpus, bağlamsız ve bağlamlı) | ≤ %0,3 | `.github/workflows/ci.yml:90`, `data/tools/corpus_false_ac.py:210-215` |
+| 2 | Yazım kurallarının korpusa eklediği yanlış düzeltme | ≤ +0,01 puan | `.github/workflows/ci.yml:91` |
+| 3 | Kişisel sözlük kategorisi İlk-3 @3 (çekim üreticisi) | ≥ %25 | `.github/ci/eval-gate.py:23` |
+| 4 | Sonraki kelime İlk-3 @0 | ≥ %18,5 | `.github/ci/eval-gate.py:19` |
+| 4 | İlk-3 @1 | ≥ %28,5 | `.github/ci/eval-gate.py:20` |
+| 4 | İlk-3 @3 | ≥ %50 | `.github/ci/eval-gate.py:21` |
+| 4 | KSR (tuş tasarrufu) | ≥ %37,5 | `.github/ci/eval-gate.py:22` |
+| 4 | Kişisel öğrenme: tekrar İlk-3 @0 ≥ %45 ve farkı ≥ +20 puan; @1 ≥ %60; KSR farkı ≥ +8 puan; ilk kez görülen ikililerde koruma: İlk-3 @0 farkı ≥ −1,5 puan, İlk-3 @3 farkı ≥ −0,5 puan, KSR farkı ≥ −0,5 puan; iki kullanımdan sonra yeni kelime ≥ %80; seed-v0'da kötüleşme ≤ 0,5 puan | (soldaki) | `.github/ci/personal-gate.py:49-62,78` (satır 55 yalnız uyarıdır: ilk kez İlk-3 @0 farkı hedefi ≥ −0,5 puan) |
+
+Faz dışı ama aynı işte uygulanan yazım kuralı eşikleri: `kural-v0` tuzaklarda 0 otomatik düzeltme,
+kesinlik ≥ %99, liste duyarlılığı ≥ %95, soru eki duyarlılığı ≥ %85 (`.github/ci/kural-gate.py:37-40`);
+de/da/ki ayrımı ilk 3'te ≥ %60, ilk yuvada ≥ %40, tuzakta ilk yuvada ≤ %10, otomatik düzeltme 0
+(`.github/ci/dedaki-gate.py:96-99`); korpusta ayrık öneri ilk yuvada ≤ %5 (`.github/workflows/ci.yml:82`).
+
+**Gecikme p95 CI'da uygulanmıyor.** Raporlarda kullanılan hedef ≤ 1,5 ms'dir (masaüstü, uçtan uca;
+`docs/reports/faz4-ngram.md:45`, `docs/reports/faz-kural-b.md:31`, `docs/reports/faz7-kisisel.md:172`).
+§6'daki "p95 < 50 ms" cihaz hedefidir; telefonda henüz ölçülmedi (`docs/reports/faz1.md:54`,
+`docs/reports/faz4-ngram.md:66`).
+
+**(b) Bugünkü ölçülen değerler** (seed-v0 tüm set; "Motor ölçüm eşiği" işinin günlüğünden, koşu
+43591364426, commit 51030aec, 2026-11-14)
+
+| Metrik | Ölçülen |
+|---|---|
+| Aksan düzeltme doğruluğu | %90,3 (289 vaka) |
+| Yanlış otomatik düzeltme (seed-v0) | %0,1 (904 kelime) |
+| Yanlış otomatik düzeltme (korpus, 21 687 sözcük) | %0,10 bağlamsız (22), %0,11 bağlamlı (24) |
+| Yazım kurallarının korpusa eklediği yanlış düzeltme | ham +0,051 puan; gözden geçirilmiş korpus yanlışları hariç +0,000 puan |
+| İlk-3 @0 / @1 / @3 | %20,3 / %30,3 / %52,1 |
+| KSR | %40,1 |
+| Kişisel sözlük kategorisi İlk-3 @3 | %47,0 |
+| Kişisel öğrenme: tekrar İlk-3 @0 / @1 | %91,0 (fark +56,0 puan) / %93,6 |
+| Kişisel öğrenme: iki kullanımdan sonra yeni kelime | %100 (32/32) |
+
+Korpus yanlış düzeltmesi için eski raporlardaki %0,04–%0,06 (`docs/reports/faz-aksan-baglam.md:57-60`,
+`docs/reports/faz7-kisisel.md:163-164`) yazım kuralları eklenmeden önce ölçülmüştür; bugünkü %0,10 / %0,11
+kurallar açıkken ham değerdir (`docs/reports/faz-kural.md:32`) ve aradaki farkın tamamı gözden geçirilmiş
+korpus yanlışlarıdır (birşey → bir şey gibi).
+
+**Gecikme p95 (masaüstü) makineye bağlıdır.** Rapordaki değerler: değişiklik öncesi 1,06 ms, sonrası
+yükte 1,14–1,55 ms (`docs/reports/faz-aksan-baglam.md:44`); dolu kişisel depoyla 1,32–1,54 ms, ortanca
+1,36 (`docs/reports/faz7-kisisel.md:172`). Üst uçlar (1,55 ve 1,54 ms) ≤ 1,5 ms rapor hedefinin
+üstündedir. Aynı CI koşusunda ölçüm setine göre p95 0,62–1,77 ms arasında çıkmıştır (seed-v0 0,68 ms,
+kural-v0 1,77 ms). Bu yüzden masaüstü gecikmesi eşik olarak önerilmeden önce sabit bir ölçüm
+yöntemi gerekir.
+
+**(c) Gboard'a göre hedefler: #10 bekleniyor**
+
+| Faz | Hedef (§6) | Sayı |
+|---|---|---|
+| 2 | Aksan düzeltme doğruluğu baseline'ı belirgin aşar, yanlış otomatik düzeltme artmaz (hangi baseline: #19, depo sahibinin kararı bekleniyor) | #10 bekleniyor |
+| 3 | İlk-3 ve KSR'de Gboard'u geçer | #10 bekleniyor |
+| 4 | Sonraki kelime isabeti (İlk-3 @0) Gboard'u geçer | #10 bekleniyor |
+
+`docs/reports/baseline-v0.md` (adım 0.5) henüz yok; Gboard ve taban değerleri ölçülmeden bu satırlara
+sayı yazılmaz. Taban, "HeliBoard eşdeğeri (KBoard derlemesi, motor kapalı)" olarak ölçülür; saf HeliBoard
+APK'sı değildir. Gboard ölçümü henüz yapılmadı. Baseline yayımlanınca her satıra "Gboard değeri + pay" biçiminde eşik önerilir
+ve (a)'daki mutlak eşiklerle birlikte onaya sunulur.
+
 ## 7. Issue haritası
 
 | Faz | Epic | Görevler |
