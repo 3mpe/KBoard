@@ -26,6 +26,11 @@ on:
         description: taban için grup başına vaka (aksan, doğru yazım, yazım hatası; 4 = 12 vaka, ~65 dk)
         type: string
         default: '4'
+      buyuk_set:
+        description: buyuk-harf için vaka kümesi (eval/testset/<ad>.jsonl; baglam-kanit-v0 = #59 hedefli küme)
+        type: choice
+        options: [buyuk-harf-v1, baglam-kanit-v0]
+        default: buyuk-harf-v1
   pull_request:
     paths:
       - eval/kboard_eval/adb_driver.py
@@ -56,6 +61,7 @@ jobs:
       GOREV: ${{ inputs.gorev || 'yoklama' }}
       DOGRU_ADET: ${{ inputs.adet || '40' }}
       TABAN_GRUP: ${{ inputs.taban_grup || '4' }}
+      BUYUK_SET: ${{ inputs.buyuk_set || 'buyuk-harf-v1' }}
       BUYUK_SURUM: ${{ matrix.surum != '-' && matrix.surum || '' }}
       BUYUK_PARCA: ${{ matrix.surum != '-' && format('{0}/3', matrix.parca) || '0/1' }}
     steps:
@@ -76,11 +82,14 @@ jobs:
         run: |
           set -euo pipefail
           cp "$(ls app/build/outputs/apk/debug/*.apk | head -1)" "$RUNNER_TEMP/kboard-sonra.apk"
-          f=app/src/main/java/helium314/keyboard/kboard/KBoardSuggestions.kt
-          git show origin/main:$f > $f
+          # "Önce": uygulama kaynağı (app/src/main) main'deki haliyle; motor ve veri bu daldan.
+          git diff --name-only origin/main -- app/src/main | tee "$RUNNER_TEMP/once-dosyalar.txt"
+          while read -r f; do
+            git show "origin/main:$f" > "$f" 2>/dev/null || rm -f "$f"
+          done < "$RUNNER_TEMP/once-dosyalar.txt"
           ./gradlew assembleDebug
           cp "$(ls app/build/outputs/apk/debug/*.apk | head -1)" "$RUNNER_TEMP/kboard-once.apk"
-          git checkout -- $f
+          git checkout -- app/src/main
       - name: Release APK (geçici anahtarla imzalı; gerçek sürüm anahtarı burada kullanılmaz)
         if: env.GOREV == 'surum-duman'
         run: |
