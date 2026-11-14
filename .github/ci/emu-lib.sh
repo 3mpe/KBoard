@@ -37,14 +37,24 @@ open_field() { # $1 = IME, $2 = etkinlik (paket/sınıf)
 }
 # Hata ayıklanabilir paketin varsayılan tercih dosyasına boolean yaz: set_prefs paket anahtar=değer...
 set_prefs() {
-  local pkg=$1 pf kv k v; shift
+  local pkg=$1 pf kv k v dosyalar son eksik=0; shift
   adb shell am force-stop "$pkg"
-  pf=$(adb shell run-as "$pkg" ls /data/user_de/0/$pkg/shared_prefs/ 2>/dev/null | tr -d '\r' | grep -m1 "_preferences\.xml$")
-  [ -n "$pf" ] || { log "tercih dosyası yok ($pkg)"; return 1; }
+  dosyalar=$(adb shell run-as "$pkg" ls /data/user_de/0/$pkg/shared_prefs/ 2>/dev/null | tr -d '\r')
+  # Klavyenin kendi dosyası <paket>_preferences.xml'dir; çalışma sırasında başka *_preferences.xml
+  # dosyaları oluşabildiği için önce tam ad aranır (ilk eşleşene yazmak yanlış dosyaya yazabiliyordu).
+  pf=$(grep -m1 -x -F "${pkg}_preferences.xml" <<<"$dosyalar" || true)
+  [ -n "$pf" ] || pf=$(grep -m1 "_preferences\.xml$" <<<"$dosyalar" || true)
+  [ -n "$pf" ] || { log "tercih dosyası yok ($pkg): $(tr '\n' ' ' <<<"$dosyalar")"; return 1; }
   for kv in "$@"; do
     k=${kv%%=*}; v=${kv#*=}
     adb shell "run-as $pkg sed -i '/name=\"$k\"/d' /data/user_de/0/$pkg/shared_prefs/$pf"
     adb shell "run-as $pkg sed -i 's|</map>|<boolean name=\"$k\" value=\"$v\" /></map>|' /data/user_de/0/$pkg/shared_prefs/$pf"
   done
-  adb shell run-as "$pkg" cat "/data/user_de/0/$pkg/shared_prefs/$pf" | grep -E "$(printf '%s|' "${@%%=*}" | sed 's/|$//')"
+  son=$(adb shell run-as "$pkg" cat "/data/user_de/0/$pkg/shared_prefs/$pf" | tr -d '\r')
+  grep -E "$(printf '%s|' "${@%%=*}" | sed 's/|$//')" <<<"$son"
+  # Geri okuma: her anahtar istenen değerle dosyada olmalı; değilse çağıran geçişi geçersiz sayabilsin.
+  for kv in "$@"; do
+    grep -qF "name=\"${kv%%=*}\" value=\"${kv#*=}\"" <<<"$son" || { log "tercih yazılamadı: $kv ($pf; dosyalar: $(tr '\n' ' ' <<<"$dosyalar"))"; eksik=1; }
+  done
+  return $eksik
 }

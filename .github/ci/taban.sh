@@ -37,17 +37,30 @@ adb shell setprop log.tag.KBoardSuggestions DEBUG
 gecis() {
   local ad=$1 kapat=$2 lp r anahtar duzeltme
   log "== geçiş: $ad (kboard_debug_engine_off=$kapat)"
-  set_prefs "$pkg" auto_cap=false use_personalized_dicts=false kboard_debug_engine_off="$kapat"
+  if ! set_prefs "$pkg" auto_cap=false use_personalized_dicts=false kboard_debug_engine_off="$kapat"; then
+    # Ayar yazılamadıysa geçiş anlamsızdır (yanlış motor durumuyla 20 dakika yazmak yerine hemen durur).
+    log "$ad: tercihler yazılamadı, geçiş atlandı"; gecersiz="$gecersiz $ad"; rc=1; : > "$out/$ad.jsonl"; return
+  fi
   adb logcat -c
   # Arka planda akıtılır: 20 dakikalık geçişte logcat tamponu dönerse baştaki anahtar satırı kaybolmasın.
   adb logcat -s KBoardSuggestions:D KBoardTestField:I > "$out/logcat-$ad.txt" 2>&1 &
   lp=$!
   open_field "$ime" "$alan" || log "KBoard etkinleşmedi ($ad)"
   adb exec-out screencap -p > "$out/$ad-ilk.png"
+  # Teşhis: geçiş başında odak, etkin klavye ve motor anahtarı (ikinci geçişte ekranın durulmadığı görüldü).
+  log "$ad başlangıç: $(adb shell dumpsys window | tr -d '\r' | grep -m1 -E 'mCurrentFocus' | sed 's/^ *//'); $(adb shell dumpsys input_method | tr -d '\r' | grep -m1 -oE 'mCurMethodId=[^ ]+'); $(adb shell dumpsys input_method | tr -d '\r' | grep -m1 -oE 'mInputShown=[a-z]+')"
+  log "$ad başlangıç anahtar satırı: $(tr -d '\r' < "$out/logcat-$ad.txt" | grep -F 'motor anahtarı:' | tail -1 | sed 's/^.*motor anahtarı:/motor anahtarı:/')"
   timeout $(( ${TABAN_SURE:-1260} + 300 )) python3 .github/ci/taban.py sur "$out/vakalar.jsonl" "$keymap" \
       "$out/$ad.jsonl" "${TABAN_SURE:-1260}" ${3:+"$3"} 2>&1 | tee "$out/$ad-drive.log"
   r=${PIPESTATUS[0]}; [ "$r" -eq 0 ] || { log "sürücü çıkışı $r ($ad)"; rc=1; }
   adb exec-out screencap -p > "$out/$ad-son.png"
+  if grep -qF "HATA " "$out/$ad-drive.log"; then
+    # Teşhis: vaka atlandıysa geçiş sonundaki ekranın paketleri ve görünen metinleri (ilk 25).
+    adb shell uiautomator dump /sdcard/taban.xml >/dev/null 2>&1
+    adb shell cat /sdcard/taban.xml 2>/dev/null | tr '>' '\n' > "$out/$ad-son.xml"
+    log "$ad son ekran paketleri: $(grep -oE 'package="[^"]+"' "$out/$ad-son.xml" | sort | uniq -c | tr '\n' ' ')"
+    log "$ad son ekran metinleri: $(grep -oE ' text="[^"]+"' "$out/$ad-son.xml" | head -25 | tr '\n' ' ')"
+  fi
   sleep 2; kill "$lp" 2>/dev/null; wait "$lp" 2>/dev/null
   # Motor durumu kanıtı. TestFieldActivity her açılışta anahtarı yazar; motor açıkken KBoardSuggestions
   # her kelime için "düzeltme:" satırı yazar (debug), kapalıyken o satıra hiç gelinmez.
