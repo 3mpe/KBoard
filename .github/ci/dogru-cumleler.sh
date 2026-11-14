@@ -23,6 +23,7 @@ adb logcat -c
 rc=${PIPESTATUS[0]}
 adb exec-out screencap -p > "$out/son.png"
 adb logcat -d -s KBoardSuggestions:D > "$out/logcat-duzeltme.txt" 2>&1 || true
+[ "$adet" -le 10 ] && { log "düzeltme logu:"; grep -E "düzeltme:" "$out/logcat-duzeltme.txt" | sed -E "s/^.*düzeltme:/düzeltme:/" | head -200; }
 if [ -s "$out/kboard.jsonl" ]; then
   ( cd eval && python3 -m kboard_eval score "../$out/vakalar.jsonl" -t "../$out/kboard.jsonl" \
       --markdown "../$out/puan.md" --title "Doğru cümleler (emülatör)" ) >/dev/null
