@@ -96,3 +96,47 @@ hedefi bunun üzerine çıkmak.
 - İlk adım kuantize, budanmış 3-gram (Kneser-Ney), HeliBoard'un mevcut bigram altyapısına ek olarak.
 - Sohbet dili verisi kritik; açık lisanslı Türkçe sohbet verisi kıt. Seçenekler ve lisansları Faz 4
   öncesi `data/KAYNAKLAR.md`'de listelenecek. Kişisel öğrenme bu açığı zamanla kapatır.
+
+## 4. İki dil modeli: ölçüm modeli ve dağıtılan model (2026-11-14)
+
+Aynı korpustan, aynı ayarlarla iki dosya derlenir (`engine/build.gradle.kts`):
+
+| Dosya | Görev | Test sızıntısı süzgeci | Nereye gider |
+|---|---|---|---|
+| `kboard-tr.kbn` | ölçüm modeli (`buildNgramModel`) | var (`--exclude-jsonl`) | masaüstü ölçümleri ve bütün kalite eşikleri |
+| `kboard-tr-ship.kbn` | dağıtılan model (`buildNgramModelShip`) | yok | APK (`assets/kboard/kboard-tr.kbn`) |
+
+**Neden.** Süzgeç, test setleriyle normalize 4-gram paylaşan eğitim cümlelerini atar (510 cümle: cv 450,
+sohbet 60). Ölçüm için doğrudur: model test cümlesini görmüşse sayı kaliteyi değil ezberi ölçer. Ama test
+setleri özellikle en sık günlük kalıplardan yazıldığı için atılanlar tam da telefonda en çok beklenen
+devamlardır: süzgeçli modelde "teşekkür" → "ederim" (korpusta 71 cümle atılıyor), "görüşmek" → "üzere",
+"doğum günün" → "kutlu" ilk üçte yoktur. Bu yüzden telefona süzgeçsiz model gider, sayılar süzgeçli
+modelden okunur.
+
+**Kurallar.**
+
+- Kalite sayıları (İlk-3, sonraki kelime, KSR, aksan, yazım) yalnız ölçüm modelinden raporlanır; bu
+  değişiklikle aynı kalır.
+- Dağıtılan modelde yalnız güvenlik denetlenir (`.github/ci/dagitilan-model.sh` ve
+  `corpus_false_ac.py --no-exclude`): seed-v0 ve korpusta yanlış otomatik düzeltme, kural-v0 tuzakları,
+  de/da/ki tuzakları ve ayrımın otomatik düzeltme olmaması, gecikme p95, boyut bütçesi.
+- CI, APK'daki `assets/kboard/kboard-tr.kbn` dosyasının sha256'sının `kboard-tr-ship.kbn` ile aynı,
+  `kboard-tr.kbn`'den farklı olduğunu denetler (`ci.yml`, "Debug APK + izin kontrolü").
+- **Kirli sayılar.** Dağıtılan APK ile (emülatör veya cihaz) seed-v0, kural-v0, dedaki-v0, kisisel-v0 ya
+  da buyuk-harf-v1 `dogal` cümleleri üzerinde ölçülen sonraki kelime / tamamlama / KSR sayıları kalite
+  ölçüsü DEĞİLDİR: model bu cümleleri eğitimde görmüştür. Bu koşular yalnız davranış denetimi olarak
+  okunur (yanlış düzeltme, büyük harf, kelime değişimi). `dogal` grubu dağıtılan model için artık
+  ayrılmış veri sayılmaz.
+- Gboard karşılaştırması (#10) ve cihaz üstü kalite sayıları için model derlemesinde hiç kullanılmamış
+  yeni bir ayrılmış parti gerekir; o parti hazır olana kadar cihaz üstü kalite sayısı yayımlanmaz.
+- Günlük ifade listesi (`eval/ifade/gunluk-ifadeler-v0.tsv`): motor çıktısına bakılmadan ve seed-v0'dan
+  alınmadan yazılmış 45 ifade + 3 sabit satır. Eşik değildir, iki modelin ilk üç sonraki kelime önerisini
+  yan yana gösterir; yalnız sabit satırlar (teşekkür → ederim, görüşmek → üzere, doğum günün → kutlu)
+  dağıtılan modelde zorunludur. İlk ölçüm: ölçüm modeli 36/45, dağıtılan model 39/45, sabit 0/3 → 3/3.
+
+### Masaüstü ölçümünün kör noktası (#59)
+
+Masaüstü benzetimi yalnız motorun kendi otomatik düzeltme kararını modeller. HeliBoard'un
+`Suggest.shouldBeAutoCorrected` kararı (yazılan kelimenin "bu bağlamda bilinmiyor" sayılması) masaüstünde
+görünmez; #59 (`mi` → `mı`) bu yüzden yalnız emülatörde yakalandı. Bu yüzden 40 doğru cümle emülatör
+koşusu (`gorev=dogru-cumleler`) sürüm kapısı olarak kalır.

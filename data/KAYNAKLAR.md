@@ -36,8 +36,12 @@ java -cp "engine/build/install/engine/lib/*" io.github.kboard.engine.deasciify.D
   belirlenimci; biçim `engine/.../morph/SuffixChainModel.kt`, ~6,5 KB, CI bütçesi 100 KB).
   `deasciify-tr.kbd` kök bayraklarını `stems-tr.tsv`'den alır (`buildDeasciifyIndex`). Zincir sayımları
   CC0 korpustan (CC0-1.0); dosya uygulamayla birlikte GPL-3.0 altında dağıtılır.
-- `kboard-tr.kbn`: n-gram dil modeli (`./gradlew :engine:buildNgramModel`; biçim ve parametreler:
-  `data/tools/build_ngram.py`). Test setiyle normalize 4-gram paylaşan eğitim cümleleri atılır.
+- `kboard-tr.kbn`: ölçüm n-gram dil modeli (`./gradlew :engine:buildNgramModel`; biçim ve parametreler:
+  `data/tools/build_ngram.py`). Test setiyle normalize 4-gram paylaşan eğitim cümleleri atılır. APK'ya
+  girmez; masaüstü ölçümleri ve kalite eşikleri bunu okur.
+- `kboard-tr-ship.kbn`: dağıtılan n-gram dil modeli (`./gradlew :engine:buildNgramModelShip`): aynı iki
+  korpus, aynı ayarlar, sızıntı süzgeci yok. APK'ya `assets/kboard/kboard-tr.kbn` adıyla bu dosya girer.
+  Gerekçe ve kurallar: `docs/EVALUATION.md`, "İki dil modeli". Kaynak ve lisans aynıdır (CC0-1.0).
   Lisansı kaynağıyla aynı: CC0-1.0. Sözlükten hiçbir şey almaz (girdiler: iki korpus, test setleri
   sızıntı süzgeci için, elle yazılmış `data/ngram-denylist.txt`; `engine/build.gradle.kts`
   `buildNgramModel`).

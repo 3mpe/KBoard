@@ -66,15 +66,18 @@ def split(every: int, workdir: Path) -> tuple[list[str], list[str]]:
     return held, specs
 
 
-def build_lm(specs: list[str], out: Path) -> None:
+def build_lm(specs: list[str], out: Path, exclude: bool = True) -> None:
     cmd = [sys.executable, str(ROOT / "data/tools/build_ngram.py")]
     for s in specs:
         cmd += ["--corpus", s]
+    if exclude:
+        cmd += [
+            "--exclude-jsonl", str(ROOT / "eval/testset/seed-v0.jsonl"),
+            "--exclude-jsonl", str(ROOT / "eval/testset/kisisel-v0.jsonl"),
+            "--exclude-jsonl", str(ROOT / "eval/testset/kural-v0.jsonl"),
+            "--exclude-jsonl", str(ROOT / "eval/testset/dedaki-v0.jsonl"),
+        ]
     cmd += [
-        "--exclude-jsonl", str(ROOT / "eval/testset/seed-v0.jsonl"),
-        "--exclude-jsonl", str(ROOT / "eval/testset/kisisel-v0.jsonl"),
-        "--exclude-jsonl", str(ROOT / "eval/testset/kural-v0.jsonl"),
-        "--exclude-jsonl", str(ROOT / "eval/testset/dedaki-v0.jsonl"),
         "--denylist", str(ROOT / "data/ngram-denylist.txt"),
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", str(out),
     ]
@@ -139,6 +142,8 @@ def main() -> int:
     ap.add_argument("--examples", type=int, default=15)
     ap.add_argument("--context", action="store_true", help="bağlamlı ölçümü de yap (ad+ctx)")
     ap.add_argument("--compare", action="append", default=[], help="yeni:taban=en yüksek oran farkı")
+    ap.add_argument("--no-exclude", action="store_true",
+                    help="dil modelini test sızıntısı süzgeci olmadan derle (dağıtılan modelin ayarı)")
     args = ap.parse_args()
     listed = misspelling_matcher()
 
@@ -146,7 +151,7 @@ def main() -> int:
         work = Path(tmp)
         held, specs = split(args.every, work)
         lm = work / "holdout.kbn"
-        build_lm(specs, lm)
+        build_lm(specs, lm, exclude=not args.no_exclude)
         counts = held_tokens(held)
         words = sorted(counts)
         total = sum(counts.values())

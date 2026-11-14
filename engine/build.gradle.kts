@@ -70,7 +70,7 @@ val buildSuffixModel by tasks.registering(JavaExec::class) {
     args("build", chains.path, out.get().asFile.path)
 }
 
-// Sonraki kelime / bağlam dil modeli (kboard-tr.kbn): data/corpus/ ve data/sohbet/ altındaki CC0 korpustan, test
+// Ölçüm dil modeli (kboard-tr.kbn; APK'ya girmez, bkz. buildNgramModelShip): data/corpus/ ve data/sohbet/ altındaki CC0 korpustan, test
 // setiyle 4-gram örtüşen cümleler atılarak üretilir (data/tools/build_ngram.py). Python 3 gerekir.
 val buildNgramModel by tasks.registering(Exec::class) {
     description = "N-gram dil modelini (kboard-tr.kbn) derler"
@@ -95,6 +95,26 @@ val buildNgramModel by tasks.registering(Exec::class) {
         "--corpus", "sohbet=${sohbet.path}:3", "--exclude-jsonl", testset.path,
         "--exclude-jsonl", personalSet.path, "--exclude-jsonl", ruleSet.path,
         "--exclude-jsonl", splitSet.path, "--exclude-jsonl", caseHeld.path, "--denylist", denylist.path,
+        "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
+    )
+}
+
+// Dağıtılan dil modeli (kboard-tr-ship.kbn): aynı korpus ve ayarlar, test sızıntısı süzgeci YOK. Süzgeç ölçüm
+// içindir: test vakalarının geçtiği cümleleri atar ve bunlar en sık günlük kalıplardır ("teşekkür ederim",
+// "görüşmek üzere"). APK'ya bu dosya girer (app/build.gradle.kts, kboardAssets); masaüstü kalite ölçümleri
+// süzgeçli kboard-tr.kbn ile yapılır (docs/EVALUATION.md, "İki dil modeli").
+val buildNgramModelShip by tasks.registering(Exec::class) {
+    description = "Dağıtılan n-gram dil modelini (kboard-tr-ship.kbn, süzgeçsiz) derler"
+    val script = file("../data/tools/build_ngram.py")
+    val corpus = file("../data/corpus/commonvoice-tr.txt")
+    val sohbet = file("../data/sohbet/sohbet-v1.txt")
+    val denylist = file("../data/ngram-denylist.txt")
+    val out = kboardDir.map { it.file("kboard-tr-ship.kbn") }
+    inputs.files(script, corpus, sohbet, denylist)
+    outputs.file(out)
+    commandLine(
+        "python3", script.path, "--corpus", "cv=${corpus.path}",
+        "--corpus", "sohbet=${sohbet.path}:3", "--denylist", denylist.path,
         "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
     )
 }
