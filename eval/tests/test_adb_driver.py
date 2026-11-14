@@ -66,6 +66,8 @@ class FakeDevice:
         self.drop_space = False
         self.windows_supported = True
         self.fail_dumps = 0
+        self.anr_open = False    # "isn't responding" kutusu klavyeyi örtüyor
+        self.anr_sticky = False  # "Wait"e dokunulsa da kalkmıyor
         self.pred = predictor
         self.text = ""
         self.layer = "base"
@@ -104,6 +106,9 @@ class FakeDevice:
         return ""
 
     def _tap(self, x, y):
+        if self.anr_open and (x, y) == (150, 1050):
+            self.anr_open = self.anr_sticky
+            return
         layer = self.km.layers[self.layer]
         hit = [k for k, pos in layer.keys.items() if pos == (x, y)]
         assert len(hit) == 1, (self.layer, x, y, hit)
@@ -154,6 +159,12 @@ class FakeDevice:
         ime = (f'<node index="0" text="" class="android.widget.FrameLayout" package="{PKG}" content-desc="" '
                f'bounds="[0,0][300,450]">{nodes}</node>')
         head = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>"
+        if self.anr_open:
+            dlg = ('<node index="0" text="Pixel Launcher isn&apos;t responding" class="android.widget.TextView" '
+                   'package="android" bounds="[0,900][300,1000]" />'
+                   '<node index="1" text="Wait" class="android.widget.Button" package="android" '
+                   'bounds="[100,1000][200,1100]" />')
+            return f'{head}<displays><display id="0"><window index="0" type="SYSTEM"><hierarchy rotation="0">{dlg}</hierarchy></window></display></displays>'
         if windows:
             win = '<window index="{0}" type="{1}"><hierarchy rotation="0">{2}</hierarchy></window>'
             body = win.format(0, "APPLICATION", app) + (win.format(1, "INPUT_METHOD", ime) if self.keyboard_visible else "")
@@ -315,6 +326,38 @@ class DriverTest(unittest.TestCase):
     def test_keyboard_window_missing_detected(self):
         drv, dev, _ = make_driver()
         dev.keyboard_visible = False
+        with self.assertRaisesRegex(DriveError, "klavye paketi"):
+            list(drv.drive([case()]))
+
+    def test_warm_up_waits_for_strip(self):
+        """Şerit ilk okumalarda boşsa (dil modeli yükleniyor) ilk olay boş kaydedilmez."""
+        drv, dev, log = make_driver()
+        stable = list(make_driver()[0].drive([case()]))
+        real_dump = dev._dump
+        cold = {"n": 3}
+        def dump(windows):
+            if cold["n"]:
+                cold["n"] -= 1
+                text, shown = dev._shown
+                dev._shown = (text, [])
+                try:
+                    return real_dump(windows)
+                finally:
+                    dev._shown = (text, shown)
+            return real_dump(windows)
+        dev._dump = dump
+        self.assertEqual(list(drv.drive([case()])), stable)
+
+    def test_anr_dialog_dismissed(self):
+        drv, dev, log = make_driver()
+        stable = list(make_driver()[0].drive([case()]))
+        dev.anr_open = True
+        self.assertEqual(list(drv.drive([case()])), stable)
+        self.assertTrue(any("Wait" in m for m in log))
+
+    def test_anr_dialog_that_stays_fails(self):
+        drv, dev, _ = make_driver()
+        dev.anr_open = dev.anr_sticky = True
         with self.assertRaisesRegex(DriveError, "klavye paketi"):
             list(drv.drive([case()]))
 

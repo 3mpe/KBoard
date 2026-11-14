@@ -263,6 +263,24 @@ def parse_dump(xml_text: str, keymap: KeyMap) -> Screen:
     return Screen(suggestions[: keymap.max_suggestions], field_text, keyboard_seen)
 
 
+_ANR_RE = re.compile(r"isn(?:.|&apos;)t responding|yanıt vermiyor")
+
+
+def anr_wait_point(xml_text: str) -> tuple[int, int] | None:
+    """Dökümde "... isn't responding" kutusu varsa "Wait"/"Bekle" düğmesinin ortası."""
+    if not _ANR_RE.search(xml_text):
+        return None
+    for m in re.finditer(r"<node\b[^>]*>", xml_text):
+        tag = m.group(0)
+        if re.search(r'\btext="(Wait|Bekle)"', tag):
+            b = re.search(r'bounds="(\[[^"]+)"', tag)
+            mb = _BOUNDS_RE.fullmatch(b.group(1)) if b else None
+            if mb:
+                x1, y1, x2, y2 = map(int, mb.groups())
+                return (x1 + x2) // 2, (y1 + y2) // 2
+    return None
+
+
 # --------------------------------------------------------------------------- adb
 
 Runner = Callable[[Sequence[str]], str]
@@ -358,6 +376,7 @@ class DeviceDriver:
         self.sleep = sleep
         self.verify_field = verify_field
         self.log = log or (lambda msg: print(msg, file=sys.stderr))
+        self._warm = False
 
     # -- ekran
     def read_screen(self, ready: Callable[[Screen], bool] | None = None) -> Screen:
@@ -384,17 +403,30 @@ class DeviceDriver:
         self.log(f"uyarı: ekran {km.max_reads} okumada durulmadı, son okuma kullanıldı")
         return last  # type: ignore[return-value]
 
-    def _dump(self, retries: int = 3) -> Screen:
-        """Tek okuma; geçici uiautomator hataları ("could not get idle state", boş çıktı) yeniden denenir."""
-        for attempt in range(retries):
-            try:
-                screen = parse_dump(self.adb.dump_ui(self.keymap.dump_command), self.keymap)
+    def _dump(self, retries: int = 3, anr_taps: int = 3) -> Screen:
+        """Tek okuma; geçici uiautomator hataları ("could not get idle state", boş çıktı) yeniden denenir.
+        Klavyeyi örten bir "... isn't responding" kutusu (emülatörde Pixel Launcher) varsa "Wait"e
+        dokunulup yeniden okunur."""
+        while True:
+            for attempt in range(retries):
+                try:
+                    raw = self.adb.dump_ui(self.keymap.dump_command)
+                    screen = parse_dump(raw, self.keymap)
+                    break
+                except DriveError as exc:
+                    if attempt == retries - 1:
+                        raise
+                    self.log(f"uyarı: ekran okunamadı, yeniden deneniyor ({exc})")
+                    self.sleep(0.5)
+            if screen.keyboard_seen or anr_taps <= 0:
                 break
-            except DriveError as exc:
-                if attempt == retries - 1:
-                    raise
-                self.log(f"uyarı: ekran okunamadı, yeniden deneniyor ({exc})")
-                self.sleep(0.5)
+            wait = anr_wait_point(raw)
+            if wait is None:
+                break
+            anr_taps -= 1
+            self.log(f"uyarı: 'yanıt vermiyor' kutusu klavyeyi örtüyor, 'Wait'e dokunuluyor {wait}")
+            self.adb.tap(*wait)
+            self.sleep(1)
         if not screen.keyboard_seen:
             raise DriveError(
                 f"dökümde klavye paketi ({self.keymap.package}) yok: klavye açık değil ya da bu Android "
@@ -432,6 +464,9 @@ class DeviceDriver:
             raise DriveError(f"{case.id}: tuş haritasında olmayan karakter(ler): {''.join(sorted(missing))}")
         if case.user_words:
             self.log(f"uyarı: {case.id}: user_words cihazda eklenmiyor ({', '.join(case.user_words)})")
+        if not self._warm:
+            self.warm_up()
+            self._warm = True
         self.clear_field()
         screen = self.read_screen(lambda sc: sc.field_text == "")
         self._check_field(screen, "", f"{case.id} başlangıç")
@@ -467,6 +502,19 @@ class DeviceDriver:
             return None
         # Düzeltme birden çok kelime olabilir ("birşey" → "bir şey"); tamamı alınır.
         return None if _same_text(tail) == _same_text(typed) else tail
+
+    def warm_up(self, reads: int = 20) -> None:
+        """Boş alanda öneri şeridi dolana kadar bekler (en çok `reads` okuma). Klavye yeni
+        açıldığında dil modeli arka planda yüklenir; ilk vakanın ilk olayı yükleme bitmeden
+        okunursa boş şerit kaydedilir ve koşular farklı çıkar (PR #53 yoklaması). Şeridi hiç
+        dolmayan klavyede yalnızca biraz bekletir, ize bir şey yazmaz."""
+        self.clear_field()
+        for _ in range(reads):
+            screen = self._dump()
+            if screen.field_text == "" and screen.suggestions:
+                return
+            self.sleep(0.5)
+        self.log("uyarı: boş alanda öneri şeridi dolmadı (ısınma)")
 
     def drive(self, cases: list[Case]) -> Iterator[Event]:
         for n, case in enumerate(cases, 1):
