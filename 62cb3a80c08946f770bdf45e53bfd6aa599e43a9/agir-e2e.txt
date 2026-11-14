@@ -1,0 +1,2 @@
+GECTI 'kontrol etmek idyrfşö' → şeritte 'istedim' (yuva 0; 0 = orta), dokununca alan: "Kontrol etmek istedim"
+GECTI boşlukta yazıldığı gibi kaldı (otomatik düzeltme yok)
