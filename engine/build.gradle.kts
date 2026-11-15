@@ -102,7 +102,7 @@ val buildNgramModel by tasks.registering(Exec::class) {
         "--exclude-jsonl", freshChat.path, "--exclude-jsonl", freshTablet.path, "--exclude-exact", freshNatural.path,
         "--exclude-jsonl", personalSet.path, "--exclude-jsonl", ruleSet.path,
         "--exclude-jsonl", splitSet.path, "--exclude-jsonl", caseHeld.path, "--denylist", denylist.path,
-        "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
+        "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "--max-succ-bos", "5000", "-o", out.get().asFile.path,
     )
 }
 
@@ -123,6 +123,6 @@ val buildNgramModelShip by tasks.registering(Exec::class) {
     commandLine(
         "python3", script.path, "--corpus", "cv=${corpus.path}",
         "--corpus", "sohbet=${sohbet.path}:3", "--corpus", "sohbet2=${sohbet2.path}:3", "--denylist", denylist.path,
-        "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "-o", out.get().asFile.path,
+        "--min-uni", "1", "--min-bi", "1", "--min-tri", "2", "--max-succ", "60", "--max-succ-bos", "5000", "-o", out.get().asFile.path,
     )
 }

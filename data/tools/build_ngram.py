@@ -111,6 +111,8 @@ def main() -> int:
     ap.add_argument("--min-bi", type=int, default=2)
     ap.add_argument("--min-tri", type=int, default=3)
     ap.add_argument("--max-succ", type=int, default=40, help="bağlam başına en çok ardıl")
+    ap.add_argument("--max-succ-bos", type=int, default=None,
+                    help="cümle başı (<s>) satırı için ardıl sınırı (varsayılan: --max-succ)")
     ap.add_argument("--top-uni", type=int, default=50)
     ap.add_argument("--denylist", type=Path, help="önerilmeyecek kelimeler (satır başına; önek* desteklenir)")
     ap.add_argument("--holdout", type=Path, help="her 20. cümleyi bu dosyaya ayır (ayar için)")
@@ -198,7 +200,8 @@ def main() -> int:
             succ[v].append(w)
     bigram_rows = []
     for v in sorted(succ, key=lambda x: (x != BOS, x)):  # sıralı: çıktı her koşuda aynı bayt
-        ws = sorted(succ[v], key=lambda w: (-p_bi_full(v, w), w))[: args.max_succ]
+        cap = args.max_succ_bos if v == BOS and args.max_succ_bos is not None else args.max_succ
+        ws = sorted(succ[v], key=lambda w: (-p_bi_full(v, w), w))[:cap]
         gamma = D * ctx_types[v] / ctx_count[v]
         bigram_rows.append((v, gamma, [(w, p_bi_full(v, w)) for w in ws]))
 
