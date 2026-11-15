@@ -132,6 +132,16 @@ class TypoSourceTest {
     }
 
     @Test
+    fun distanceTwoForFourLetterTypos() {
+        // "sordu": o→p (komşu) ve son harf eksik; yazım 4 harf (adım 3: uzaklık 2 araması 4 harften)
+        assertTrue("sordu" in words("sprd"))
+        assertNull(auto("sprd"))
+        // Uzaklık 1 adayı uzaklık 2 adayının önünde kalır
+        val w = words("ekun")
+        assertEquals("ekin", w.first())
+    }
+
+    @Test
     fun guards() {
         assertEquals(emptyList(), words("üzerw2"))
         assertEquals(emptyList(), words("üzer'w"))

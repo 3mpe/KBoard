@@ -59,8 +59,10 @@ class TypoSource(
         val minAutoFreq: Int = 0,
         /** Oto. düzeltme için yazılanın en az harf sayısı. */
         val minAutoLength: Int = 3,
-        /** Uzaklık 2 adayları bu uzunluktan itibaren aranır. */
-        val distance2MinLength: Int = 6,
+        /** Uzaklık 2 adayları bu uzunluktan itibaren aranır (adım 3: 6 → 4, docs/reports/adim-3-iki-hata.md). */
+        val distance2MinLength: Int = 4,
+        /** Yalnızca uzaklık 2 ile ulaşılan adayların sıralama cezası (uzaklık 1 adayları önde kalsın). */
+        val distance2Penalty: Double = 1.0,
         /** Yalnızca uzaklık 2 ile ulaşılan bir adaya oto. düzeltme bu uzunluktan itibaren. */
         val distance2AutoMinLength: Int = 8,
         /** Aday olarak kabul edilen en yüksek maliyet. */
@@ -281,7 +283,7 @@ class TypoSource(
         if (wl == lower) return
         val cost = TypoCost.distance(lower, wl)
         if (cost > config.maxCost) return
-        val c = Correction(word, freq, cost, dist, config.freqWeight * freq / 255.0 - cost)
+        val c = Correction(word, freq, cost, dist, config.freqWeight * freq / 255.0 - cost - if (dist >= 2) config.distance2Penalty else 0.0)
         val prev = best[wl]
         if (prev == null || c.rank > prev.rank || (c.rank == prev.rank && c.distance < prev.distance)) best[wl] = c
     }
