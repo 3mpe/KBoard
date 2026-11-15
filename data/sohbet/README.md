@@ -1,4 +1,4 @@
-# Sohbet cümleleri (`sohbet-v1.txt`)
+# Sohbet cümleleri (`sohbet-v1.txt`, `sohbet-v2.txt`)
 
 KBoard'un sonraki kelime modelini sohbet diline alıştırmak için yazılmış, mesajlaşma tarzında
 Türkçe cümleler. Arkadaşa, aileye, iş arkadaşına WhatsApp benzeri uygulamalarda yazılan kısa
@@ -44,3 +44,25 @@ adanmıştır; atıf zorunluluğu yoktur. (Uygulama kodu GPL-3.0'dır; bu veri d
   harfle ve noktalamasız. Bunlar bilinçli olarak azınlıkta tutuldu; modelin önereceği biçim
   olarak standart yazım baskın kalmalıdır.
 - Hakaret, argo küfür veya kırıcı içerik yoktur.
+
+## `sohbet-v2.txt` (adım 1, 2026-11-15)
+
+Dil modelinin öğrenme eğrisini sohbet korpusu taşıdığı için (bkz. `docs/reports/adim-1-korpus.md`)
+korpus büyütüldü. 6 281 mesaj, 34 764 kelime, 9 578 farklı kelime biçimi; mesaj başına ortanca 6 kelime.
+
+- **Yapay zekâ ile üretildi; 80 satırlık rastgele bir örneklem okundu, tamamı insan gözünden
+  geçmedi.** CC0-1.0.
+- 16 ayrı yazım oturumu, her biri 400 mesaj ve farklı bir konuşan grubu: (1) üniversite öğrencileri,
+  (2) anne babalar, (3) iş yazışması (siz dili), (4) lise çağı, (5) 55 yaş üstü, (6) tanımadığı
+  kişilere yazanlar (ev sahibi, kurye, usta, randevu), (7) çiftler ve yakın arkadaşlar, (8) hobi ve
+  etkinlik grupları, (9) selamlaşma, onay, iyi dilek gibi kısa kalıplar, (10) kardeşler ve kuzenler,
+  (11) esnaf ve müşteri, (12) yolda olanlar, (13) uzaktaki arkadaşlar ve gurbet, (14) ev hali,
+  (15) fikir, tavsiye ve gün anlatımı, (16) resmi işler ve gündelik ödemeler.
+- Yazım oturumları `sohbet-v1.txt`'yi, `eval/testset/` dosyalarını, taze ölçüm kümelerini ve motor
+  çıktısını görmedi; yalnız konu listesi ve bu dosyadaki üslup kuralları verildi.
+- Süzgeç (6 400 satırdan 119'u atıldı): kendi içinde ve `sohbet-v1` ile normalize tekrar (34), taze
+  sohbet kümesiyle 4-gram örtüşmesi (33), `data/ngram-denylist.txt` kelimesi geçen satır (46; çoğu
+  "geliyom", "bişey" gibi konuşma yazımları), beş ve daha uzun rakam dizisi, adres ya da bağlantı (0),
+  aynı ilk dört kelimeyle üçüncü satır (0), yanlış yazım listesindeki bir biçimi içeren satır (6: sağol, haftasonu, iyiki).
+- Gerçek kişi, telefon, adres, hesap adı, marka yok; adlar yaygın Türkçe adlardır.
+- Denetim: `python3 -I data/tools/sohbet_check.py data/sohbet/sohbet-v2.txt`.
