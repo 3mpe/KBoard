@@ -68,7 +68,11 @@ class NgramModel private constructor(
             for (r in 0 until starts.size - 1) {
                 val from = starts[r]
                 val to = starts[r + 1]
-                if (to - from > BIG_ROW) big[from] = (from until to).sortedBy { entId[it] }.toIntArray()
+                if (to - from <= BIG_ROW) continue
+                // (id << 32 | kayıt) sıralanır: kutulama yok
+                val keys = LongArray(to - from) { (entId[from + it].toLong() shl 32) or (from + it).toLong() }
+                keys.sort()
+                big[from] = IntArray(keys.size) { keys[it].toInt() }
             }
         }
         index(biStart)
