@@ -1,0 +1,14 @@
+BILGI öğrenmeden önce 'mavi' sonrası 'kaplumbağa' önerilmiyor (beklenen)
+BILGI yazılan: "Mavi kaplumbağa mavi kaplumbağa mavi kaplumbağa mavi kaplumbağa mavi kaplumbağa "
+GECTI öğrenilenler dosyaya yazıldı: 66 bayt
+GECTI uygulama yeniden açılınca 'mavi' sonrası ilk öneri 'kaplumbağa'
+GECTI 'herşey' + boşluk → "Her şey " (iki kelime yazıldı)
+GECTI geri silme düzeltmeyi geri aldı: "Herşey"
+GECTI geri alma dosyaya yazıldı (kural-geri-alinan.tsv)
+GECTI yeniden açılınca geri alınan 'herşey' düzeltilmedi
+BILGI yerel yedek dosyası bulunamadı, yedek dışlama denenemedi
+GECTI yeniden başlatma sonrası dosya duruyor
+GECTI yeniden başlatma sonrası 'kaplumbağa' hâlâ öneriliyor (yuva 0)
+GECTI 'Öğrenilenleri sil' sonrası dosya silindi
+GECTI 'Öğrenilenleri sil' sonrası geri alma dosyası silindi
+GECTI silme sonrası 'kaplumbağa' artık önerilmiyor
