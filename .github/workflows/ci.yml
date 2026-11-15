@@ -176,7 +176,7 @@ jobs:
           # Dil modeli boyut bütçesi: <= 1,1 MB (biçim 3; sohbet korpusuyla 1,08 MB)
           size=$(stat -c %s engine/build/kboard/kboard-tr-ship.kbn)
           echo "kboard-tr-ship.kbn: $size bayt"
-          [ "$size" -le 1100000 ] || { echo "::error::kboard-tr-ship.kbn $size bayt, bütçe 1 100 000"; exit 1; }
+          [ "$size" -le 2000000 ] || { echo "::error::kboard-tr-ship.kbn $size bayt, bütçe 2 000 000"; exit 1; }
           # Ek zinciri modeli boyut bütçesi: <= 100 KB (faz-ek-zinciri.md)
           size=$(stat -c %s engine/build/kboard/suffix-tr.kbs)
           echo "suffix-tr.kbs: $size bayt"

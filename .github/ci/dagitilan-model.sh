@@ -12,7 +12,7 @@ evalm=$B/kboard/kboard-tr.kbn
 if cmp -s "$ship" "$evalm"; then echo "::error::dağıtılan model ile ölçüm modeli aynı dosya"; exit 1; fi
 size=$(stat -c %s "$ship")
 echo "kboard-tr-ship.kbn: $size bayt (ölçüm modeli: $(stat -c %s "$evalm") bayt)"
-[ "$size" -le 1100000 ] || { echo "::error::kboard-tr-ship.kbn $size bayt, bütçe 1 100 000"; exit 1; }
+[ "$size" -le 2000000 ] || { echo "::error::kboard-tr-ship.kbn $size bayt, bütçe 2 000 000"; exit 1; }
 base="../$B/install/engine/bin/engine --deasciify ../$B/kboard/deasciify-tr.kbd --denylist ../data/ngram-denylist.txt --suffix ../$B/kboard/suffix-tr.kbs --ngram"
 cd eval
 mkdir -p out

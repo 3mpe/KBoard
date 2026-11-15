@@ -45,6 +45,7 @@ CORPUS_MISSPELLINGS = ROOT / "data/korpus-yanlislari.tsv"
 CORPORA = [
     ("cv", ROOT / "data/corpus/commonvoice-tr.txt", 1),
     ("sohbet", ROOT / "data/sohbet/sohbet-v1.txt", 3),
+    ("sohbet2", ROOT / "data/sohbet/sohbet-v2.txt", 3),
 ]
 
 

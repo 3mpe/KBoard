@@ -113,6 +113,10 @@ source .github/ci/delete-e2e.sh
 # Dışa / içe aktarma (dışa aktar, pm clear, öğrenilenler seçilmeden ve seçilerek içe aktar).
 source .github/ci/transfer-e2e.sh
 
+# Model yükleme süresi: dedaki-e2e.sh logcat'i temizlediği için satırlar burada ayrı dosyaya alınır.
+adb logcat -d -s KBoardEngineLoader:I 2>/dev/null | grep -F "dil modeli yüklendi" | sed -E "s/^.*dil modeli yüklendi:/dil modeli yüklendi:/" > "$out/model-yukleme.txt" || true
+echo "model yükleme satırları:"; cat "$out/model-yukleme.txt" || true
+
 # Bitişik bağlaç ayrımı (öneri, iki kelime yazılması, geri silme, tuzak).
 source .github/ci/dedaki-e2e.sh
 

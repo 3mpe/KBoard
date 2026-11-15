@@ -134,6 +134,20 @@ modelden okunur.
   yan yana gösterir; yalnız sabit satırlar (teşekkür → ederim, görüşmek → üzere, doğum günün → kutlu)
   dağıtılan modelde zorunludur. İlk ölçüm: ölçüm modeli 36/45, dağıtılan model 39/45, sabit 0/3 → 3/3.
 
+### Taze ölçüm kümeleri (2026-11-15)
+
+seed-v0 ve sohbet korpusu aynı yöntemle yazıldığından, korpus değişikliklerinin kazancı üzerinde hiç ayar
+yapılmayan iki kümede de ölçülür (ölçüm modelinden çıkarılırlar; `engine/build.gradle.kts`):
+
+- `taze-sohbet-v0` (110 mesaj, sentetik, ayrı oturumda yazıldı): birincil. Kazanç aynı işaretli olmalı ve
+  @0 ile @3'te dev kazancının en az üçte biri kadar olmalı; değilse üsluba aşırı uyum sayılır.
+- `taze-dogal-v0` (300 Common Voice cümlesi, okuma metni üslubu): bekçi; @3 ve KSR en çok 1 puan düşebilir.
+- `taze-sohbet-tablet-v0` (40 mesaj): yalnız tablet karşılaştırmasında (KBoard / Gboard) kullanılır;
+  masaüstünde üzerinde ölçüm ya da ayar yapılmaz. Dağıtılan model bu mesajları da görmemiştir.
+
+Not: `taze-dogal-v0` cümleleri Common Voice'tan çekildiği için dağıtılan modelde vardır; bu küme yalnız
+ölçüm modeliyle anlamlıdır. İlk kullanım: `docs/reports/adim-1-korpus.md`.
+
 ### Masaüstü ölçümünün kör noktası (#59)
 
 Masaüstü benzetimi yalnız motorun kendi otomatik düzeltme kararını modeller. HeliBoard'un

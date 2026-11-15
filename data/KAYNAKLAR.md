@@ -9,13 +9,16 @@ Projeye giren her sözlük, korpus, desen listesi ve model burada kaynağı ve l
 | `data/deasciify-koruma.txt` | Aksansız yazımı da geçerli kelimeler (oto. düzeltme koruması) | CC0-1.0 | elle yazıldı |
 | `engine/src/main/resources/io/github/kboard/engine/rules/yazim-yanlislari-tr.tsv` | Yanlış yazım listesi (137 kayıt; yazım kuralı otomatik düzeltmesi, `rules/SpellingRuleSource`) | CC0-1.0 | elle derlendi (2026-11-13, yapay zekâ ile); yayımlanmış bir liste kopyalanmadı, doğru biçimler TDK Yazım Kılavuzu kurallarına göre. Ayrıntı: `docs/reports/faz-kural.md` |
 | `data/sohbet/sohbet-v1.txt` | Sohbet dili korpusu (sonraki kelime modeli, 2 801 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, insan gözden geçirdi (karar: aşağıda "Sentetik sohbet metni") |
+| `data/sohbet/sohbet-v2.txt` | Sohbet dili korpusu, ikinci parti (6 281 mesaj, 16 konuşan grubu) | CC0-1.0 | yapay zekâ ile üretildi; 80 satırlık rastgele örneklem okundu, tamamı insan gözünden geçmedi (ayrıntı: `data/sohbet/README.md`, karar: aşağıda "Sentetik sohbet metni") |
+| `eval/testset/taze-sohbet-v0.jsonl`, `taze-sohbet-tablet-v0.jsonl` | Taze sohbet ölçüm kümesi (110 + yalnız tablette kullanılan 40 mesaj) | CC0-1.0 | **sentetik**: yapay zekâ ile, seed-v0, korpus ve motor çıktısı görülmeden yazıldı; 20 mesajlık örneklemi depo sahibi "böyle yazılıyor" diye onayladı (2026-11-14); dil modeline sızıntı süzgeciyle girmez; üzerinde ayar yapılmaz |
+| `eval/testset/taze-dogal-v0.jsonl` | Taze doğal ölçüm kümesi (300 cümle; ikincil, okuma metni üslubu) | CC0-1.0 | Common Voice `sentence-collector.txt`'den sabit tohumla (20261115) çekildi; ölçüm modelinden yalnız birebir cümle olarak çıkarılır (`--exclude-exact`); hedef değil bekçi |
 | [Zemberek-NLP](https://github.com/ahmetaa/zemberek-nlp) 0.17.1 | Ön hesaplama ve ölçüm (masaüstü, `tools/zemberek-spike`) | Apache-2.0 | doğrulandı (depodaki LICENSE) |
 | `eval/testset/seed-v0.jsonl` | Test seti | CC0-1.0 | elle yazıldı |
 | `eval/testset/kural-v0.jsonl` | Yazım kuralları test seti (196 vaka; yanlış yazım listesi, bitişik soru eki, tuzaklar, de/da/ki) | CC0-1.0 | yapay zekâ ile üretildi (Claude), seed-v0 ve kisisel-v0 okunmadan; insan gözden geçirmedi; dil modeline sızıntı süzgeciyle girmez |
 | `eval/testset/dedaki-v0.jsonl` | de/da/ki ayrımı test seti (176 vaka; bitişik yazılmış bağlaç, tuzaklar) | CC0-1.0 | yapay zekâ ile üretildi (Claude); insan gözden geçirmedi; dil modeline sızıntı süzgeciyle girmez |
 | `eval/testset/kisisel-v0.jsonl` | Kişisel öğrenme test seti (8 sentetik kullanıcı × 40 mesaj) | CC0-1.0 | yapay zekâ ile üretildi, seed-v0 okunmadan; dil modeline sızıntı süzgeciyle girmez (bkz. "Sentetik sohbet metni") |
 | [Common Voice](https://github.com/common-voice/common-voice) `server/data/tr/sentence-collector.txt` → `data/corpus/commonvoice-tr.txt` | Dil modeli (sonraki kelime, bağlama göre sıralama) | CC0-1.0 | doğrulandı: cümle toplayıcı yalnız CC0 kabul ediyor; kaynağı net olmayan `setimes.txt` alınmadı |
-| `data/suffix/chains-tr.tsv` | Ek zinciri modeli: kök sınıfı (N, P, V) başına soyut ek zincirleri ve sayıları (`data/tools/build_suffix_chains.py`; Common Voice + sohbet korpusu, ağırlık 1/3, seed-v0 ve kisisel-v0 sızıntı süzgeci; Zemberek 0.17.1 ile masaüstünde çözümlendi) | CC0-1.0 | türetildi; yalnız sayımlar, metin içermez. Kaynak korpuslar CC0 |
+| `data/suffix/chains-tr.tsv` | Ek zinciri modeli: kök sınıfı (N, P, V) başına soyut ek zincirleri ve sayıları (`data/tools/build_suffix_chains.py`; Common Voice + `sohbet-v1` korpusu; `sohbet-v2` eklendikten sonra yeniden üretilmedi, ağırlık 1/3, seed-v0 ve kisisel-v0 sızıntı süzgeci; Zemberek 0.17.1 ile masaüstünde çözümlendi) | CC0-1.0 | türetildi; yalnız sayımlar, metin içermez. Kaynak korpuslar CC0 |
 | `data/suffix/stems-tr.tsv` | Kök sınıfı ve çekim öznitelikleri (yumuşama, ince ek, geniş zaman, ettirgen, özel isim); aksan dizininin boş bayrak bitlerine yazılır | Birleşik eser, **GPL-3.0** altında dağıtılır: öznitelikler Zemberek-NLP 0.17.1 kök sözlüğünden (Apache-2.0, atıf `NOTICE`, `LICENSE-Apache-2.0`), kelime seçimi `main_tr.dict`'ten (GPL-3.0) | türetildi: kelimeler `main_tr.dict` ile Zemberek kök sözlüğünün kesişimi, öznitelikler Zemberek'ten |
 
 ## Türetilen veriler (depoya girmez)
@@ -39,8 +42,8 @@ java -cp "engine/build/install/engine/lib/*" io.github.kboard.engine.deasciify.D
 - `kboard-tr.kbn`: ölçüm n-gram dil modeli (`./gradlew :engine:buildNgramModel`; biçim ve parametreler:
   `data/tools/build_ngram.py`). Test setiyle normalize 4-gram paylaşan eğitim cümleleri atılır. APK'ya
   girmez; masaüstü ölçümleri ve kalite eşikleri bunu okur.
-- `kboard-tr-ship.kbn`: dağıtılan n-gram dil modeli (`./gradlew :engine:buildNgramModelShip`): aynı iki
-  korpus, aynı ayarlar, sızıntı süzgeci yok. APK'ya `assets/kboard/kboard-tr.kbn` adıyla bu dosya girer.
+- `kboard-tr-ship.kbn`: dağıtılan n-gram dil modeli (`./gradlew :engine:buildNgramModelShip`): aynı
+  korpuslar, aynı ayarlar, sızıntı süzgeci yok. APK'ya `assets/kboard/kboard-tr.kbn` adıyla bu dosya girer.
   Gerekçe ve kurallar: `docs/EVALUATION.md`, "İki dil modeli". Kaynak ve lisans aynıdır (CC0-1.0).
   Lisansı kaynağıyla aynı: CC0-1.0. Sözlükten hiçbir şey almaz (girdiler: iki korpus, test setleri
   sızıntı süzgeci için, elle yazılmış `data/ngram-denylist.txt`; `engine/build.gradle.kts`
@@ -134,4 +137,8 @@ Fable kararıyla dil modeline alındı. Koşullar:
   kalitesi gerçek kullanıcı metniyle ayrıca doğrulanır (`eval/private`, depoya girmez).
 - Konuşma dili kısaltmaları (geliyom, napıyosun...) bağlam olarak kullanılır, önerilmez
   (`data/ngram-denylist.txt`).
-- Korpus büyütülürse model boyutu budamayla sınırda tutulur (CI bütçesi 1,1 MB).
+- Model boyutu CI bütçesiyle sınırlıdır (adım 1'de 1,1 MB'tan 2 MB'a çıkarıldı; Fable kararı, 2026-11-15).
+- `sohbet-v2.txt` (2026-11-15, Fable kararı): yazım oturumları `sohbet-v1`'i, test setlerini, taze ölçüm
+  kümelerini ve motor çıktısını görmedi. Kazanç, aynı yöntemle yazılmamış taze kümelerde de ölçülür;
+  taze sohbet kümesindeki kazanç dev yarısındaki kazancın üçte birinden azsa üsluba aşırı uyum sayılır.
+  Vikipedi cümleleri (`wiki.tr.txt`) denendi ve alınmadı (`docs/reports/adim-1-korpus.md`).

@@ -11,7 +11,9 @@ dışındaki en sık yazılışıdır ("ankara" → "Ankara").
 
 Test sızıntısı: `--exclude-jsonl` ile verilen test setindeki herhangi bir vakayla normalize
 edilmiş 4 kelimelik ortak dizisi olan eğitim cümlesi atılır; 4 kelimeden kısa vakalar için
-vakanın tamamını içeren cümleler atılır.
+vakanın tamamını içeren cümleler atılır. `--exclude-exact` ile verilen sette yalnız normalize edilmiş
+hali birebir aynı olan cümleler atılır (korpustan çekilmiş doğal örneklem: 4-gram süzgeci orada
+örneklemle ilgisi olmayan cümleleri de atardı).
 
 Öneri yasağı: `--denylist` dosyasındaki kelimeler (küfür, OCR hatası; `önek*` biçimi desteklenir)
 modelde bağlam olarak kalır ama hiçbir zaman aday olarak önerilmez (bayrak 1).
@@ -103,6 +105,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--corpus", action="append", required=True, help="ad=yol[:ağırlık] (ağırlık: tamsayı tekrar)")
     ap.add_argument("--exclude-jsonl", action="append", default=[], type=Path)
+    ap.add_argument("--exclude-exact", action="append", default=[], type=Path,
+                    help="test seti (jsonl): yalnız normalize edilmiş hali birebir aynı olan cümleler atılır")
     ap.add_argument("--min-uni", type=int, default=2, help="sözlüğe girmek için en az sayı")
     ap.add_argument("--min-bi", type=int, default=2)
     ap.add_argument("--min-tri", type=int, default=3)
@@ -114,6 +118,11 @@ def main() -> int:
     args = ap.parse_args()
 
     grams, short = load_exclusions(args.exclude_jsonl)
+    exact: set[tuple[str, ...]] = set()
+    for p in args.exclude_exact:
+        for line in p.read_text(encoding="utf-8").splitlines():
+            if line.strip() and not line.lstrip().startswith("//"):
+                exact.add(tuple(norm_tokens(json.loads(line)["text"])))
     sents: list[list[str]] = []
     surface: dict[str, Counter] = defaultdict(Counter)
     dropped = Counter()
@@ -129,7 +138,7 @@ def main() -> int:
             if not raw:
                 continue
             toks = [tr_lower(t) for t in raw]
-            if leaks(toks, grams, short):
+            if leaks(toks, grams, short) or tuple(toks) in exact:
                 dropped[name] += 1
                 continue
             n += 1
