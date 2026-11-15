@@ -41,6 +41,9 @@ class NgramModel private constructor(
     private val foldChars: CharArray
     private val foldStart: IntArray
 
+    /** [BIG_ROW]'dan uzun satırların başlangıcı → id'ye göre sıralı kayıt sıraları. */
+    private val bigRows: Map<Int, IntArray>
+
     init {
         // id() ikili arama yapar: <s> dışındaki kelimeler kesin artan olmalı
         for (i in 1 until size - 1) {
@@ -58,7 +61,21 @@ class NgramModel private constructor(
         foldStart[byFold.size] = total
         foldChars = CharArray(total)
         for (k in byFold.indices) folded[byFold[k]].toCharArray(foldChars, foldStart[k])
+        // Uzun satırlar (cümle başı `<s>` satırı binlerce ardıl taşır) doğrusal aranmasın: kayıt
+        // sıraları kelime id'sine göre sıralanıp ikili aranır.
+        val big = HashMap<Int, IntArray>()
+        fun index(starts: IntArray) {
+            for (r in 0 until starts.size - 1) {
+                val from = starts[r]
+                val to = starts[r + 1]
+                if (to - from > BIG_ROW) big[from] = (from until to).sortedBy { entId[it] }.toIntArray()
+            }
+        }
+        index(biStart)
+        index(triStart)
+        bigRows = big
     }
+
 
     /** Türkçe küçük harfli kelime ("ankara"). */
     fun word(id: Int): String = String(chars, wordStart[id], wordStart[id + 1] - wordStart[id])
@@ -208,6 +225,23 @@ class NgramModel private constructor(
     private fun triRow(u: Int, v: Int): Int = triKey.binarySearch(key(u, v)).let { if (it >= 0) it else -1 }
 
     private fun find(from: Int, to: Int, id: Int): Int {
+        if (to - from > BIG_ROW) {
+            val order = bigRows[from]
+            if (order != null) {
+                var lo = 0
+                var hi = order.size - 1
+                while (lo <= hi) {
+                    val mid = (lo + hi) ushr 1
+                    val x = entId[order[mid]]
+                    when {
+                        x < id -> lo = mid + 1
+                        x > id -> hi = mid - 1
+                        else -> return order[mid]
+                    }
+                }
+                return -1
+            }
+        }
         for (e in from until to) if (entId[e] == id) return e
         return -1
     }
@@ -217,6 +251,8 @@ class NgramModel private constructor(
         private const val FLAG_DISPLAY = 2
         private const val FLAG_NO_MID = 4
         private const val QMAX = 8f
+        /** Bundan uzun satırlar ikili aramayla aranır. */
+        private const val BIG_ROW = 64
 
         private fun deq(q: Byte): Float = -(q.toInt() and 0xff) * QMAX / 255f
 
