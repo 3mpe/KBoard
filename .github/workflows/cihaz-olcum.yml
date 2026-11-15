@@ -54,6 +54,8 @@ jobs:
     strategy:
       fail-fast: false
       # buyuk-harf: önce (main) ve sonra (bu dal), her biri üç parça: altı emülatörde paralel
+      # "önce" derlemesi yalnız app/src/main altındaki değişiklikleri geri alır: derleme dosyası ya da
+      # model değişikliklerinde gerçek bir "önce" değildir (öncesi için main üzerindeki koşuya bakılır).
       matrix:
         surum: ${{ inputs.gorev == 'buyuk-harf' && fromJSON('["once","sonra"]') || fromJSON('["-"]') }}
         parca: ${{ inputs.gorev == 'buyuk-harf' && fromJSON('[0,1,2]') || fromJSON('[0]') }}
