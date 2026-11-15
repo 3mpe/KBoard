@@ -171,7 +171,7 @@ def liste(tsv: Path, kbn: Path, dst: Path) -> None:
 
 
 def olc(cases_path: Path, keymap: Path, dst: Path, part: str = "0/1") -> int:
-    """Her vakayı tuş dokunuşlarıyla yazar (iki kelime + boşluk) ve alandaki ikinci kelimeyi kaydeder.
+    """Her vakayı tuş dokunuşlarıyla yazar (iki kelime + boşluk) ve alandaki son kelimeyi kaydeder.
 
     Genel sürücüden (`kboard_eval drive`) farklı olarak her harften sonra ekran okunmaz: yalnız boşluktan
     sonra ne yazıldığı ölçülür (vaka başına ~10 sn yerine ~80 sn)."""
@@ -196,13 +196,16 @@ def olc(cases_path: Path, keymap: Path, dst: Path, part: str = "0/1") -> int:
                 drv.read_screen(lambda sc: lower(sc.field_text or "").endswith(target) and bool(sc.suggestions))
                 drv.type_char(" ")
                 sc = drv.read_screen(lambda sc: (sc.field_text or "").endswith(" ") and len((sc.field_text or "").split()) >= 2)
-                words = (sc.field_text or "").split()
-                got = words[1] if len(words) > 1 else None
+                # Son kelime ölçülür: ilk kelime bir yazım kuralıyla ikiye bölünebilir ("birşey" → "bir şey"),
+                # o zaman ikinci belirteç ölçülen kelime değildir (#62). Alanın tamamı da kayda girer.
+                alan = (sc.field_text or "").strip()
+                words = alan.split()
+                got = words[-1] if len(words) > 1 else None
             except adb_driver.DriveError as exc:
                 print(f"[{n}/{len(cases)}] {c['id']}: sürücü hatası: {exc}", flush=True)
-                got, rc = None, 1
+                got, alan, rc = None, None, 1
             out.write(json.dumps({"id": c["id"], "grup": c["tags"][0], "typed": target, "beklenen": c["text"].split(" ")[1],
-                                  "got": got}, ensure_ascii=False) + "\n")
+                                  "got": got, "alan": alan}, ensure_ascii=False) + "\n")
             out.flush()
             if n % 10 == 0:
                 print(f"[{n}/{len(cases)}]", flush=True)
@@ -233,7 +236,7 @@ def rapor(*records_paths: Path) -> int:
                 examples.append(f"- `{r['id']}`: {r['typed']} → {got} (beklenen {exp})")
             else:
                 other += 1
-                examples.append(f"- `{r['id']}`: {r['typed']} → {got} (başka; beklenen {exp})")
+                examples.append(f"- `{r['id']}`: {r['typed']} → {got} (başka; beklenen {exp}; alan: {r.get('alan')!r})")
         print(f"| {g} | {len(rows)} | {ok} | {case} | {other} | {none} |")
     print()
     print("\n".join(examples))
