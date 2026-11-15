@@ -89,8 +89,47 @@ kazancının üçte birinden azsa sonuç üsluba aşırı uyum sayılır.
 | boyut | 1,42 MB (önce 1,08 MB) | ≤ 2 MB (bu adımda 1,1 MB'tan çıkarıldı) |
 | günlük ifade listesi (ölçüm / dağıtılan) | 38/45 / 40/45 (önce 36/45 / 39/45); sabit 3/3 | sabit satırlar dağıtılan modelde zorunlu |
 
-Kişisel öğrenme eşikleri geçti; "ilk kez İlk-3 @0 farkı" −1,4 puan (koruma eşiği −1,5; önceki ölçüm −0,9):
-taban model güçlendiği için öğrenmenin ilk kullanımda eklediği pay küçüldü. Uyarı olarak izlenir.
+### de/da/ki ayrımı (dedaki-v0 test yarısı)
+
+| | Model | Ayrım ilk 3'te (n=54) | Ayrım ilk yuvada | Tuzakta ilk yuvada (n=35) | Tuzakta ilk 3'te | Otomatik düzeltme |
+|---|---|---|---|---|---|---|
+| önce | ölçüm | %75,9 | %63,0 | %8,6 | %22,9 | 0 |
+| önce | dağıtılan | %75,9 | %61,1 | %8,6 | %22,9 | 0 |
+| sonra | ölçüm | %74,1 | %57,4 | %0,0 | %14,3 | 0 |
+| sonra | dağıtılan | %74,1 | %57,4 | %0,0 | %14,3 | 0 |
+
+Tuzaklardaki düşüş bedelsiz değil: ayrım önerisi biraz daha az çıkıyor (ilk 3'te 1 vaka, ilk yuvada 2–3 vaka
+az). Eşikler (ilk 3 ≥ %60, ilk yuva ≥ %40, tuzak ≤ %10) geçiyor; ayrım hiçbir zaman otomatik düzeltme olmuyor.
+
+### Kişisel öğrenme
+
+Eşikler geçti. "İlk kez yazılan kelimede İlk-3 @0 farkı" (öğrenme açık − kapalı) −0,9'dan −1,4 puana indi
+(koruma eşiği −1,5; eşik gevşetilmedi). Sayılar: öğrenme kapalı %15,7 → %21,0; açık %14,8 → %19,6. Kayıp
+oransal olarak benzer (%5,7 → %6,7): öğrenilen kelimeler üç yuvadan birini aldığında, taban modelin tuttuğu
+isabetlerin bir kısmı düşüyor; taban model daha çok isabet ettikçe düşen isabet sayısı da artıyor. Bu, sayılarla
+uyumlu bir açıklamadır, ayrıca kanıtlanmadı; bir sonraki korpus büyütmesinde koruma eşiğine takılabilir
+(izlenecek, adım 2'de kişisel kelimenin yuva alma koşuluna bakılacak).
+
+### Gerçek kişi ve kişisel veri taraması (`sohbet-v2.txt`)
+
+Otomatik tarama: 4 ve daha uzun rakam dizisi 0 satır; `@`, bağlantı ya da alan adı 0 satır; sokak/cadde/
+mahalle/kapı numarası biçiminde adres 0 satır ("sokak" geçen 10 satırın hepsi genel anlatım). Cümle içinde
+büyük harfle geçen 65 farklı kelimenin tamamı okundu: yaygın ilk adlar, Bey/Hanım, şehir ve ülke adları,
+Allah/Rabbim; art arda iki büyük harfli kelime yalnız "ad + Bey/Hanım" (soyadı yok). Marka, ünlü ya da hesap
+adı görülmedi.
+
+### Taze kümenin korpustan ayrılması
+
+Taze sohbet kümesiyle (150 mesajın tamamı, tabletteki 40 dahil) 4-gram paylaşan 33 satır **korpus dosyasının
+kendisinden** çıkarıldı; yani dağıtılan (süzgeçsiz) model de bu satırları görmedi. Ölçüm modelinde ayrıca
+derleme süzgeci çalışır.
+
+### Türetilen dosyalar
+
+- `data/buyuk-harf-kanitli.txt` dağıtılan modelden yeniden üretildi: 127 → 142 kelime (yeni kanıt: alışamadım,
+  aradayız, ayağım, ağrıdı, bağlarım, dikelim, dönersen, ekmeğimi, gelebilirsen, kavur, pdf, uykucu, yoktum,
+  çalışmamı, çözülmedi). buyuk-harf-v1'in `ortak-kanitsiz` grubundaki "ayağım" artık kanıtlı.
+- `data/suffix/chains-tr.tsv` yeniden üretilmedi (ayrı PR; etkiler ayrılsın diye).
 
 ## 5. Yapılmayanlar
 
