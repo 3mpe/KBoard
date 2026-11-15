@@ -112,6 +112,7 @@ class EvalServer(
  *   --suffix-params ad=değer,...  SuffixChainSource.Config alanları (ör. oovMargin=0.5,minChainLogProb=-4)
  *   --no-typo                 yazım hatası önerilerini (TypoSource, --deasciify dizinini kullanır) kapatır
  *   --typo-autocorrect        TypoSource oto. düzeltmesini açar (varsayılan kapalı; yalnızca ölçüm için)
+ *   --typo-d2 n[,probes]      uzaklık 2 araması n harften itibaren (varsayılan 6), dizin arama bütçesi
  *   --personal                kişisel model (PersonalSource, dil modelini sarar); `learn` ile öğrenir
  *   --personal-params lmax,K,l0,kappa[,l0next]  karışım parametreleri (PersonalSource.Config)
  *   --no-rules                yazım kurallarını (SpellingRuleSource: yanlış yazım listesi, bitişik
@@ -197,6 +198,12 @@ fun main(args: Array<String>) {
             tc = tc.copy(spatialBeam = b[0], spatialMaxProbes = b[1], spatialDeadlineMs = b.getOrElse(2) { 0 })
         }
         argValue(args, "--spatial-floor")?.let { tc = tc.copy(spatialMinSupport = it.toDouble()) }
+        // --typo-d2 minLength[,maxProbes]: uzaklık 2 araması (ölçüm/ayar için)
+        argValue(args, "--typo-d2")?.split(',')?.map { it.toInt() }?.let { d ->
+            tc = tc.copy(distance2MinLength = d[0], maxProbes = d.getOrElse(1) { tc.maxProbes })
+        }
+        argValue(args, "--typo-d2-penalty")?.let { tc = tc.copy(distance2Penalty = it.toDouble())
+        }
         sources += TypoSource(index, tc, lmKnown).also { it.contextScorer = lm }
     }
     var rules: SpellingRuleSource? = null
